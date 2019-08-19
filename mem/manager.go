@@ -51,7 +51,7 @@ func (m *manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 }
 
 //New create a in memory storage
-func New(ctx context.Context, options ...storage.Option) storage.Manager {
+func New(options ...storage.Option) storage.Manager {
 	return newManager(options...)
 }
 
