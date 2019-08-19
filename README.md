@@ -299,7 +299,7 @@ Check out [storage manager](#storage-managers) for additional options.
 - [SSH - SCP](scp/README.md)
 - [HTTP](http/README.md)
 - [Tar](tar/README.md)
-- [Zip](zip[/README.md)
+- [Zip](zip/README.md)
 - [GCP - GS](https://github.com/viant/gcpgs)
 - [AWS - S3](https://github.com/viant/awss3)
 - [Docker](https://github.com/viant/dockerafs)
