@@ -1,2 +1,2 @@
-//http package defines simple http based storage operation
+//Package http defines simple http based storage operation
 package http
