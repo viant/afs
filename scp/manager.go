@@ -59,6 +59,7 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 }
 
 func (m *manager) provider(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
+	options = m.Options(options)
 	timeout := option.Timeout{}
 	var basicAuth option.BasicAuth
 	var keyAuth KeyAuth
@@ -66,9 +67,6 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	_, _ = option.Assign(options, &basicAuth, &keyAuth, &authProvider, &timeout)
 	if timeout.Duration == 0 {
 		timeout = option.NewTimeout(defaultTimeoutMs)
-	}
-	if basicAuth == nil || keyAuth == nil || authProvider == nil {
-		_, _ = option.Assign(m.Manager.Options, &basicAuth, &keyAuth, &authProvider, &timeout)
 	}
 	if authProvider == nil {
 		authProvider = NewAuthProvider(keyAuth, basicAuth)

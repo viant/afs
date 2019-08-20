@@ -33,6 +33,7 @@ func ExampleService_List() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer reader.Close()
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)

@@ -2,7 +2,6 @@ package base
 
 import (
 	"context"
-	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
@@ -18,7 +17,7 @@ import (
 //Manager represents storager base manager
 type Manager struct {
 	storage.Manager
-	Options   []storage.Option
+	options   []storage.Option
 	scheme    string
 	mutex     *sync.RWMutex
 	storagers map[string]storage.Storager
@@ -151,6 +150,13 @@ func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Opt
 	return storager.Exists(ctx, URLPath)
 }
 
+func (m *Manager) Options(options []storage.Option) []storage.Option {
+	result := make([]storage.Option, 0)
+	result = append(result, m.options...)
+	result = append(result, options...)
+	return result
+}
+
 //Storager returns storager
 func (m *Manager) Storager(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	m.mutex.RLock()
@@ -160,7 +166,7 @@ func (m *Manager) Storager(ctx context.Context, baseURL string, options ...stora
 	if ok {
 		return storager, nil
 	}
-	fmt.Printf("%v \n", options)
+	options = m.Options(options)
 	storager, err := m.provider(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err
@@ -193,6 +199,6 @@ func New(manager storage.Manager, scheme string, provider func(ctx context.Conte
 		mutex:     &sync.RWMutex{},
 		storagers: make(map[string]storage.Storager),
 		provider:  provider,
-		Options:   options,
+		options:   options,
 	}
 }
