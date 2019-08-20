@@ -2,6 +2,7 @@ package base
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
@@ -159,6 +160,7 @@ func (m *Manager) Storager(ctx context.Context, baseURL string, options ...stora
 	if ok {
 		return storager, nil
 	}
+	fmt.Printf("%v \n", options)
 	storager, err := m.provider(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err

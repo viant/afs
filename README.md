@@ -300,9 +300,7 @@ Check out [storage manager](#storage-managers) for additional options.
 - [HTTP](http/README.md)
 - [Tar](tar/README.md)
 - [Zip](zip/README.md)
-- [GCP - GS](https://github.com/viant/gcpgs)
-- [AWS - S3](https://github.com/viant/awss3)
-- [Docker](https://github.com/viant/dockerafs)
+- [GCP - GS](https://github.com/viant/afsc/gs)
 
 ## Testing service
 

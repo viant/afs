@@ -53,7 +53,7 @@ func TestService_Uploader(t *testing.T) {
 	for _, useCase := range useCases {
 		service := New()
 
-		destManager, err := Manager( useCase.destURL)
+		destManager, err := Manager(useCase.destURL)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

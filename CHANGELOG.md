@@ -1,4 +1,4 @@
-## Agust 14 2018
+## August 20 2018
 
   * Initial Release.
 
