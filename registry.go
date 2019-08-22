@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+//Provider represents manager provider
 type Provider func(options ...storage.Option) (storage.Manager, error)
 
 //Registry represents  abstract file system service provider registry

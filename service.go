@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	_ "github.com/go-errors/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/mem"
 	"github.com/viant/afs/option"

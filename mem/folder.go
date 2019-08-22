@@ -154,6 +154,7 @@ func (f *Folder) Delete(name string) error {
 	return fmt.Errorf("%v: No such file or directory", url.Join(f.URL(), name))
 }
 
+//Put adds object to this folder
 func (f *Folder) Put(object storage.Object) error {
 	if object.IsDir() {
 		return f.putFolder(object)

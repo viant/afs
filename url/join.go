@@ -2,6 +2,7 @@ package url
 
 import "strings"
 
+//Join joins base URL with path elements
 func Join(baseURL string, elements ...string) string {
 	if strings.HasSuffix(baseURL, "://") {
 		baseURL += Localhost

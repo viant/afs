@@ -33,6 +33,7 @@ func (f *File) NewReader() io.ReadCloser {
 	return ioutil.NopCloser(reader)
 }
 
+//SetErrors sets test errors
 func (f *File) SetErrors(errors ...*option.Error) {
 	if len(errors) > 0 {
 		for i := range errors {

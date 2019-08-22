@@ -32,8 +32,8 @@ func (s *storager) connect() (err error) {
 }
 
 //Delete removes supplied asset
-func (c *storager) Delete(ctx context.Context, location string) error {
-	session, err := c.NewSession()
+func (s *storager) Delete(ctx context.Context, location string) error {
+	session, err := s.NewSession()
 	if err == nil {
 		_, err = session.Output(fmt.Sprintf("rm -rf %v", location))
 	}
@@ -42,8 +42,8 @@ func (c *storager) Delete(ctx context.Context, location string) error {
 }
 
 //Exists returns true if location exists
-func (c *storager) Exists(ctx context.Context, location string) (bool, error) {
-	session, err := newSession(c.Client, modeRead, true, c.timeout)
+func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
+	session, err := newSession(s.Client, modeRead, true, s.timeout)
 	if err != nil {
 		return false, err
 	}
@@ -57,7 +57,7 @@ func (c *storager) Exists(ctx context.Context, location string) (bool, error) {
 }
 
 //List lists location assets
-func (c *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
+func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	page := &option.Page{}
 	var matcher option.Matcher
 	_, _ = option.Assign(options, &page, &matcher)
@@ -67,7 +67,7 @@ func (c *storager) List(ctx context.Context, location string, options ...storage
 		}
 	}
 	var result = make([]os.FileInfo, 0)
-	err := c.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
+	err := s.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
 		if !matcher(relative, info) {
 			return true, nil
 		}
@@ -83,8 +83,8 @@ func (c *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Walk visits location resources
-func (c *storager) Walk(ctx context.Context, location string, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error)) error {
-	session, err := newSession(c.Client, modeRead, true, c.timeout)
+func (s *storager) Walk(ctx context.Context, location string, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error)) error {
+	session, err := newSession(s.Client, modeRead, true, s.timeout)
 	if err != nil {
 		return err
 	}
@@ -93,9 +93,9 @@ func (c *storager) Walk(ctx context.Context, location string, handler func(relat
 }
 
 //Download fetches content for supplied location
-func (c *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	result := new(bytes.Buffer)
-	err := c.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (b bool, e error) {
+	err := s.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (b bool, e error) {
 		_, err := io.Copy(result, reader)
 		return false, err
 	})
@@ -103,8 +103,8 @@ func (c *storager) Download(ctx context.Context, location string, options ...sto
 }
 
 //Uploader return batch uploader
-func (c *storager) Uploader(ctx context.Context, destination string) (storage.Upload, io.Closer, error) {
-	session, err := newSession(c.Client, modeWrite, true, 0)
+func (s *storager) Uploader(ctx context.Context, destination string) (storage.Upload, io.Closer, error) {
+	session, err := newSession(s.Client, modeWrite, true, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,21 +112,21 @@ func (c *storager) Uploader(ctx context.Context, destination string) (storage.Up
 }
 
 //Upload uploads content for supplied destination
-func (c *storager) Upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options ...storage.Option) error {
-	return c.Create(ctx, destination, mode, content, false)
+func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options ...storage.Option) error {
+	return s.Create(ctx, destination, mode, content, false)
 }
 
 //Create creates a file or directory
-func (c *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
+func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
 	parent, name := path.Split(destination)
 	if isDir {
-		if session, err := c.NewSession(); err == nil {
+		if session, err := s.NewSession(); err == nil {
 			if _, err := session.Output(fmt.Sprintf("mkdir -p %s", destination)); err == nil {
 				return nil
 			}
 		}
 	}
-	upload, closer, err := c.Uploader(ctx, parent)
+	upload, closer, err := s.Uploader(ctx, parent)
 	if err != nil {
 		return err
 	}

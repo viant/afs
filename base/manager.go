@@ -64,6 +64,7 @@ func (m *Manager) ensureParentExists(ctx context.Context, URL string) error {
 	return m.Create(ctx, parentURL, file.DefaultDirOsMode, true)
 }
 
+//Upload uploads content
 func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	err := m.ensureParentExists(ctx, URL)
@@ -139,6 +140,7 @@ func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Opt
 	return storager.Exists(ctx, URLPath)
 }
 
+//Options returns base and supplied options
 func (m *Manager) Options(options []storage.Option) []storage.Option {
 	result := make([]storage.Option, 0)
 	result = append(result, m.options...)

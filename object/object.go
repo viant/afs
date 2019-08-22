@@ -36,7 +36,7 @@ func (o *Object) Wrap(source interface{}) {
 	o.Source = source
 }
 
-//Wrap wraps Source storage object
+//Unwrap unwrap source storage to target pointer
 func (o *Object) Unwrap(target interface{}) error {
 	if o.Source == nil {
 		return nil
@@ -51,7 +51,7 @@ func (o *Object) Unwrap(target interface{}) error {
 	return nil
 }
 
-//NewObject creates a new storage object
+//New creates a new storage object
 func New(URL string, info os.FileInfo, source interface{}) storage.Object {
 	linkname := ""
 	linkURL := ""

@@ -11,11 +11,13 @@ type Crc struct {
 	Hash uint32
 }
 
+//Encode encodes hash
 func (c *Crc) Encode() string {
 	b := []byte{byte(c.Hash >> 24), byte(c.Hash >> 16), byte(c.Hash >> 8), byte(c.Hash)}
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+//Decode decodes base64 encoded hash
 func (c *Crc) Decode(encoded string) error {
 	d, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {

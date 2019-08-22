@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-//ConfigProvider represents ssh client config authProvider
+//AuthProvider represents ssh client config authProvider
 type AuthProvider interface {
 	ClientConfig() (*ssh.ClientConfig, error)
 }
@@ -22,6 +22,7 @@ type authProvider struct {
 	credAuth option.BasicAuth
 }
 
+//ClientConfig returns client config
 func (p *authProvider) ClientConfig() (*ssh.ClientConfig, error) {
 	config := &ssh.ClientConfig{
 		User:            os.Getenv("USER"),
@@ -109,8 +110,8 @@ func (a *keyAuthnticator) pem() ([]byte, error) {
 	return pemBytes, nil
 }
 
-//NewKeyAuthe returns a new private key authenticator
-func NewKeyAuthe(keyLocation, username, keyPassword string) KeyAuth {
+//NewKeyAuth returns a new private key authenticator
+func NewKeyAuth(keyLocation, username, keyPassword string) KeyAuth {
 	return &keyAuthnticator{
 		keyLocation:  keyLocation,
 		username:     username,
@@ -135,5 +136,5 @@ func LocalhostKeyAuth(keyPassword string, locations ...string) (KeyAuth, error) 
 	if keyLocation == "" {
 		return nil, fmt.Errorf("failed to lookup key location: %v", locations)
 	}
-	return NewKeyAuthe(keyLocation, username, keyPassword), nil
+	return NewKeyAuth(keyLocation, username, keyPassword), nil
 }

@@ -38,14 +38,14 @@ func HeaderTime(header http.Header, key string, defaultValue time.Time) time.Tim
 	if len(value) == 0 {
 		return defaultValue
 	}
-	if result, err := ParseHttpDate(value[0]); err == nil {
+	if result, err := ParseHTTPDate(value[0]); err == nil {
 		return result
 	}
 	return defaultValue
 }
 
-//ParseHttpDate parses date assigned
-func ParseHttpDate(value string) (result time.Time, err error) {
+//ParseHTTPDate parses date assigned
+func ParseHTTPDate(value string) (result time.Time, err error) {
 	for i := range timeLayouts {
 		if result, err = time.Parse(timeLayouts[i], value); err == nil {
 			return result, nil

@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	//Localhost default host
 	Localhost = "localhost"
 )
 

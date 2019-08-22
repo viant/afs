@@ -32,6 +32,7 @@ func newManager(options ...storage.Option) *manager {
 	}
 }
 
+//New creates HTTP manager
 func New(options ...storage.Option) storage.Manager {
 	return newManager(options...)
 }

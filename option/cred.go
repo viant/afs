@@ -1,5 +1,6 @@
 package option
 
+//BasicAuth represents a basic auth
 type BasicAuth interface {
 	Credentials() (user, password string)
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+//SplitPath splits path
 func SplitPath(URLPath string) []string {
 	var result = make([]string, 0)
 	var elements = strings.Split(URLPath, "/")

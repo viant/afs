@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+//NewInfo returns new info from SCP response
 func NewInfo(createResponse string, modified *time.Time) (os.FileInfo, error) {
 	elements := strings.SplitN(createResponse, " ", 3)
 	if len(elements) != 3 {
@@ -35,6 +36,7 @@ func NewInfo(createResponse string, modified *time.Time) (os.FileInfo, error) {
 	return file.NewInfo(name, size, os.FileMode(mode), *modified, isDir), nil
 }
 
+//ParseTimeResponse parases respons time
 func ParseTimeResponse(response string) (*time.Time, error) {
 	elements := strings.SplitN(response, " ", 4)
 	if len(elements) != 4 {
@@ -57,7 +59,7 @@ func InfoToTimestampCmd(info os.FileInfo) string {
 	return fmt.Sprintf("T%v 0 %v 0\n", unixTimestamp, unixTimestamp)
 }
 
-//InfoToCmd returns scp create command for supplied info
+//InfoToCreateCmd returns scp create command for supplied info
 func InfoToCreateCmd(info os.FileInfo) string {
 	mode := info.Mode()
 	if mode >= 01000 { //symbolic linkg

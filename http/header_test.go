@@ -106,7 +106,7 @@ func TestHeaderTime(t *testing.T) {
 		now := time.Now()
 		actual := HeaderTime(header, useCase.key, now)
 		if useCase.value != "" {
-			expectModified, err := ParseHttpDate(useCase.value)
+			expectModified, err := ParseHTTPDate(useCase.value)
 			assert.Nil(t, err, useCase.description)
 			assert.EqualValues(t, expectModified, actual, useCase.description)
 		} else {

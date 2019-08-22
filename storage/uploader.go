@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+//Upload uploads content
 type Upload func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error
 
 //Uploader represents an uploader
@@ -14,7 +15,7 @@ type Uploader interface {
 	Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...Option) error
 }
 
-//Uploader represents a batch uploader
+//BatchUploader represents a batch uploader
 type BatchUploader interface {
 	//Uploader returns upload handler, and upload closer for batch upload or error
 	Uploader(ctx context.Context, URL string, options ...Option) (Upload, io.Closer, error)

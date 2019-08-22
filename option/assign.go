@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-//Mode assign mode
+//FilterMode assign mode
 type FilterMode struct {
 	Strict bool
 }

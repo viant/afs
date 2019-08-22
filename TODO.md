@@ -1,1 +1,5 @@
-- Add sym link support for file storage
+- More options
+ - Cloud ignore matcher
+ - Prefix, suffix reg expr matcher
+ - Add Zip storager
+ - Add Tar storager

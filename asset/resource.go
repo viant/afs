@@ -52,7 +52,7 @@ func NewLink(name, link string, mode os.FileMode) *Resource {
 	return New(name, mode|os.ModeSymlink, false, link, nil)
 }
 
-//NewAsset creates a new asset
+//New creates an asset
 func New(name string, mode os.FileMode, dir bool, link string, data []byte) *Resource {
 	if mode == 0 {
 		mode = 0744

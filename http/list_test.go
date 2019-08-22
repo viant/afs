@@ -69,7 +69,7 @@ func TestManager_List(t *testing.T) {
 		assert.EqualValues(t, useCase.expectSize, objects[0].Size(), useCase.description)
 
 		if useCase.lastModified != "" {
-			expectModified, err := ParseHttpDate(useCase.lastModified)
+			expectModified, err := ParseHTTPDate(useCase.lastModified)
 			assert.Nil(t, err, useCase.description)
 			assert.Equal(t, expectModified, objects[0].ModTime(), useCase.description)
 		}
