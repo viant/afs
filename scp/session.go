@@ -119,7 +119,7 @@ func (s *session) processNewResource(relativeElements *[]string, response []byte
 	}
 
 	var reader io.Reader
-	relativePath := path.Join(*relativeElements...)
+	parent := path.Join(*relativeElements...)
 	if fileInfo.IsDir() {
 		if s.skipBaseDir && s.counter == 0 && fileInfo.Name() == s.locationName {
 			return false, nil
@@ -131,11 +131,11 @@ func (s *session) processNewResource(relativeElements *[]string, response []byte
 	if err != nil {
 		return false, err
 	}
-	toContinue, err := handler(relativePath, fileInfo, reader)
+	toContinue, err := handler(parent, fileInfo, reader)
 	return toContinue, err
 }
 
-func (s *session) download(ctx context.Context, skipBaseDir bool, location string, handler func(relativePath string, info os.FileInfo, reader io.Reader) (bool, error)) error {
+func (s *session) download(ctx context.Context, skipBaseDir bool, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error)) error {
 	if s.mode == modeWrite {
 		return fmt.Errorf("invalid mode")
 	}
@@ -160,7 +160,7 @@ func (s *session) download(ctx context.Context, skipBaseDir bool, location strin
 	return err
 }
 
-func (s *session) pull(pathElements *[]string, modified *time.Time, handler func(relativePath string, info os.FileInfo, reader io.Reader) (bool, error)) error {
+func (s *session) pull(pathElements *[]string, modified *time.Time, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error)) error {
 	err := s.writeStatusOK()
 	if err != nil {
 		return err
@@ -235,14 +235,14 @@ func (s *session) upload(location string) (storage.Upload, io.Closer, error) {
 	}
 
 	var prevRelativeElements = make([]string, 0)
-	handler := func(ctx context.Context, relativePath string, info os.FileInfo, reader io.Reader) error {
+	handler := func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
 		prevRelativePath := path.Join(prevRelativeElements...)
-		relativePath = strings.Trim(relativePath, "/")
+		parent = strings.Trim(parent, "/")
 		prevRelativeElements = []string{}
-		if relativePath != "" {
-			prevRelativeElements = strings.Split(relativePath, "/")
+		if parent != "" {
+			prevRelativeElements = strings.Split(parent, "/")
 		}
-		err = adjustPath(prevRelativePath, relativePath, s.moveDown, s.moveUp)
+		err = adjustPath(prevRelativePath, parent, s.moveDown, s.moveUp)
 
 		if info.IsDir() {
 			prevRelativeElements = append(prevRelativeElements, info.Name())

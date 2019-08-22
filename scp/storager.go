@@ -49,7 +49,7 @@ func (c *storager) Exists(ctx context.Context, location string) (bool, error) {
 	}
 	location = path.Clean(location)
 	has := false
-	_ = session.download(ctx, false, location, func(relativePath string, info os.FileInfo, reader io.Reader) (b bool, e error) {
+	_ = session.download(ctx, false, location, func(parent string, info os.FileInfo, reader io.Reader) (b bool, e error) {
 		has = true
 		return false, nil
 	})
@@ -59,19 +59,26 @@ func (c *storager) Exists(ctx context.Context, location string) (bool, error) {
 //List lists location assets
 func (c *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	page := &option.Page{}
-
-	_, _ = option.Assign(options, &page)
-
+	var matcher option.Matcher
+	_, _ = option.Assign(options, &page, &matcher)
+	if matcher == nil {
+		matcher = func(parent string, info os.FileInfo) bool {
+			return true
+		}
+	}
 	var result = make([]os.FileInfo, 0)
 	err := c.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
-
-		if relative != "" || page.ShallSkip() {
-			return true, err
+		if !matcher(relative, info) {
+			return true, nil
+		}
+		page.Increment()
+		if page.ShallSkip() {
+			return true, nil
 		}
 		result = append(result, info)
-		page.Increment()
-		return !page.HasReachedLimit(), err
+		return !page.HasReachedLimit(), nil
 	})
+
 	return result, err
 }
 
@@ -119,7 +126,6 @@ func (c *storager) Create(ctx context.Context, destination string, mode os.FileM
 			}
 		}
 	}
-
 	upload, closer, err := c.Uploader(ctx, parent)
 	if err != nil {
 		return err

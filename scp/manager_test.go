@@ -134,7 +134,7 @@ func TestManager_Walk(t *testing.T) {
 		assert.Nil(t, err, useCase.description)
 
 		actuals := map[string]string{}
-		err = manager.Walk(ctx, useCase.baseLocation, func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		err = manager.Walk(ctx, useCase.baseLocation, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 			content := ""
 			if !info.IsDir() {
 				if data, err := ioutil.ReadAll(reader); err == nil {
@@ -142,7 +142,7 @@ func TestManager_Walk(t *testing.T) {
 				}
 
 			}
-			actuals[path.Join(relativePath, info.Name())] = content
+			actuals[path.Join(parent, info.Name())] = content
 			return true, nil
 		}, keyAuth)
 		assert.Nil(t, err, useCase.description)

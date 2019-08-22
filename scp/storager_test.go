@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 )
 
 func TestNewService(t *testing.T) {
@@ -42,7 +43,7 @@ func TestNewService(t *testing.T) {
 	}
 
 	for _, useCase := range useCases {
-		srv, err := NewStorager("127.0.0.1:22", 15000, clientConfig)
+		srv, err := NewStorager("127.0.0.1:22", time.Millisecond*15000, clientConfig)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

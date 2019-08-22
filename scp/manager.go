@@ -33,10 +33,10 @@ func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.O
 
 func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, Scheme)
-	var matcher option.WalkerMatcher
+	var matcher option.Matcher
 	options, _ = option.Assign(options, &matcher)
 	if matcher == nil {
-		matcher = func(baseURL, relativePath string, info os.FileInfo) bool {
+		matcher = func(parent string, info os.FileInfo) bool {
 			return true
 		}
 	}
@@ -48,11 +48,11 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 	if !ok {
 		return fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
 	}
-	return service.Walk(ctx, URLPath, func(relative string, info os.FileInfo, reader io.Reader) (shallContinue bool, err error) {
-		if !matcher(baseURL, relative, info) {
+	return service.Walk(ctx, URLPath, func(parent string, info os.FileInfo, reader io.Reader) (shallContinue bool, err error) {
+		if !matcher(parent, info) {
 			return true, nil
 		}
-		shallContinue, err = handler(ctx, baseURL, relative, info, ioutil.NopCloser(reader))
+		shallContinue, err = handler(ctx, baseURL, parent, info, ioutil.NopCloser(reader))
 		return shallContinue, err
 	})
 
@@ -81,7 +81,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}
-	baseMgr := base.New(result, Scheme, result.provider, options...)
+	baseMgr := base.New(result, Scheme, result.provider, options)
 	result.Manager = baseMgr
 	return result
 }

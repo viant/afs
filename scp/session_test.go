@@ -3,6 +3,7 @@ package scp
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
@@ -76,6 +77,19 @@ func TestSession_download(t *testing.T) {
 		assets      []*asset.Resource
 		hasError    bool
 	}{
+
+		{
+			description: "multi download from baseLocation with symlink",
+			location:    path.Join(baseDir, "scp_download_04"),
+			file:        path.Join(baseDir, "scp_download_04"),
+			recursive:   true,
+			assets: []*asset.Resource{
+				asset.NewFile("foo1.txt", []byte("abc"), 0644),
+				asset.NewFile("foo2.txt", []byte("xyz"), 0644),
+				asset.NewLink("sym.txt", "foo1.txt", 0644),
+			},
+		},
+
 		{
 			description: "location single download",
 			location:    path.Join(baseDir, "scp_download_01"),
@@ -102,18 +116,6 @@ func TestSession_download(t *testing.T) {
 			hasError:    true,
 			assets: []*asset.Resource{
 				asset.NewFile("foo.txt", []byte("abc"), 0644),
-			},
-		},
-
-		{
-			description: "multi download from baseLocation with symlink",
-			location:    path.Join(baseDir, "scp_download_04"),
-			file:        path.Join(baseDir, "scp_download_04"),
-			recursive:   true,
-			assets: []*asset.Resource{
-				asset.NewFile("foo1.txt", []byte("abc"), 0644),
-				asset.NewFile("foo2.txt", []byte("xyz"), 0644),
-				asset.NewLink("sym.txt", "foo1.txt", 0644),
 			},
 		},
 
@@ -204,7 +206,8 @@ func TestSession_upload(t *testing.T) {
 				asset.NewFile("foo.txt", []byte("abc"), 0644),
 			},
 		},
-		{description: "multi file location upload",
+		{
+			description:    "multi file location upload",
 			recursive:      true,
 			createLocation: true,
 			baseLocation:   path.Join(baseDir, "scp_upload_02"),
@@ -231,23 +234,6 @@ func TestSession_upload(t *testing.T) {
 			},
 		},
 		{
-			description:    "multi download from baseLocation - 2 depth",
-			baseLocation:   path.Join(baseDir, "scp_upload_04"),
-			location:       path.Join(baseDir, "scp_upload_04"),
-			createLocation: true,
-			recursive:      true,
-			assets: []*asset.Resource{
-				asset.NewFile("foo1.txt", []byte("abc"), 0644),
-				asset.NewDir("s1", 0744),
-				asset.NewFile("s1/bar1.txt", []byte("xyz"), 0644),
-				asset.NewDir("s1/s2", 0744),
-				asset.NewFile("s1/s2/bar1.txt", []byte("xyz"), 0644),
-				asset.NewFile("s1/bar2.txt", []byte("xyz"), 0644),
-				asset.NewFile("foo2.txt", []byte("abc"), 0644),
-			},
-		},
-
-		{
 			description:    "multi download - unordered",
 			baseLocation:   path.Join(baseDir, "scp_upload_05"),
 			location:       path.Join(baseDir, "scp_upload_05"),
@@ -264,6 +250,22 @@ func TestSession_upload(t *testing.T) {
 				asset.NewFile("test/folder2/res1.txt", []byte("xyz"), 0644),
 			},
 		},
+		{
+			description:    "multi download from baseLocation - 2 depth",
+			baseLocation:   path.Join(baseDir, "scp_upload_04"),
+			location:       path.Join(baseDir, "scp_upload_04"),
+			createLocation: true,
+			recursive:      true,
+			assets: []*asset.Resource{
+				asset.NewFile("foo1.txt", []byte("abc"), 0644),
+				asset.NewDir("s1", 0744),
+				asset.NewFile("s1/bar1.txt", []byte("xyz"), 0644),
+				asset.NewDir("s1/s2", 0744),
+				asset.NewFile("s1/s2/bar1.txt", []byte("xyz"), 0644),
+				asset.NewFile("s1/bar2.txt", []byte("xyz"), 0644),
+				asset.NewFile("foo2.txt", []byte("abc"), 0644),
+			},
+		},
 	}
 
 	for _, useCase := range useCases {
@@ -275,6 +277,9 @@ func TestSession_upload(t *testing.T) {
 		if useCase.createLocation {
 			_ = fileManager.Create(ctx, useCase.baseLocation, 0744, true)
 		}
+
+		fmt.Printf("%v\n", useCase.location)
+
 		uploader, closer, err := session.upload(useCase.location)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
@@ -289,6 +294,7 @@ func TestSession_upload(t *testing.T) {
 			err = uploader(ctx, relative, asset.Info(), reader)
 			assert.Nil(t, err, useCase.description)
 		}
+
 		actuals, err := asset.Load(fileManager, useCase.location)
 		assert.Nil(t, err, useCase.description)
 		for _, asset := range useCase.assets {
