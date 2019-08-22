@@ -7,9 +7,9 @@ import (
 )
 
 //FilepathMatcher returns filepath based filepath matcher
-func FilepathMatcher(pattern string) func(baseURL, relativePath string, info os.FileInfo) bool {
-	return func(baseURL, relativePath string, info os.FileInfo) bool {
-		name := path.Join(relativePath, info.Name())
+func FilepathMatcher(pattern string) func(baseURL, parent string, info os.FileInfo) bool {
+	return func(baseURL, parent string, info os.FileInfo) bool {
+		name := path.Join(parent, info.Name())
 		hasMatch, _ := filepath.Match(pattern, name)
 		return hasMatch
 	}

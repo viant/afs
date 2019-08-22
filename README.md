@@ -48,7 +48,7 @@ Delete(ctx context.Context, URL string, options ...Option) error
 * **Batch uploader:**
 
 ```go
-type Upload func(ctx context.Context, relativePath string, info os.FileInfo, reader io.Reader) error
+type Upload func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error
  
 Uploader(ctx context.Context, URL string, options ...Option) (Upload, io.Closer, error)
 ```
@@ -265,13 +265,9 @@ func main() {
 
 ## Options
 
-* **[Walker Matcher](option/matcher.go).**
+* **[Matcher](option/matcher.go).**
 
-Filters resources with Copy or Walk operations
-
-* **[List Matcher](option/matcher.go).**
-
-Filter resource with List operation
+Filters resources
 
 * **[Page](option/page.go)**
 
@@ -279,7 +275,10 @@ Page paginates list result by offset and limit.
 
 * **[Modifier](option/modifier.go)**
 
+
 * **[Timeout](option/timeout.go)**
+
+Provider specific timeout.
 
 * **[BasicAuth](option/cred.go)** 
 
@@ -301,6 +300,7 @@ Check out [storage manager](#storage-managers) for additional options.
 - [Tar](tar/README.md)
 - [Zip](zip/README.md)
 - [GCP - GS](https://github.com/viant/afsc/gs)
+- [AWS - S3](https://github.com/viant/afsc/s3)
 
 ## Testing service
 

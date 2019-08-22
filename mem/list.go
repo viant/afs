@@ -10,10 +10,15 @@ import (
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	page := &option.Page{}
-	_, _ = option.Assign(options, &page)
+	var matcher option.Matcher
+	_, _ = option.Assign(options, &page, &matcher)
 	root := s.Root
 	object, err := root.Lookup(location, 0)
-
+	if matcher == nil {
+		matcher = func(parent string, info os.FileInfo) bool {
+			return true
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +31,9 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 		var result = make([]os.FileInfo, len(objects))
 
 		for i := range objects {
+			if !matcher(location, objects[i]) {
+				continue
+			}
 			page.Increment()
 			if page.ShallSkip() {
 				continue
@@ -36,6 +44,9 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 			}
 		}
 		return result, nil
+	}
+	if !matcher(location, object) {
+		return []os.FileInfo{}, nil
 	}
 	return []os.FileInfo{object}, nil
 }

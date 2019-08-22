@@ -16,8 +16,7 @@ func (s *service) Move(ctx context.Context, sourceURL, destURL string, options .
 
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()
-	var matcher option.WalkerMatcher
-	_, _ = option.Assign(options, &sourceOptions, &destOptions, &matcher)
+	_, _ = option.Assign(options, &sourceOptions, &destOptions)
 	if sourceScheme == destScheme {
 		if manager, err := s.manager(ctx, sourceURL, *sourceOptions...); err == nil {
 			if mover, ok := manager.(storage.Mover); ok {

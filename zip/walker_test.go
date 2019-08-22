@@ -44,9 +44,9 @@ func TestWalker_Walk(t *testing.T) {
 		walker := NewWalker(afs.New())
 		ctx := context.Background()
 		actuals := make(map[string]*asset.Resource)
-		err := walker.Walk(ctx, useCase.location, func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		err := walker.Walk(ctx, useCase.location, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 
-			resourceLocation := path.Join(relativePath, info.Name())
+			resourceLocation := path.Join(parent, info.Name())
 			linkName := ""
 			if rawInfo, ok := info.(*file.Info); ok {
 				linkName = rawInfo.Linkname
@@ -59,7 +59,7 @@ func TestWalker_Walk(t *testing.T) {
 				}
 			}
 			fmt.Printf("actual: %v\n", resourceLocation)
-			actuals[resourceLocation] = asset.New(relativePath, info.Mode(), info.IsDir(), linkName, data)
+			actuals[resourceLocation] = asset.New(parent, info.Mode(), info.IsDir(), linkName, data)
 			return true, nil
 		})
 		assert.Nil(t, err, useCase.description)

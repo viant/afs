@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type Upload func(ctx context.Context, relativePath string, info os.FileInfo, reader io.Reader) error
+type Upload func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error
 
 //Uploader represents an uploader
 type Uploader interface {

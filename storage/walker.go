@@ -7,7 +7,7 @@ import (
 )
 
 //OnVisit represents on location visit handler
-type OnVisit func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error)
+type OnVisit func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error)
 
 //Walker represents abstract storage walker
 type Walker interface {

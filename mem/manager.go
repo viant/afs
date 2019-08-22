@@ -57,7 +57,7 @@ func New(options ...storage.Option) storage.Manager {
 
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}
-	baseMgr := base.New(result, Scheme, result.provider, options...)
+	baseMgr := base.New(result, Scheme, result.provider, options)
 	result.Manager = baseMgr
 	return result
 }

@@ -2,6 +2,7 @@ package asset
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"github.com/viant/afs/walker"
@@ -19,8 +20,9 @@ func Load(manager storage.Manager, URL string) (map[string]*Resource, error) {
 		managerWalker = walker.New(manager)
 	}
 	var result = make(map[string]*Resource)
-	err := managerWalker.Walk(context.Background(), URL, func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
-		key := path.Join(relativePath, info.Name())
+	err := managerWalker.Walk(context.Background(), URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		fmt.Printf("%v %v %v\n", parent, info.Name(), info.Mode())
+		key := path.Join(parent, info.Name())
 		var data []byte
 		if !info.IsDir() {
 			data, err = ioutil.ReadAll(reader)

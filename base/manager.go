@@ -32,14 +32,6 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	if err != nil {
 		return nil, err
 	}
-	var matcher option.ListMatcher
-	options, _ = option.Assign(options, &matcher)
-	if matcher == nil {
-		matcher = func(info os.FileInfo) bool {
-			return true
-		}
-	}
-
 	files, err := storager.List(ctx, URLPath, options)
 	if err != nil {
 		return nil, err
@@ -59,9 +51,6 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 
 	objects[0] = object.New(url.Join(baseURL, URLPath), files[0], nil)
 	for i := 1; i < len(files); i++ {
-		if !matcher(files[i]) {
-			continue
-		}
 		fileURL := url.Join(baseURL, path.Join(URLPath, files[i].Name()))
 		objects[i] = object.New(fileURL, files[i], nil)
 	}
@@ -192,7 +181,7 @@ func (m *Manager) Scheme() string {
 }
 
 //New creates base storager base Manager
-func New(manager storage.Manager, scheme string, provider func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error), options ...storage.Option) *Manager {
+func New(manager storage.Manager, scheme string, provider func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error), options []storage.Option) *Manager {
 	return &Manager{
 		Manager:   manager,
 		scheme:    scheme,

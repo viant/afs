@@ -27,22 +27,24 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	walker storage.Walker, uploader storage.BatchUploader) error {
 	destURL = s.updateDestURL(sourceURL, destURL)
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
+
+	destOpts := *destOptions
 	if err == nil && object.IsDir() {
-		err = s.Create(ctx, destURL, object.Mode(), object.IsDir(), *destOptions...)
+		err = s.Create(ctx, destURL, object.Mode(), object.IsDir(), destOpts...)
 	}
 	if err != nil {
 		return err
 	}
 
-	upload, closer, err := uploader.Uploader(ctx, destURL, *destOptions...)
+	upload, closer, err := uploader.Uploader(ctx, destURL, destOpts...)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = closer.Close()
 	}()
-	return walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
-		err = upload(ctx, relativePath, info, reader)
+	return walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		err = upload(ctx, parent, info, reader)
 		return err == nil, err
 	}, *srcOptions...)
 
@@ -55,7 +57,7 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destOptions := option.NewDest()
 	var walker storage.Walker
 	var uploader storage.BatchUploader
-	var matcher option.WalkerMatcher
+	var matcher option.Matcher
 	_, _ = option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader)
 	if matcher != nil {
 		*sourceOptions = append(*sourceOptions, matcher)

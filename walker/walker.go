@@ -2,11 +2,9 @@ package walker
 
 import (
 	"context"
-	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
-	"os"
 	"path"
 )
 
@@ -24,7 +22,7 @@ func (f *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	return f.walk(ctx, URL, "", handler, options)
 }
 
-func (f *walker) visitResource(ctx context.Context, object storage.Object, URL, relativePath string, matcher option.WalkerMatcher, handler storage.OnVisit, options []storage.Option) error {
+func (f *walker) visitResource(ctx context.Context, object storage.Object, URL, parent string, handler storage.OnVisit, options []storage.Option) error {
 	var err error
 	var reader io.ReadCloser
 
@@ -34,16 +32,13 @@ func (f *walker) visitResource(ctx context.Context, object storage.Object, URL, 
 		}
 		defer func() { _ = reader.Close() }()
 	}
-	if !matcher(URL, relativePath, object) {
-		return nil
-	}
 	if f.counter == 0 && object.IsDir() && f.locationName == object.Name() {
 		//skip base location
 		return nil
 	}
 	f.counter++
 
-	toContinue, err := handler(ctx, URL, relativePath, object, reader)
+	toContinue, err := handler(ctx, URL, parent, object, reader)
 	if err != nil || !toContinue {
 		return err
 	}
@@ -52,8 +47,8 @@ func (f *walker) visitResource(ctx context.Context, object storage.Object, URL, 
 	}
 
 	relative := object.Name()
-	if relativePath != "" {
-		relative = path.Join(relativePath, object.Name())
+	if parent != "" {
+		relative = path.Join(parent, object.Name())
 	}
 	if err = f.walk(ctx, URL, relative, handler, options); err != nil {
 		return err
@@ -63,18 +58,11 @@ func (f *walker) visitResource(ctx context.Context, object storage.Object, URL, 
 }
 
 //Walk traverses URL and calls handler on all file or folder
-func (f *walker) walk(ctx context.Context, URL, relativePath string, handler storage.OnVisit, options []storage.Option) error {
+func (f *walker) walk(ctx context.Context, URL, parent string, handler storage.OnVisit, options []storage.Option) error {
 	URL = url.Normalize(URL, f.Scheme())
 	resourceURL := URL
-	if relativePath != "" {
-		resourceURL = url.Join(URL, relativePath)
-	}
-	var matcher option.WalkerMatcher
-	_, _ = option.Assign(options, &matcher)
-	if matcher == nil {
-		matcher = func(baseURL, relativePath string, info os.FileInfo) bool {
-			return true
-		}
+	if parent != "" {
+		resourceURL = url.Join(URL, parent)
 	}
 	objects, err := f.List(ctx, resourceURL, options...)
 	if err != nil {
@@ -85,7 +73,7 @@ func (f *walker) walk(ctx context.Context, URL, relativePath string, handler sto
 		if i == 0 && objects[i].IsDir() {
 			continue
 		}
-		if err = f.visitResource(ctx, objects[i], URL, relativePath, matcher, handler, options); err != nil {
+		if err = f.visitResource(ctx, objects[i], URL, parent, handler, options); err != nil {
 			break
 		}
 

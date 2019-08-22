@@ -3,9 +3,10 @@ package option
 import (
 	"encoding/base64"
 	"fmt"
+	"hash/crc32"
 )
 
-//Crc represents crc value
+//Crc represents crc hash
 type Crc struct {
 	Hash uint32
 }
@@ -25,4 +26,11 @@ func (c *Crc) Decode(encoded string) error {
 	}
 	c.Hash = uint32(d[0])<<24 + uint32(d[1])<<16 + uint32(d[2])<<8 + uint32(d[3])
 	return nil
+}
+
+//NewCrc returns a crc hash for supplied data
+func NewCrc(data []byte) *Crc {
+	crc32Hash := crc32.New(crc32.MakeTable(crc32.Castagnoli))
+	_, _ = crc32Hash.Write(data)
+	return &Crc{Hash: crc32Hash.Sum32()}
 }

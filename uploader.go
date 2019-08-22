@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -21,11 +22,17 @@ func (s *service) Uploader(ctx context.Context, URL string, options ...storage.O
 	if ok {
 		return batchUploader.Uploader(ctx, URL, options...)
 	}
-	handler := func(ctx context.Context, relativePath string, info os.FileInfo, reader io.Reader) error {
-		location := path.Join(relativePath, info.Name())
+	handler := func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
+		location := path.Join(parent, info.Name())
 		URL := url.Join(URL, location)
+		if info.Mode()&os.ModeSymlink > 0 {
+			if rawInfo, ok := info.(*file.Info); ok && rawInfo.Linkname != "" {
+				fmt.Printf("is link %v\n", rawInfo)
+				options = append(options, rawInfo.Link)
+			}
+		}
 		if info.IsDir() {
-			return manager.Create(ctx, URL, info.Mode(), info.IsDir(), options)
+			return manager.Create(ctx, URL, info.Mode(), info.IsDir(), options...)
 		}
 		return manager.Upload(ctx, URL, info.Mode(), reader, options...)
 	}

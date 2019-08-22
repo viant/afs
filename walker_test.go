@@ -49,14 +49,14 @@ func TestService_Walk(t *testing.T) {
 
 		actuals := map[string]string{}
 
-		err = service.Walk(ctx, useCase.baseLocation, func(ctx context.Context, baseURL string, relativePath string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		err = service.Walk(ctx, useCase.baseLocation, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 			content := ""
 			if !info.IsDir() {
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					content = string(data)
 				}
 			}
-			actuals[path.Join(relativePath, info.Name())] = content
+			actuals[path.Join(parent, info.Name())] = content
 			return true, nil
 		})
 

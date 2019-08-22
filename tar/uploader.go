@@ -31,7 +31,7 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 		buffer = new(bytes.Buffer)
 	}
 	writer := newWriter(ctx, buffer, URL, uploader)
-	return func(ctx context.Context, relativePath string, info os.FileInfo, reader io.Reader) error {
+	return func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
 		link := ""
 		var options []storage.Option
 		if fileInfo, ok := info.(*file.Info); ok {
@@ -39,7 +39,7 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 			options = make([]storage.Option, 0)
 			options = append(options, fileInfo.Link)
 		}
-		filename := path.Join(relativePath, info.Name())
+		filename := path.Join(parent, info.Name())
 		info = file.NewInfo(filename, info.Size(), info.Mode(), info.ModTime(), info.IsDir(), options...)
 		header, err := tar.FileInfoHeader(info, link)
 		if err != nil {
