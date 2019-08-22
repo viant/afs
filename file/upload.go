@@ -3,8 +3,9 @@ package file
 import (
 	"context"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/object"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-
 	"io"
 	"os"
 	"path"
@@ -29,6 +30,11 @@ func Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader,
 	err := EnsureParentPathExists(filePath, DefaultDirOsMode)
 	if err != nil {
 		return errors.Wrap(err, "unable to create parent for "+filePath)
+	}
+	link := &object.Link{}
+	_, _ = option.Assign(options, &link)
+	if link.Linkname != "" {
+		return os.Symlink(filePath, link.Linkname)
 	}
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, mode)
 	if err != nil {

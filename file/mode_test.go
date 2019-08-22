@@ -2,6 +2,7 @@ package file
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -10,7 +11,7 @@ func TestNewMode(t *testing.T) {
 	var useCases = []struct {
 		description string
 		attrs       string
-		expect      int
+		expect      os.FileMode
 		hasError    bool
 	}{
 		{

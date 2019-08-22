@@ -8,6 +8,7 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"os"
+	"path"
 )
 
 //List list directory or returns a file Info
@@ -17,11 +18,11 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to open "+filePath)
 	}
-	var matcher option.ListMatcher
+	var matcher option.Matcher
 	page := option.Page{}
 	_, _ = option.Assign(options, &matcher, &page)
 	if matcher == nil {
-		matcher = func(info os.FileInfo) bool {
+		matcher = func(parent string, info os.FileInfo) bool {
 			return true
 		}
 	}
@@ -43,12 +44,19 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	var result = make([]storage.Object, 0)
 	result = append(result, object.New(URL, stat, nil))
 	for _, fileInfo := range files {
-		if !matcher(fileInfo) {
+		if !matcher(filePath, fileInfo) {
 			continue
 		}
 		page.Increment()
 		if page.ShallSkip() {
 			continue
+		}
+
+		if fileInfo.Mode()&os.ModeSymlink > 0 {
+			linkname, err := os.Readlink(path.Join(filePath, fileInfo.Name()))
+			if err == nil {
+				fileInfo = NewInfo(fileInfo.Name(), fileInfo.Size(), fileInfo.Mode(), fileInfo.ModTime(), fileInfo.IsDir(), object.NewLink(linkname, url.Join(baseURL, linkname), fileInfo))
+			}
 		}
 		fileURL := url.Join(baseURL, filePath, fileInfo.Name())
 		result = append(result, object.New(fileURL, fileInfo, nil))
