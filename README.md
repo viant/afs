@@ -138,8 +138,8 @@ func main() {
 * **Uploading Content**
 
 ```go
-
 func main() {
+	
     service := afs.New()
     ctx := context.Background()
     keyAuth, err := scp.LocalhostKeyAuth("")
