@@ -168,8 +168,8 @@ func main() {
 
 ```go
 func main() {
-	
-	service := afs.New()
+
+    service := afs.New()
     ctx := context.Background()
     keyAuth, err := scp.LocalhostKeyAuth("")
     if err != nil {
