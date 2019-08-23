@@ -12,6 +12,7 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 - [Introduction](#introduction)
 - [Usage](#usage)
 - [Matchers](#matchers)
+- [Content modifiers](#content-modifiers)
 - [Options](#options)
 - [Storage Implementations](#storage-implementations)
 - [Testing mode](#testing-mode)
@@ -343,7 +344,7 @@ func mian(){
 }	
 ```
 
-## Content modified
+## Content modifiers
 
 To modify resource content on the fly you can use [Modified](option/modifier.go) option.
 
