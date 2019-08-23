@@ -6,9 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -24,7 +27,7 @@ func TestNewService(t *testing.T) {
 		asset        *asset.Resource
 	}{
 		{
-			description:  "location single download",
+			description:  "single resource test",
 			baseLocation: path.Join(baseDir, "afs_new"),
 			asset:        asset.NewFile("foo.txt", []byte("abc"), 0644),
 		},
@@ -33,12 +36,8 @@ func TestNewService(t *testing.T) {
 	var err error
 	for _, useCase := range useCases {
 		service := New()
-
-		_ = asset.Cleanup(fileManager, useCase.baseLocation)
-		_ = fileManager.Create(ctx, useCase.baseLocation, 0744, true)
-
+		_ = asset.Create(fileManager, useCase.baseLocation, []*asset.Resource{})
 		dest := path.Join(useCase.baseLocation, useCase.asset.Name)
-
 		_, err = service.List(ctx, dest, 0, 1)
 		assert.NotNil(t, err, useCase.description)
 
@@ -75,4 +74,65 @@ func TestNewService(t *testing.T) {
 		assert.False(t, has, useCase.description)
 	}
 
+}
+
+func TestService_DownloadWithURL(t *testing.T) {
+	baseDir := os.TempDir()
+	ctx := context.Background()
+	fileManager := file.New()
+
+	var useCases = []struct {
+		description  string
+		baseLocation string
+		assets       []*asset.Resource
+		modifier     option.Modifier
+		expect       map[string]string
+	}{
+		{
+			description:  "location single download",
+			baseLocation: path.Join(baseDir, "afs_download"),
+			assets: []*asset.Resource{
+				asset.NewFile("foo1.txt", []byte("test run by $os.User"), 0644),
+				asset.NewFile("foo2.txt", []byte("test run by $os.User"), 0644),
+			},
+			expect: map[string]string{
+				"foo1.txt": "test run by " + os.Getenv("USER"),
+				"foo2.txt": "test run by $os.User",
+			},
+			modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
+				if info.Name() == "foo1.txt" {
+					data, err := ioutil.ReadAll(reader)
+					if err != nil {
+						return nil, err
+					}
+					_ = reader.Close()
+					expanded := strings.Replace(string(data), "$os.User", os.Getenv("USER"), 1)
+					reader = ioutil.NopCloser(strings.NewReader(expanded))
+				}
+				return reader, nil
+			},
+		},
+	}
+
+	for _, useCase := range useCases {
+		service := New()
+		err := asset.Create(fileManager, useCase.baseLocation, useCase.assets)
+		if !assert.Nil(t, err, useCase.description) {
+			continue
+		}
+		for _, resource := range useCase.assets {
+			URL := path.Join(useCase.baseLocation, resource.Name)
+			reader, err := service.DownloadWithURL(ctx, URL, useCase.modifier)
+			if !assert.Nil(t, err, useCase.description+" "+resource.Name) {
+				continue
+			}
+			actual, _ := ioutil.ReadAll(reader)
+			expect, ok := useCase.expect[resource.Name]
+			if !assert.True(t, ok, useCase.description+" "+resource.Name) {
+				continue
+			}
+			assert.EqualValues(t, expect, actual, useCase.description+" "+resource.Name)
+		}
+
+	}
 }

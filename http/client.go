@@ -20,7 +20,7 @@ func (s *manager) getClient(baseURL string, options ...storage.Option) (*http.Cl
 		options = append(s.options, options...)
 	}
 	var clientProvider ClientProvider
-	_, _ = option.Assign(options, &clientProvider)
+	option.Assign(options, &clientProvider)
 	if clientProvider == nil {
 		if s.client == nil {
 			s.client = http.DefaultClient

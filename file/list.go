@@ -20,7 +20,7 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	}
 	var matcher option.Matcher
 	page := option.Page{}
-	_, _ = option.Assign(options, &matcher, &page)
+	option.Assign(options, &matcher, &page)
 	if matcher == nil {
 		matcher = func(parent string, info os.FileInfo) bool {
 			return true

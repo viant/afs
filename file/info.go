@@ -51,7 +51,7 @@ func (i *Info) Sys() interface{} {
 //NewInfo returns a ew file Info
 func NewInfo(name string, size int64, mode os.FileMode, modificationTime time.Time, isDir bool, options ...storage.Option) os.FileInfo {
 	link := &object.Link{}
-	_, _ = option.Assign(options, &link)
+	option.Assign(options, &link)
 	if link.Source == nil && len(options) == 1 {
 		link.Source = options[0]
 	}

@@ -60,7 +60,7 @@ func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	page := &option.Page{}
 	var matcher option.Matcher
-	_, _ = option.Assign(options, &page, &matcher)
+	option.Assign(options, &page, &matcher)
 	if matcher == nil {
 		matcher = func(parent string, info os.FileInfo) bool {
 			return true

@@ -7,6 +7,7 @@ import (
 	"github.com/viant/afs"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/scp"
 	"io"
@@ -165,4 +166,24 @@ func Example_ReaderError() {
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}
+}
+
+func Example_IgnoreMatcher() {
+	ignoreMatcher, err := matcher.NewIgnore([]string{"*.txt", ".ignore"})
+	if err != nil {
+		log.Fatal(err)
+	}
+	service := afs.New()
+	ctx := context.Background()
+	objects, err := service.List(ctx, "/tmp/folder", ignoreMatcher)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, object := range objects {
+		fmt.Printf("%v %v\n", object.Name(), object.URL())
+		if object.IsDir() {
+			continue
+		}
+	}
+
 }

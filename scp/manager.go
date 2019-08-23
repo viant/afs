@@ -64,7 +64,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	var basicAuth option.BasicAuth
 	var keyAuth KeyAuth
 	var authProvider AuthProvider
-	_, _ = option.Assign(options, &basicAuth, &keyAuth, &authProvider, &timeout)
+	option.Assign(options, &basicAuth, &keyAuth, &authProvider, &timeout)
 	if timeout.Duration == 0 {
 		timeout = option.NewTimeout(defaultTimeoutMs)
 	}

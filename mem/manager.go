@@ -20,9 +20,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 func (m *manager) setErrors(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	errors := option.Errors{}
 	optError := &option.Error{}
-	if _, err := option.Assign(options, &errors, &optError); err != nil {
-		return err
-	}
+	option.Assign(options, &errors, &optError)
 	if optError.Type != "" && len(errors) == 0 {
 		errors = append(errors, optError)
 	}

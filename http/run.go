@@ -14,9 +14,7 @@ func (s *manager) run(ctx context.Context, URL string, request *http.Request, op
 	var basicAuthProvider option.BasicAuth
 	resp := &http.Response{}
 	header := http.Header{}
-	if _, err := option.Assign(options, &clientProvider, &basicAuthProvider, &header, &reader, &resp); err != nil {
-		return nil, err
-	}
+	option.Assign(options, &clientProvider, &basicAuthProvider, &header, &reader, &resp)
 	s.setHeader(request, header)
 	s.authWithBasicCred(request, basicAuthProvider)
 	client, err := s.getClient(URL)

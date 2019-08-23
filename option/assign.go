@@ -1,40 +1,30 @@
 package option
 
 import (
-	"fmt"
 	"github.com/viant/afs/storage"
 	"reflect"
 )
 
-//FilterMode assign mode
-type FilterMode struct {
-	Strict bool
+//Assign assign supplied option, if returns un assign options and true if assign at least one
+func Assign(options []storage.Option, supported ...interface{}) ([]storage.Option, bool) {
+	return assign(options, supported)
 }
 
-//Assign assign supplied option or throw error is unsupported
-func Assign(options []storage.Option, supported ...interface{}) ([]storage.Option, error) {
-	mode := &FilterMode{}
-	_, _ = assign(options, false, append(supported, &mode))
-	return assign(options, mode.Strict, supported)
-}
-
-//Assign assign supplied option or throw error is unsupported
-func assign(options []storage.Option, strictMode bool, supported []interface{}) ([]storage.Option, error) {
+//Assign assign supplied option
+func assign(options []storage.Option, supported []interface{}) ([]storage.Option, bool) {
 	var unfiltered = make([]storage.Option, 0)
 	if len(options) == 0 {
-		return options, nil
+		return options, false
 	}
 	if len(supported) == 0 {
-		if !strictMode {
-			return unfiltered, nil
-		}
-		return nil, fmt.Errorf("unsupported option %T", options[0])
+		return options, false
 	}
+
 	var index = make(map[reflect.Type]interface{})
 	for i := range supported {
 		index[reflect.TypeOf(supported[i]).Elem()] = supported[i]
 	}
-	var err error
+	assigned := false
 	for i := range options {
 		option := options[i]
 		if option == nil {
@@ -52,14 +42,11 @@ func assign(options []storage.Option, strictMode bool, supported []interface{}) 
 			}
 		}
 		if !ok {
-			if strictMode {
-				err = fmt.Errorf("unsupported option %T", options[i])
-			} else {
-				unfiltered = append(unfiltered, options[i])
-			}
+			unfiltered = append(unfiltered, options[i])
 			continue
 		}
+		assigned = true
 		reflect.ValueOf(target).Elem().Set(optionValue)
 	}
-	return unfiltered, err
+	return unfiltered, assigned
 }

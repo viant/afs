@@ -21,7 +21,7 @@ type uploader struct {
 func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
 	var buffer *bytes.Buffer
 	var uploader storage.Uploader
-	_, _ = option.Assign(options, &buffer, &uploader)
+	option.Assign(options, &buffer, &uploader)
 	if uploader == nil {
 		uploader = u.uploader
 	}

@@ -32,7 +32,7 @@ func Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader,
 		return errors.Wrap(err, "unable to create parent for "+filePath)
 	}
 	link := &object.Link{}
-	_, _ = option.Assign(options, &link)
+	option.Assign(options, &link)
 	if link.Linkname != "" {
 		return os.Symlink(filePath, link.Linkname)
 	}

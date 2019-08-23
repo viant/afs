@@ -11,7 +11,9 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 - [Motivation](#motivation)
 - [Introduction](#introduction)
 - [Usage](#usage)
+- [Matchers](#matchers)
 - [Options](#options)
+- [Storage Implementations](#storage-implementations)
 - [Testing mode](#testing-mode)
 - [Storage Manager](#storage-managers)
 - [GoCover](#gocover)
@@ -262,19 +264,118 @@ func main() {
 	}
 }
 ```
+## Matchers
+
+To filter source content you can use [Matcher](option/matcher.go) option. 
+The following have been implemented.
+
+
+**[Basic Matcher](matcher/basic.go)**
+
+```go
+func main() {
+    matcher, err := NewBasic("/data", ".avro", nil)
+    service := afs.New()
+    ctx := context.Background()
+    err := service.Copy(ctx, "/tmp/data", "s3://mybucket/data/", matcher.Match)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+**[Filepath matcher](matcher/filepath.go)**
+
+OS style filepath match, with the following terms:
+- '*'         matches any sequence of non-Separator characters
+- '?'         matches any single non-Separator character
+- '[' [ '^' ] { character-range } ']'
+
+```go
+
+func main() {
+    matcher := matcher.Filepath("*.avro")
+    service := afs.New()
+    ctx := context.Background()
+    err := service.Copy(ctx, "/tmp/data", "gs://mybucket/data/", matcher)
+    if err != nil {
+        log.Fatal(err)
+    }
+}	
+		
+
+```
+
+**[Ignore Matcher](matcher/ignore.go)**
+
+Ignore matcher represents matcher that matches file that are not in the ignore rules.
+The syntax of ignore borrows heavily from that of .gitignore; see https://git-scm.com/docs/gitignore or man gitignore for a full reference.
+
+
+```go
+func mian(){
+	ignoreMatcher, err := matcher.NewIgnore([]string{"*.txt", ".ignore"})
+  	//or matcher.NewIgnore(option.NewLocation(".cloudignore"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	service := afs.New()
+	ctx := context.Background()
+	objects, err := service.List(ctx, "/tmp/folder", ignoreMatcher.Match)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, object := range objects {
+		fmt.Printf("%v %v\n", object.Name(), object.URL())
+		if object.IsDir() {
+			continue
+		}
+	}
+}	
+```
+
+## Content modified
+
+To modify resource content on the fly you can use [Modified](option/modifier.go) option.
+
+```go
+
+func main() {
+	
+	modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
+        if strings.HasSuffix(info.Name() ,".info") {
+            data, err := ioutil.ReadAll(reader)
+            if err != nil {
+                return nil, err
+            }
+            _ = reader.Close()
+            expanded := strings.Replace(string(data), "$os.User", os.Getenv("USER"), 1)
+            reader = ioutil.NopCloser(strings.NewReader(expanded))
+        }
+        return reader, nil
+    }
+	service := afs.New()
+	reader ,err := service.DownloadWithURL(ctx, "s3://mybucket/meta.info", modifier)
+	if err != nil {
+	    log.Fatal(err)	
+	}
+	defer reader.Close()
+    content, err := ioutil.ReadAll(reader)
+    if err != nil {
+        log.Fatal(err)	
+    }
+	fmt.Printf("content: %s\n", content)
+	
+}
+```
+
 
 ## Options
 
-* **[Matcher](option/matcher.go).**
-
-Filters resources
 
 * **[Page](option/page.go)**
 
-Page paginates list result by offset and limit.
-
-* **[Modifier](option/modifier.go)**
-
+To control number and position of listed resources you can yse page option.
 
 * **[Timeout](option/timeout.go)**
 
@@ -288,6 +389,26 @@ Provides user/password auth.
 
 Groups options by source or destination options. This options work with Copy or Move operations.
 
+```go
+
+func main() {
+    service := afs.New()
+
+    secretPath :=  path.Join(os.Getenv("HOME"), ".secret","gcp.json")
+    jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
+    if err != nil {
+    	log.Fatal(err)
+    }
+    sourceOptions := option.NewSource(jwtConfig)
+    authConfig, err := s3.NewAuthConfig(option.NewLocation("aws.json"))
+    if err != nil {
+        log.Fatal(err)
+    }
+    destOptions := option.NewDest(authConfig)
+	err = service.Copy(ctx, "gs://mybucket/data", "s3://mybucket/data",  sourceOptions, destOptions)
+}
+
+```
 
 Check out [storage manager](#storage-managers) for additional options. 
 
@@ -310,16 +431,19 @@ In addition you can use error options to test exception handling.
 
 - **DownloadError**
 ```go
+func mian() {
 	service := afs.NewFaker()
 	ctx := context.Background()
 	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
 	if err != nil {
 		log.Fatalf("expect upload error: %v", err)
 	}
+}
 ```
 
 - **ReaderError**
 ```go
+func mian() {
     service := afs.NewFaker()
 	ctx := context.Background()
 	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
@@ -330,16 +454,19 @@ In addition you can use error options to test exception handling.
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}
+}
 ```
 
 - **UploadError**
 ```go
+func mian() {
     service := afs.NewFaker()
     ctx := context.Background()
     err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
     if err != nil {
         log.Fatalf("expect upload error: %v", err)
     }
+}
 ```
 
 
@@ -396,13 +523,11 @@ func Test_XXX(t *testing.T) {
 
 ```
 
-
 ## GoCover
 
 [![GoCover](https://gocover.io/github.com/viant/afs)](https://gocover.io/github.com/viant/afs)
 
-	
-	
+
 <a name="License"></a>
 ## License
 

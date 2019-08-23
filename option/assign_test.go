@@ -24,23 +24,22 @@ func TestFilter(t *testing.T) {
 
 	var useCases = []struct {
 		description string
-		strictMode  bool
 		options     []storage.Option
 		target      interface{}
-		hasError    bool
+		assigned    bool
 	}{
 
 		{
 			description: "test interface option",
-			strictMode:  true,
 			options: []storage.Option{
 				io.Reader(new(bytes.Buffer)),
 			},
-			target: &reader,
+			assigned: true,
+			target:   &reader,
 		},
 		{
 			description: "test function option",
-			strictMode:  true,
+			assigned:    true,
 			options: []storage.Option{
 				Calc(func(ops ...int) int {
 					return 0
@@ -55,7 +54,7 @@ func TestFilter(t *testing.T) {
 
 		{
 			description: "test struct option",
-			strictMode:  true,
+			assigned:    true,
 			options: []storage.Option{
 				&testFilter{message: "abc"},
 			},
@@ -68,13 +67,12 @@ func TestFilter(t *testing.T) {
 		if useCase.target != nil {
 			targets = append(targets, useCase.target)
 		}
-		targets = append(targets, &FilterMode{useCase.strictMode})
-		_, err := Assign(useCase.options, targets...)
-		if useCase.hasError {
-			assert.NotNil(t, err, useCase.description)
+
+		_, assigned := Assign(useCase.options, targets...)
+		if !assert.EqualValues(t, assigned, useCase.assigned, useCase.description) {
 			continue
 		}
-		if !assert.Nil(t, err, useCase.description) {
+		if !assigned {
 			continue
 		}
 		if useCase.target != nil {

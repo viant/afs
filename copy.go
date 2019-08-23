@@ -58,7 +58,7 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	var walker storage.Walker
 	var uploader storage.BatchUploader
 	var matcher option.Matcher
-	_, _ = option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader)
+	option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader)
 	if matcher != nil {
 		*sourceOptions = append(*sourceOptions, matcher)
 	}

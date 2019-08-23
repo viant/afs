@@ -91,6 +91,9 @@ func (m *Manager) Download(ctx context.Context, object storage.Object, options .
 //DownloadWithURL downloads content
 func (m *Manager) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
+
+	var modifier option.Modifier
+	option.Assign(options, &modifier)
 	storager, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err

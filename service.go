@@ -73,9 +73,7 @@ func (s *service) Download(ctx context.Context, object storage.Object, options .
 		return nil, errors.New("object was empty")
 	}
 	var modifier option.Modifier
-	if options, err = option.Assign(options, &modifier); err != nil {
-		return nil, err
-	}
+	option.Assign(options, &modifier)
 	manager, err := s.manager(ctx, object.URL(), options...)
 	if err != nil {
 		return nil, err
@@ -148,9 +146,7 @@ func (s *service) exists(ctx context.Context, manager storage.Manager, URL strin
 func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error) {
 	url.Normalize(URL, file.Scheme)
 	var modifier option.Modifier
-	if options, err = option.Assign(options, &modifier); err != nil {
-		return nil, err
-	}
+	option.Assign(options, &modifier)
 	manager, err := s.manager(ctx, URL, options...)
 	if err != nil {
 		return nil, err
