@@ -352,7 +352,7 @@ To modify resource content on the fly you can use [Modified](option/modifier.go)
 
 func main() {
 	
-	modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
+    modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
         if strings.HasSuffix(info.Name() ,".info") {
             data, err := ioutil.ReadAll(reader)
             if err != nil {
@@ -365,18 +365,18 @@ func main() {
         return reader, nil
     }
 	
-	service := afs.New()
-	reader ,err := service.DownloadWithURL(ctx, "s3://mybucket/meta.info", modifier)
-	if err != nil {
-	    log.Fatal(err)	
-	}
-	
-	defer reader.Close()
+    service := afs.New()
+    reader ,err := service.DownloadWithURL(ctx, "s3://mybucket/meta.info", modifier)
+    if err != nil {
+        log.Fatal(err)	
+    }
+    
+    defer reader.Close()
     content, err := ioutil.ReadAll(reader)
     if err != nil {
         log.Fatal(err)	
     }
-	fmt.Printf("content: %s\n", content)
+    fmt.Printf("content: %s\n", content)
 	
 }
 ```
