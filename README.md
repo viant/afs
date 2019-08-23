@@ -110,6 +110,7 @@ func main() {
 
 ```go
 func main() {
+	
     service := afs.New()
     ctx := context.Background()
     objects, err := service.List(ctx, "/tmp/folder")
@@ -167,6 +168,7 @@ func main() {
 
 ```go
 func main() {
+	
 	service := afs.New()
     ctx := context.Background()
     keyAuth, err := scp.LocalhostKeyAuth("")
@@ -186,6 +188,7 @@ Walker can be created for tar or zip archive.
 
 ```go
 func main() {
+	
     ctx := context.Background()
 	service := afs.New()
 	walker := tar.NewWalker(s3afs.New())
@@ -202,6 +205,7 @@ Uploader can be created for tar or zip archive.
 
 ```go
 func main() {
+	
     ctx := context.Background()
 	service := afs.New()
 	uploader := zip.NewBatchUploader(gsafs.New())
@@ -217,6 +221,7 @@ func main() {
 
 ```go
 func main() {
+	
     service := afs.New()
 	ctx := context.Background()
 	keyAuth, err := scp.LocalhostKeyAuth("")
@@ -234,6 +239,7 @@ func main() {
 
 ```go
 func main() {
+	
     service := afs.New()
 	ctx := context.Background()
 	upload, closer, err := service.Uploader(ctx, "/tmp/clone")
@@ -274,6 +280,7 @@ The following have been implemented.
 
 ```go
 func main() {
+	
     matcher, err := NewBasic("/data", ".avro", nil)
     service := afs.New()
     ctx := context.Background()
@@ -294,6 +301,7 @@ OS style filepath match, with the following terms:
 ```go
 
 func main() {
+	
     matcher := matcher.Filepath("*.avro")
     service := afs.New()
     ctx := context.Background()
@@ -314,6 +322,7 @@ The syntax of ignore borrows heavily from that of .gitignore; see https://git-sc
 
 ```go
 func mian(){
+	
 	ignoreMatcher, err := matcher.NewIgnore([]string{"*.txt", ".ignore"})
   	//or matcher.NewIgnore(option.NewLocation(".cloudignore"))
 	if err != nil {
@@ -392,8 +401,8 @@ Groups options by source or destination options. This options work with Copy or 
 ```go
 
 func main() {
+	
     service := afs.New()
-
     secretPath :=  path.Join(os.Getenv("HOME"), ".secret","gcp.json")
     jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
     if err != nil {
@@ -431,6 +440,7 @@ In addition you can use error options to test exception handling.
 
 - **DownloadError**
 ```go
+
 func mian() {
 	service := afs.NewFaker()
 	ctx := context.Background()
@@ -443,6 +453,7 @@ func mian() {
 
 - **ReaderError**
 ```go
+
 func mian() {
     service := afs.NewFaker()
 	ctx := context.Background()
@@ -459,6 +470,7 @@ func mian() {
 
 - **UploadError**
 ```go
+
 func mian() {
     service := afs.NewFaker()
     ctx := context.Background()
