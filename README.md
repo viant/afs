@@ -349,24 +349,37 @@ func mian(){
 To modify resource content on the fly you can use [Modified](option/modifier.go) option.
 
 ```go
+package main
+
+import (
+	"bytes"
+	"context"
+	"log"
+	"github.com/viant/afs"
+	"io"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+)
+
+func modifyContent(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
+   if strings.HasSuffix(info.Name() ,".info") {
+       data, err := ioutil.ReadAll(reader)
+       if err != nil {
+           return nil, err
+       }
+       _ = reader.Close()
+       expanded := strings.Replace(string(data), "$os.User", os.Getenv("USER"), 1)
+       reader = ioutil.NopCloser(strings.NewReader(expanded))
+   }
+   return reader, nil
+}                           
 
 func main() {
-	
-    modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
-        if strings.HasSuffix(info.Name() ,".info") {
-            data, err := ioutil.ReadAll(reader)
-            if err != nil {
-                return nil, err
-            }
-            _ = reader.Close()
-            expanded := strings.Replace(string(data), "$os.User", os.Getenv("USER"), 1)
-            reader = ioutil.NopCloser(strings.NewReader(expanded))
-        }
-        return reader, nil
-    }
-	
+
     service := afs.New()
-    reader ,err := service.DownloadWithURL(ctx, "s3://mybucket/meta.info", modifier)
+    reader ,err := service.DownloadWithURL(context.Background(), "s3://mybucket/meta.info", modifyContent)
     if err != nil {
         log.Fatal(err)	
     }
