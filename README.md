@@ -500,7 +500,7 @@ func mian() {
 
 ## Test setup utilities
 
-Package [asset](asset) defines basic utilities to quickly manage asset related unit test.
+Package [asset](asset) defines basic utilities to quickly manage asset related unit tests.
 
 ```go
 
