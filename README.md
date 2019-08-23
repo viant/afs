@@ -346,7 +346,7 @@ func mian(){
 
 ## Content modifiers
 
-To modify resource content on the fly you can use [Modified](option/modifier.go) option.
+To modify resource content on the fly you can use [Modifier](option/modifier.go) option.
 
 ```go
 package main
