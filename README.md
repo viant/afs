@@ -364,11 +364,13 @@ func main() {
         }
         return reader, nil
     }
+	
 	service := afs.New()
 	reader ,err := service.DownloadWithURL(ctx, "s3://mybucket/meta.info", modifier)
 	if err != nil {
 	    log.Fatal(err)	
 	}
+	
 	defer reader.Close()
     content, err := ioutil.ReadAll(reader)
     if err != nil {
