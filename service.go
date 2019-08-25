@@ -210,23 +210,25 @@ func (s *service) manager(ctx context.Context, URL string, options ...storage.Op
 	if noCache.Source == option.NoCacheBaseURL {
 		return s.newManager(ctx, scheme, options...)
 	}
-	baseURL, _ := url.Base(URL, scheme)
+	key, _ := url.Base(URL, scheme)
+	key += url.SchemeExtensionURL(URL)
+
 	s.mutex.RLock()
-	result, ok := s.managers[baseURL]
+	result, ok := s.managers[key]
 	s.mutex.RUnlock()
 	if ok {
 		return result, nil
 	}
 	s.mutex.Lock()
 	//retry in case
-	result, ok = s.managers[baseURL]
+	result, ok = s.managers[key]
 	if ok {
 		return result, nil
 	}
 	defer s.mutex.Unlock()
 	manager, err := s.newManager(ctx, scheme, options...)
 	if err == nil {
-		s.managers[baseURL] = manager
+		s.managers[key] = manager
 	}
 	return manager, err
 }
