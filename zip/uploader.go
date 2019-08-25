@@ -4,8 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"fmt"
-
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -16,22 +14,19 @@ import (
 
 type uploader struct {
 	uploader storage.Uploader
+	buffer   *bytes.Buffer
 }
 
 func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
-	var buffer *bytes.Buffer
 	var uploader storage.Uploader
-	option.Assign(options, &buffer, &uploader)
+	option.Assign(options, &u.buffer, &uploader)
 	if uploader == nil {
 		uploader = u.uploader
 	}
-	if buffer == nil && uploader == nil {
-		return nil, nil, fmt.Errorf("invalid options: %T and %T were empty", buffer, uploader)
+	if u.buffer == nil {
+		u.buffer = new(bytes.Buffer)
 	}
-	if buffer == nil {
-		buffer = new(bytes.Buffer)
-	}
-	writer := newWriter(ctx, buffer, URL, uploader)
+	writer := newWriter(ctx, u.buffer, URL, uploader)
 	return func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
 		filename := path.Join(parent, info.Name())
 		mode := info.Mode().Perm()
@@ -56,7 +51,12 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 	}, writer, nil
 }
 
+//newBatchUploader returns a batch uploader
+func newBatchUploader(dest storage.Uploader) *uploader {
+	return &uploader{uploader: dest}
+}
+
 //NewBatchUploader returns a batch uploader
 func NewBatchUploader(dest storage.Uploader) storage.BatchUploader {
-	return &uploader{uploader: dest}
+	return newBatchUploader(dest)
 }

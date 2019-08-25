@@ -14,15 +14,30 @@ import (
 
 type walker struct {
 	storage.Downloader
+	data []byte
+	URL  string
+}
+
+func (w *walker) load(ctx context.Context, URL string, options ...storage.Option) ([]byte, error) {
+	if len(w.data) > 0 && URL == w.URL {
+		return w.data, nil
+	}
+	rawReader, err := w.DownloadWithURL(ctx, URL, options...)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(rawReader)
+	if err != nil {
+		return nil, err
+	}
+	w.URL = URL
+	w.data = data
+	return w.data, nil
 }
 
 func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
-	rawReader, err := w.DownloadWithURL(ctx, URL, options...)
-	if err != nil {
-		return err
-	}
-	data, err := ioutil.ReadAll(rawReader)
+	data, err := w.load(ctx, URL, options...)
 	if err != nil {
 		return err
 	}
@@ -56,6 +71,11 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 }
 
 //NewWalker returns a walker
-func NewWalker(download storage.Downloader) storage.Walker {
+func newWalker(download storage.Downloader) *walker {
 	return &walker{Downloader: download}
+}
+
+//NewWalker returns a walker
+func NewWalker(downloader storage.Downloader) storage.Walker {
+	return newWalker(downloader)
 }

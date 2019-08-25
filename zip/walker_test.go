@@ -1,12 +1,12 @@
-package zip
+package zip_test
 
 import (
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/zip"
 	"io"
 	"io/ioutil"
 	"os"
@@ -41,7 +41,8 @@ func TestWalker_Walk(t *testing.T) {
 	}
 
 	for _, useCase := range useCases {
-		walker := NewWalker(afs.New())
+		walker := zip.NewWalker(afs.New())
+
 		ctx := context.Background()
 		actuals := make(map[string]*asset.Resource)
 		err := walker.Walk(ctx, useCase.location, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
@@ -58,7 +59,6 @@ func TestWalker_Walk(t *testing.T) {
 					return false, err
 				}
 			}
-			fmt.Printf("actual: %v\n", resourceLocation)
 			actuals[resourceLocation] = asset.New(parent, info.Mode(), info.IsDir(), linkName, data)
 			return true, nil
 		})

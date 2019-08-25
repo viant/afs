@@ -2,7 +2,6 @@ package zip
 
 import (
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
@@ -64,8 +63,7 @@ func TestUploader_Uploader(t *testing.T) {
 		assert.Nil(t, err, useCase.description)
 		_, err = os.Stat(useCase.destURL)
 		assert.Nil(t, err, useCase.description)
-		fmt.Printf("%v\n", useCase.destURL)
-		//_ = asset.Cleanup(fileManager, useCase.destURL)
+		_ = asset.Cleanup(fileManager, useCase.destURL)
 
 	}
 
