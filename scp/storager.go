@@ -61,11 +61,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	page := &option.Page{}
 	var matcher option.Matcher
 	option.Assign(options, &page, &matcher)
-	if matcher == nil {
-		matcher = func(parent string, info os.FileInfo) bool {
-			return true
-		}
-	}
+	matcher = option.GetMatcher(matcher)
 	var result = make([]os.FileInfo, 0)
 	err := s.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
 		if !matcher(relative, info) {

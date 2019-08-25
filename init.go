@@ -5,6 +5,8 @@ import (
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/mem"
 	"github.com/viant/afs/scp"
+	"github.com/viant/afs/tar"
+	"github.com/viant/afs/zip"
 )
 
 func init() {
@@ -14,4 +16,6 @@ func init() {
 	registry.Register(http.Scheme, http.Provider)
 	registry.Register(http.SecureScheme, http.Provider)
 	registry.Register(scp.Scheme, scp.Provider)
+	registry.Register(zip.Scheme, zip.Provider)
+	registry.Register(tar.Scheme, tar.Provider)
 }

@@ -21,11 +21,7 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	var matcher option.Matcher
 	page := option.Page{}
 	option.Assign(options, &matcher, &page)
-	if matcher == nil {
-		matcher = func(parent string, info os.FileInfo) bool {
-			return true
-		}
-	}
+	matcher = option.GetMatcher(matcher)
 	defer func() { _ = file.Close() }()
 	stat, err := file.Stat()
 	if err != nil {

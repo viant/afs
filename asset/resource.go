@@ -2,6 +2,7 @@ package asset
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
 	"io"
@@ -13,28 +14,49 @@ import (
 
 //Resource represents a test resource
 type Resource struct {
-	Dir  bool
-	Link string
-	Name string
-	Mode os.FileMode
-	Data []byte
+	Dir      bool
+	Link     string
+	Name     string
+	Mode     os.FileMode
+	Data     []byte
+	FileInfo os.FileInfo
 }
 
 //Info returns file info
-func (r *Resource) Info() os.FileInfo {
+func (r Resource) Info() os.FileInfo {
+	if r.FileInfo != nil {
+		return r.FileInfo
+	}
 	name := r.Name
 	if strings.Contains(name, "/") {
 		_, name = path.Split(r.Name)
 	}
-	return file.NewInfo(name, int64(len(r.Data)), r.Mode, time.Now(), r.Dir, object.NewLink(r.Link, r.Link, nil))
+	r.FileInfo = file.NewInfo(name, int64(len(r.Data)), r.Mode, time.Now(), r.Dir, object.NewLink(r.Link, r.Link, nil))
+	return r.FileInfo
 }
 
 //Reader returns a reader
-func (r *Resource) Reader() io.Reader {
+func (r Resource) Reader() io.Reader {
 	if r.Dir {
 		return nil
 	}
 	return bytes.NewReader(r.Data)
+}
+
+func (r *Resource) MergeInto(resource *Resource) error {
+	if r.Dir != resource.Dir {
+		not := ""
+		if !resource.Dir {
+			not = "not "
+		}
+		return fmt.Errorf("%v: is %vdirectory", resource.Name, not)
+	}
+	r.Data = resource.Data
+	r.Mode = resource.Mode
+	if resource.FileInfo != nil {
+		r.FileInfo = resource.FileInfo
+	}
+	return nil
 }
 
 //NewFile create a file resource

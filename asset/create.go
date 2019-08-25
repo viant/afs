@@ -11,8 +11,8 @@ import (
 )
 
 //Create creates supplied assets, links or folders in provided location (for testing purpose)
-func Create(manager storage.Manager, URL string, assets []*Resource) error {
-	if len(assets) == 0 {
+func Create(manager storage.Manager, URL string, resources []*Resource) error {
+	if len(resources) == 0 {
 		return nil
 	}
 	URL = url.Normalize(URL, manager.Scheme())
@@ -22,7 +22,7 @@ func Create(manager storage.Manager, URL string, assets []*Resource) error {
 	_ = manager.Create(ctx, URL, 0744, true)
 	baseURL, URLPath := url.Base(URL, manager.Scheme())
 
-	for _, asset := range assets {
+	for _, asset := range resources {
 		if !asset.Dir {
 			continue
 		}
@@ -32,7 +32,7 @@ func Create(manager storage.Manager, URL string, assets []*Resource) error {
 			return err
 		}
 	}
-	for _, asset := range assets {
+	for _, asset := range resources {
 		if asset.Dir || asset.Link != "" {
 			continue
 		}
@@ -42,7 +42,7 @@ func Create(manager storage.Manager, URL string, assets []*Resource) error {
 		}
 	}
 
-	for _, asset := range assets {
+	for _, asset := range resources {
 		if asset.Link == "" {
 			continue
 		}

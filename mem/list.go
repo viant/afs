@@ -14,11 +14,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	_, _ = option.Assign(options, &page, &matcher)
 	root := s.Root
 	object, err := root.Lookup(location, 0)
-	if matcher == nil {
-		matcher = func(parent string, info os.FileInfo) bool {
-			return true
-		}
-	}
+	matcher = option.GetMatcher(matcher)
 	if err != nil {
 		return nil, err
 	}

@@ -25,10 +25,10 @@ type registry struct {
 	*sync.RWMutex
 }
 
-func (r *registry) Register(uRLScheme string, provider Provider) {
+func (r *registry) Register(URLScheme string, provider Provider) {
 	r.Lock()
 	defer r.Unlock()
-	r.proviers[uRLScheme] = provider
+	r.proviers[URLScheme] = provider
 
 }
 

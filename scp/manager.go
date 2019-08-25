@@ -35,11 +35,7 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 	baseURL, URLPath := url.Base(URL, Scheme)
 	var matcher option.Matcher
 	options, _ = option.Assign(options, &matcher)
-	if matcher == nil {
-		matcher = func(parent string, info os.FileInfo) bool {
-			return true
-		}
-	}
+	matcher = option.GetMatcher(matcher)
 	srv, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return err
