@@ -1,4 +1,4 @@
-package tar
+package tar_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/viant/afs"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/tar"
 	"io"
 	"io/ioutil"
 	"os"
@@ -40,7 +41,7 @@ func TestWalker_Walk(t *testing.T) {
 	}
 
 	for _, useCase := range useCases {
-		walker := NewWalker(afs.New())
+		walker := tar.NewWalker(afs.New())
 		ctx := context.Background()
 		actuals := make(map[string]*asset.Resource)
 		err := walker.Walk(ctx, useCase.location, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
