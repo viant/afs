@@ -27,7 +27,6 @@ type Manager struct {
 //List lists content for supplied URL
 func (m *Manager) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-
 	storager, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err
@@ -49,6 +48,10 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 		return objects, nil
 	}
 
+	if files[0].Name() == "" {
+		_, name := path.Split(URLPath)
+		files[0] = file.NewInfo(name, files[0].Size(), files[0].Mode(), files[0].ModTime(), files[0].IsDir())
+	}
 	objects[0] = object.New(url.Join(baseURL, URLPath), files[0], nil)
 	for i := 1; i < len(files); i++ {
 		fileURL := url.Join(baseURL, path.Join(URLPath, files[i].Name()))
@@ -91,9 +94,6 @@ func (m *Manager) Download(ctx context.Context, object storage.Object, options .
 //DownloadWithURL downloads content
 func (m *Manager) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-
-	var modifier option.Modifier
-	option.Assign(options, &modifier)
 	storager, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err
