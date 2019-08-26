@@ -188,19 +188,21 @@ func main() {
 ```go
 
 func main() {
+	
     secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
-	auth, err := gs.NewJwtConfig(option.NewLocation(secretPath))
-	if err != nil {
-		return
-	}
-	sourceURL := "mylocalPath/"
-	destURL := "gs:mybucket/test.zip/zip://localhost/dir1"
-	service := afs.New()
-	ctx := context.Background()
-	err = service.Copy(ctx, sourceURL, destURL, option.NewDest(auth))
-	if err != nil {
-		log.Fatal(err)
-	}
+    auth, err := gs.NewJwtConfig(option.NewLocation(secretPath))
+    if err != nil {
+        return
+    }
+    sourceURL := "mylocalPath/"
+    destURL := "gs:mybucket/test.zip/zip://localhost/dir1"
+    service := afs.New()
+    ctx := context.Background()
+    err = service.Copy(ctx, sourceURL, destURL, option.NewDest(auth))
+    if err != nil {
+        log.Fatal(err)
+    }
+
 }	
 ```
 
