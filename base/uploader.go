@@ -2,7 +2,6 @@ package base
 
 import (
 	"context"
-	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -21,13 +20,13 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 		URL := url.Join(URL, location)
 		if info.Mode()&os.ModeSymlink > 0 {
 			if rawInfo, ok := info.(*file.Info); ok && rawInfo.Linkname != "" {
-				fmt.Printf("is link %v\n", rawInfo)
 				options = append(options, rawInfo.Link)
 			}
 		}
 		if info.IsDir() {
 			return u.Manager.Create(ctx, URL, info.Mode(), info.IsDir(), options...)
 		}
+
 		return u.Manager.Upload(ctx, URL, info.Mode(), reader, options...)
 	}
 	return handler, u.Manager, nil
