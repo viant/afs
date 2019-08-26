@@ -13,6 +13,7 @@ import (
 
 //NewInfo returns new info from SCP response
 func NewInfo(createResponse string, modified *time.Time) (os.FileInfo, error) {
+
 	elements := strings.SplitN(createResponse, " ", 3)
 	if len(elements) != 3 {
 		return nil, fmt.Errorf("invalid download createResponse: %v", createResponse)
@@ -71,6 +72,6 @@ func InfoToCreateCmd(info os.FileInfo) string {
 		locationType = "D"
 		size = 0
 	}
-	fileMode := string(fmt.Sprintf("%v%04o", locationType, mode)[:5])
+	fileMode := string(fmt.Sprintf("%v%04o", locationType, mode.Perm())[:5])
 	return fmt.Sprintf("%v %d %s\n", fileMode, size, info.Name())
 }

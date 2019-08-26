@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -224,15 +226,17 @@ func (s *session) upload(location string) (storage.Upload, io.Closer, error) {
 	if s.mode == modeRead {
 		return nil, nil, fmt.Errorf("invalid mode")
 	}
-
 	err := s.init(location)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to initialise session")
 	}
 
-	if err = s.readStatus(); err != nil {
+
+	err = s.readStatus();
+	if err != nil {
 		return nil, nil, err
 	}
+
 
 	var prevRelativeElements = make([]string, 0)
 	handler := func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
@@ -255,6 +259,13 @@ func (s *session) upload(location string) (storage.Upload, io.Closer, error) {
 }
 
 func (s *session) push(info os.FileInfo, reader io.Reader) error {
+	if info.Mode() & os.ModeSymlink > 0 {
+		//update size for symlink, otherwise size may be reported incorrectly
+		data, _ :=  ioutil.ReadAll(reader)
+		info = file.NewInfo(info.Name(), int64(len(data)), info.Mode().Perm(), info.ModTime(), info.IsDir())
+		reader = bytes.NewReader(data)
+	}
+
 	timestampCmd := InfoToTimestampCmd(info)
 	err := s.runCmd(timestampCmd)
 	if err == nil {
@@ -265,11 +276,11 @@ func (s *session) push(info os.FileInfo, reader io.Reader) error {
 		return err
 	}
 	if !info.IsDir() {
-		_, err = io.Copy(s.writer, reader)
-		if err != nil {
+		if _, err = io.Copy(s.writer, reader); err != nil {
 			return err
 		}
-		if err = s.writeStatusOK(); err == nil {
+		err = s.writeStatusOK();
+		if err == nil {
 			err = s.readStatus()
 		}
 	}
