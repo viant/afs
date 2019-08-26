@@ -15,6 +15,7 @@ func Host(URL string) string {
 	if index == -1 {
 		return Localhost
 	}
+
 	fragment := string(URL[index+3:])
 	index = strings.Index(fragment, "/")
 	if index != -1 {

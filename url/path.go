@@ -1,7 +1,6 @@
 package url
 
 import (
-	"net/url"
 	"strings"
 )
 
@@ -11,10 +10,16 @@ func Path(URL string) string {
 	if location == "" {
 		return "/"
 	}
-	if strings.Contains(URL, ":/") {
-		if parsed, err := url.Parse(URL); err == nil {
-			return parsed.Path
+
+	if index := strings.Index(URL, "://"); index != -1 {
+		location = string(URL[index+3:])
+		index := strings.Index(location, "/")
+		if index == -1 {
+			return ""
+		} else {
+			location = string(location[index:])
 		}
+
 	}
 	return location
 }
