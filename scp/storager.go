@@ -79,7 +79,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Walk visits location resources
-func (s *storager) Walk(ctx context.Context, location string, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error)) error {
+func (s *storager) Walk(ctx context.Context, location string, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
 	session, err := newSession(s.Client, modeRead, true, s.timeout)
 	if err != nil {
 		return err
