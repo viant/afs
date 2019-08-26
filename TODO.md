@@ -1,5 +1,6 @@
-- More options
- - Cloud ignore matcher
- - Prefix, suffix reg expr matcher
- - Add Zip storager
- - Add Tar storager
+### TODO list
+
+- add git ignore example
+- add docker connector
+- add git connector
+    

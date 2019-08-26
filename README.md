@@ -183,6 +183,25 @@ func main() {
 }
 ```
 
+* **Archiving content**
+
+```go
+    secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
+	auth, err := gs.NewJwtConfig(option.NewLocation(secretPath))
+	if err != nil {
+		return
+	}
+	sourceURL := "mylocalPath/"
+	destURL := "gs:e2etst/test.zip/zip://localhost/dir1"
+	service := afs.New()
+	ctx := context.Background()
+	err = service.Copy(ctx, sourceURL, destURL, option.NewDest(auth))
+	if err != nil {
+		log.Fatal(err)
+	}
+```
+
+
 * **Archive Walker**
 
 Walker can be created for tar or zip archive.
@@ -347,6 +366,21 @@ func mian(){
 ## Content modifiers
 
 To modify resource content on the fly you can use [Modifier](option/modifier.go) option.
+
+```go
+func main() {
+	service := afs.New()
+	ctx := context.Background()
+	sourceURL := "file:/tmp/app.war/zip://localhost/WEB-INF/classes/config.properties"
+	destURL := "file:/tmp/app.war/zip://localhost/"
+	err := service.Copy(ctx, sourceURL, destURL, option.Replace(map[string]string{
+		"${changeMe}": os.Getenv("USER"),
+	}))
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ```go
 package main
