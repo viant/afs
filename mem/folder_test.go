@@ -67,7 +67,7 @@ func TestFolder_Lookup(t *testing.T) {
 		}
 
 		baseURL, _ := url.Base(useCase.URL, Scheme)
-		root := manager.Root(baseURL)
+		root := manager.Root(ctx, baseURL)
 		object, err := root.Lookup(useCase.URL, 0)
 
 		if useCase.hasError {
