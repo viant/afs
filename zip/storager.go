@@ -23,6 +23,7 @@ import (
 type storager struct {
 	//underlying archive URL
 	walker     *walker
+	mode       os.FileMode
 	URL        string
 	exists     bool
 	closer     io.Closer
@@ -39,7 +40,7 @@ func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
 //List lists archive assets
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	if !s.exists {
-		return nil, fmt.Errorf("%v: not found", location)
+		return nil, fmt.Errorf("%v: not found", s.URL)
 	}
 	var result = make([]os.FileInfo, 0)
 	location = strings.Trim(location, "/")
@@ -61,15 +62,31 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Walk visits location resources
-func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error)) error {
+func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
 	if !s.exists {
-		return fmt.Errorf("%v: not found", location)
+		return fmt.Errorf("%v: not found", s.URL)
 	}
 	location = strings.Trim(location, "/")
 	basicMatcher, _ := matcher.NewBasic(location, "", "")
+
+	var storageMatcher option.Matcher
+	var modifier option.Modifier
+	options, _ = option.Assign(options, &storageMatcher, &modifier)
+	storageMatcher = option.GetMatcher(storageMatcher)
+
 	return s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if !basicMatcher.Match(parent, info) {
 			return true, nil
+		}
+
+		if !storageMatcher(parent, info) {
+			return true, nil
+		}
+		if modifier != nil {
+			reader, err = modifier(info, ioutil.NopCloser(reader))
+			if err != nil {
+				return false, err
+			}
 		}
 		return handler(parent, info, reader)
 	})
@@ -78,8 +95,9 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 //Download fetches content for supplied location
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	if !s.exists {
-		return nil, fmt.Errorf("%v: not found", location)
+		return nil, fmt.Errorf("%v: not found", s.URL)
 	}
+	location = strings.Trim(location, "/")
 	var result io.ReadCloser
 	err := s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		filename := path.Join(parent, info.Name())
@@ -94,7 +112,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 		return true, nil
 	})
 	if err == nil && result == nil {
-		return nil, fmt.Errorf("%v: not found", location)
+		return nil, fmt.Errorf("%v: not found in archive: %v", location, s.URL)
 	}
 	return result, err
 }
@@ -102,8 +120,9 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 //Delete removes specified resource from archive
 func (s *storager) Delete(ctx context.Context, location string) error {
 	if !s.exists {
-		return fmt.Errorf("%v: not found", location)
+		return fmt.Errorf("%v: not found", s.URL)
 	}
+	location = strings.Trim(location, "/")
 	uploader := newBatchUploader(nil)
 	upload, closer, err := uploader.Uploader(ctx, "")
 	if err != nil {
@@ -117,7 +136,7 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 	if err != nil {
 		return err
 	}
-	return s.uploader.Upload(ctx, s.URL, file.DefaultFileOsMode, uploader.buffer)
+	return s.uploader.Upload(ctx, s.URL, s.mode, uploader.buffer)
 }
 
 func (s *storager) touch(ctx context.Context) error {
@@ -125,7 +144,7 @@ func (s *storager) touch(ctx context.Context) error {
 	writer := zip.NewWriter(buffer)
 	_ = writer.Flush()
 	_ = writer.Close()
-	err := s.uploader.Upload(ctx, s.URL, file.DefaultFileOsMode, buffer)
+	err := s.uploader.Upload(ctx, s.URL, s.mode, buffer)
 	if err == nil {
 		s.exists = true
 	}
@@ -139,12 +158,14 @@ func (s *storager) Uploader(ctx context.Context, destination string) (storage.Up
 			return nil, nil, err
 		}
 	}
+	destination = strings.Trim(destination, "/")
 	uploader := archive.NewRewriteUploader(func(resources []*asset.Resource) error {
 		uploader := newBatchUploader(nil)
 		upload, closer, err := uploader.Uploader(ctx, "")
 		if err != nil {
-			return errors.Wrapf(err, "failed to upload: %v in archvive: %v", destination, s.URL)
+			return errors.Wrapf(err, "failed to upload: %v in archive: %v", destination, s.URL)
 		}
+		resources = archive.UpdateDestination(destination, resources)
 		err = archive.Rewrite(ctx, s.walker, s.URL, upload, archive.UploadHandler(resources))
 		if err == nil {
 			err = closer.Close()
@@ -153,7 +174,7 @@ func (s *storager) Uploader(ctx context.Context, destination string) (storage.Up
 			return err
 		}
 		s.walker.data = uploader.buffer.Bytes()
-		return s.uploader.Upload(ctx, s.URL, file.DefaultFileOsMode, uploader.buffer)
+		return s.uploader.Upload(ctx, s.URL, s.mode, uploader.buffer)
 	})
 	return uploader.Upload, uploader, nil
 }
@@ -170,6 +191,7 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 			return err
 		}
 	}
+	destination = strings.Trim(destination, "/")
 	uploader := newBatchUploader(nil)
 	upload, closer, err := uploader.Uploader(ctx, "")
 	if err != nil {
@@ -183,7 +205,7 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 		return err
 	}
 	s.walker.data = uploader.buffer.Bytes()
-	return s.uploader.Upload(ctx, s.URL, file.DefaultFileOsMode, uploader.buffer)
+	return s.uploader.Upload(ctx, s.URL, s.mode, uploader.buffer)
 }
 
 //Close closes undelrying closer
@@ -197,15 +219,21 @@ func newStorager(ctx context.Context, baseURL string, mgr storage.Manager) (*sto
 	if URL == "" {
 		return nil, fmt.Errorf("invalid URL: %v", baseURL)
 	}
+
+	mode := file.DefaultFileOsMode
 	object, _ := mgr.List(ctx, URL)
-	if len(object) == 1 && object[0].IsDir() {
-		return nil, fmt.Errorf("%v: is directory", URL)
+	if len(object) == 1 {
+		if object[0].IsDir() {
+			return nil, fmt.Errorf("%v: is directory", URL)
+		}
+		mode = object[0].Mode()
 	}
 	return &storager{
 		walker:     newWalker(mgr),
 		exists:     len(object) == 1,
 		closer:     mgr,
 		uploader:   mgr,
+		mode:       mode,
 		downloader: mgr,
 		URL:        URL,
 	}, nil

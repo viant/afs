@@ -38,6 +38,7 @@ func Rewrite(ctx context.Context, walker storage.Walker, URL string, upload stor
 	if err != nil {
 		return err
 	}
+	resources = dedupe(resources)
 	for i := range resources {
 		resource := resources[i]
 		parent, _ := path.Split(resource.Name)
@@ -46,6 +47,19 @@ func Rewrite(ctx context.Context, walker storage.Walker, URL string, upload stor
 		}
 	}
 	return err
+}
+
+func dedupe(resources []*asset.Resource) []*asset.Resource {
+	var result = make([]*asset.Resource, 0)
+	var dedupe = make(map[string]bool)
+	for i := range resources {
+		if dedupe[resources[i].Name] {
+			continue
+		}
+		dedupe[resources[i].Name] = true
+		result = append(result, resources[i])
+	}
+	return result
 }
 
 //DeleteHandler represents on rewrite upload delete handler
@@ -69,7 +83,7 @@ func DeleteHandler(location string) func(resources []*asset.Resource) ([]*asset.
 	}
 }
 
-func addResource(dirs map[string]*asset.Resource, resource *asset.Resource, resources []*asset.Resource) ([]*asset.Resource, error) {
+func addResource(existing map[string]*asset.Resource, resource *asset.Resource, resources []*asset.Resource) ([]*asset.Resource, error) {
 	location := resource.Name
 	parent, _ := path.Split(location)
 	var additions = make([]*asset.Resource, 0)
@@ -77,10 +91,12 @@ func addResource(dirs map[string]*asset.Resource, resource *asset.Resource, reso
 	additions = append(additions, resource)
 	for i := 0; i < parentDepth; i++ {
 		parent = strings.Trim(parent, "/")
-		if _, ok := dirs[parent]; ok || parent == "" {
+		if _, ok := existing[parent]; ok || parent == "" {
 			break
 		}
-		additions = append(additions, asset.New(parent, file.DefaultDirOsMode, true, "", nil))
+		dir := asset.New(parent, file.DefaultDirOsMode, true, "", nil)
+		existing[parent] = dir
+		additions = append(additions, dir)
 		parent, _ = path.Split(parent)
 	}
 	for i := 0; i < len(additions)/2; i++ {
@@ -89,7 +105,6 @@ func addResource(dirs map[string]*asset.Resource, resource *asset.Resource, reso
 		additions[i] = additions[swapIndex]
 		additions[swapIndex] = tmp
 	}
-
 	if parent == "" {
 		resources = append(resources, additions...)
 		return resources, nil
@@ -130,7 +145,7 @@ func UploadHandler(toUpload []*asset.Resource) func(resources []*asset.Resource)
 	return func(resources []*asset.Resource) ([]*asset.Resource, error) {
 		var existing = make(map[string]*asset.Resource)
 		for i, resource := range resources {
-			existing[resource.Name] = resources[i]
+			existing[strings.Trim(resource.Name, "/")] = resources[i]
 		}
 		var err error
 		for _, resource := range toUpload {
@@ -144,8 +159,21 @@ func UploadHandler(toUpload []*asset.Resource) func(resources []*asset.Resource)
 			if resources, err = addResource(existing, resource, resources); err != nil {
 				return nil, err
 			}
-
 		}
 		return resources, nil
 	}
+}
+
+//UpdateDestination updates resource with specified destination
+func UpdateDestination(destination string, resources []*asset.Resource) []*asset.Resource {
+	if strings.Trim(destination, "/") == "" {
+		return resources
+	}
+	var result = make([]*asset.Resource, len(resources))
+	for i := range resources {
+		resource := *resources[i]
+		resource.Name = path.Join(destination, resources[i].Name)
+		result[i] = &resource
+	}
+	return result
 }

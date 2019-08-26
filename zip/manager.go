@@ -7,6 +7,8 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"io"
+	"os"
 )
 
 type manager struct {
@@ -26,6 +28,35 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	}
 	return newStorager(ctx, baseURL, manager)
 
+}
+
+func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
+	baseURL, URLPath := url.Base(URL, Scheme)
+	srv, err := m.Storager(ctx, baseURL, options...)
+	if err != nil {
+		return err
+	}
+	service, ok := srv.(*storager)
+	if !ok {
+		return fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
+	}
+	return service.Walk(ctx, URLPath, func(parent string, info os.FileInfo, reader io.Reader) (shallContinue bool, err error) {
+		shallContinue, err = handler(ctx, baseURL, parent, info, reader)
+		return shallContinue, err
+	}, options...)
+}
+
+func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
+	_, URLPath := url.Base(URL, Scheme)
+	srv, err := m.Storager(ctx, URL, options...)
+	if err != nil {
+		return nil, nil, err
+	}
+	service, ok := srv.(*storager)
+	if !ok {
+		return nil, nil, fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
+	}
+	return service.Uploader(ctx, URLPath)
 }
 
 func newManager(options ...storage.Option) *manager {

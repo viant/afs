@@ -7,6 +7,9 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"io"
+	"io/ioutil"
+	"os"
 )
 
 type manager struct {
@@ -25,7 +28,42 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 		return nil, fmt.Errorf("manager for URL was empty: %v", URL)
 	}
 	return newStorager(ctx, baseURL, manager)
+}
 
+func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
+	baseURL, URLPath := url.Base(URL, Scheme)
+	var matcher option.Matcher
+
+	options, _ = option.Assign(options, &matcher)
+	matcher = option.GetMatcher(matcher)
+	srv, err := m.Storager(ctx, baseURL, options...)
+	if err != nil {
+		return err
+	}
+	service, ok := srv.(*storager)
+	if !ok {
+		return fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
+	}
+	return service.Walk(ctx, URLPath, func(parent string, info os.FileInfo, reader io.Reader) (shallContinue bool, err error) {
+		if !matcher(parent, info) {
+			return true, nil
+		}
+		shallContinue, err = handler(ctx, baseURL, parent, info, ioutil.NopCloser(reader))
+		return shallContinue, err
+	}, options...)
+}
+
+func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
+	_, URLPath := url.Base(URL, Scheme)
+	srv, err := m.Storager(ctx, URL, options...)
+	if err != nil {
+		return nil, nil, err
+	}
+	service, ok := srv.(*storager)
+	if !ok {
+		return nil, nil, fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
+	}
+	return service.Uploader(ctx, URLPath)
 }
 
 func newManager(options ...storage.Option) *manager {
