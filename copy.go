@@ -27,7 +27,6 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	walker storage.Walker, uploader storage.BatchUploader) error {
 	destURL = s.updateDestURL(sourceURL, destURL)
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
-
 	destOpts := *destOptions
 	if err == nil && object.IsDir() {
 		err = s.Create(ctx, destURL, object.Mode(), object.IsDir(), destOpts...)
@@ -35,7 +34,6 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	if err != nil {
 		return err
 	}
-
 	upload, closer, err := uploader.Uploader(ctx, destURL, destOpts...)
 	if err != nil {
 		return err
@@ -58,9 +56,13 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	var walker storage.Walker
 	var uploader storage.BatchUploader
 	var matcher option.Matcher
-	option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader)
+	var modifier option.Modifier
+	option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader, &modifier)
 	if matcher != nil {
 		*sourceOptions = append(*sourceOptions, matcher)
+	}
+	if modifier != nil {
+		*sourceOptions = append(*sourceOptions, modifier)
 	}
 	if walker == nil {
 		walker = s
