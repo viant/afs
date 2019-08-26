@@ -34,7 +34,8 @@ func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.O
 func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, Scheme)
 	var matcher option.Matcher
-	options, _ = option.Assign(options, &matcher)
+	var modifier option.Modifier
+	options, _ = option.Assign(options, &matcher, &modifier)
 	matcher = option.GetMatcher(matcher)
 	srv, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
@@ -48,7 +49,13 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 		if !matcher(parent, info) {
 			return true, nil
 		}
-		shallContinue, err = handler(ctx, baseURL, parent, info, ioutil.NopCloser(reader))
+		readerCloser := ioutil.NopCloser(reader)
+		if modifier != nil {
+			if readerCloser, err = modifier(info, readerCloser); err != nil {
+				return false, err
+			}
+		}
+		shallContinue, err = handler(ctx, baseURL, parent, info, readerCloser)
 		return shallContinue, err
 	})
 
