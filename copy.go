@@ -29,7 +29,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 	if err == nil && object.IsDir() {
-		err = s.Create(ctx, destURL, object.Mode(), object.IsDir(), destOpts...)
+		err = s.Create(ctx, destURL, object.Mode() | os.ModeDir, object.IsDir(), destOpts...)
 	}
 	if err != nil {
 		return err
