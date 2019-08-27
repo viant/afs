@@ -80,11 +80,14 @@ func (f *Folder) folder(name string) (*Folder, error) {
 	return result, nil
 }
 
-//File returns a file for supplied URL
+//File returns a file for supplied location
 func (f *Folder) File(URL string) (*File, error) {
 	object, err := f.Lookup(URL, 0)
 	if err != nil {
 		return nil, err
+	}
+	if object.IsDir() {
+		return nil, fmt.Errorf("%v is directory", URL)
 	}
 	result := &File{}
 	return result, object.Unwrap(&result)
