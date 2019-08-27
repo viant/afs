@@ -20,12 +20,14 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 	if destName == sourceName {
 		return destURL
 	}
+	if len(path.Ext(sourceName)) != len(path.Ext(destName)) {
+		destPath = path.Join(destPath, sourceName)
+	}
 	return url.Join(baseURL, destPath)
 }
 
 func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOptions *option.Source, destOptions *option.Dest,
 	walker storage.Walker, uploader storage.BatchUploader) error {
-	destURL = s.updateDestURL(sourceURL, destURL)
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 	if err == nil && object.IsDir() {
@@ -34,6 +36,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	if err != nil {
 		return err
 	}
+
 	upload, closer, err := uploader.Uploader(ctx, destURL, destOpts...)
 	if err != nil {
 		return err
@@ -53,6 +56,7 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destURL = url.Normalize(destURL, file.Scheme)
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()
+	destURL = s.updateDestURL(sourceURL, destURL)
 	var walker storage.Walker
 	var uploader storage.BatchUploader
 	var matcher option.Matcher

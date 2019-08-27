@@ -13,6 +13,7 @@ func (s *service) Move(ctx context.Context, sourceURL, destURL string, options .
 	destURL = url.Normalize(destURL, file.Scheme)
 	sourceScheme := url.Scheme(sourceURL, file.Scheme)
 	destScheme := url.Scheme(destURL, file.Scheme)
+	destURL = s.updateDestURL(sourceURL, destURL)
 
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()

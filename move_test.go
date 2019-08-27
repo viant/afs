@@ -7,6 +7,7 @@ import (
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
+	"github.com/viant/afs/url"
 	"os"
 	"path"
 	"testing"
@@ -25,6 +26,17 @@ func TestService_Move(t *testing.T) {
 		destOptions   []storage.Option
 		sourceOptions []storage.Option
 	}{
+
+		{
+			description: "single file move",
+			source:      path.Join(baseDir, "service_move_00/src"),
+			dest:        path.Join(baseDir, "service_move_00/dst"),
+
+			assets: []*asset.Resource{
+				asset.NewFile("asset1.txt", []byte("test 1"), 0644),
+			},
+		},
+
 		{
 			description: "mover move",
 			source:      path.Join(baseDir, "service_move_01/src"),
@@ -45,6 +57,7 @@ func TestService_Move(t *testing.T) {
 				asset.NewFile("asset2.txt", []byte("test 2"), 0644),
 			},
 		},
+
 		{
 			description: "crosss storage move: mem to file",
 			source:      "mem://" + path.Join(baseDir, "service_move_03/src"),
@@ -52,6 +65,15 @@ func TestService_Move(t *testing.T) {
 			assets: []*asset.Resource{
 				asset.NewFile("asset1.txt", []byte("test 1"), 0644),
 				asset.NewFile("asset2.txt", []byte("test 2"), 0644),
+			},
+		},
+
+		{
+			description: "memory move",
+			source:      "mem://" + path.Join(baseDir, "service_move_04/src"),
+			dest:        "mem://" + path.Join(baseDir, "service_move_04/dst"),
+			assets: []*asset.Resource{
+				asset.NewFile("asset10.txt", []byte("test 1"), 0644),
 			},
 		},
 	}
@@ -62,17 +84,24 @@ func TestService_Move(t *testing.T) {
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
+
 		err = asset.Create(srcManager, useCase.source, useCase.assets)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
+
 		destManager, err := Manager(useCase.dest, useCase.destOptions...)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 		_ = asset.Cleanup(destManager, useCase.dest)
 
-		err = service.Move(ctx, useCase.source, useCase.dest, option.NewSource(useCase.sourceOptions...), option.NewDest(useCase.destOptions...))
+		source := useCase.source
+		if len(useCase.assets) == 1 {
+			source = url.Join(source, useCase.assets[0].Name)
+		}
+
+		err = service.Move(ctx, source, useCase.dest, option.NewSource(useCase.sourceOptions...), option.NewDest(useCase.destOptions...))
 		assert.Nil(t, err, useCase.description)
 
 		actuals, err := asset.Load(destManager, useCase.dest)
@@ -90,8 +119,6 @@ func TestService_Move(t *testing.T) {
 		}
 
 		_ = service.CloseAll()
-		//_ = asset.Cleanup(srcManager, useCase.source)
-		//_ = asset.Cleanup(destManager, useCase.dest)
 	}
 
 }
