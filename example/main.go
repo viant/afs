@@ -17,14 +17,6 @@ func main() {
 	baseDir, _ := path.Split(filename)
 	runArchiveSubstitution(baseDir)
 	copyIntoArchive(baseDir)
-
-	service := afs.New()
-	ctx := context.Background()
-	err := service.Copy(ctx, "file:///tmp/somedir", "file:/tmp/zipped.zip/zip:///")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 }
 
 func copyIntoArchive(baseDir string) {
