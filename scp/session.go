@@ -231,12 +231,10 @@ func (s *session) upload(location string) (storage.Upload, io.Closer, error) {
 		return nil, nil, errors.Wrap(err, "failed to initialise session")
 	}
 
-
-	err = s.readStatus();
+	err = s.readStatus()
 	if err != nil {
 		return nil, nil, err
 	}
-
 
 	var prevRelativeElements = make([]string, 0)
 	handler := func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
@@ -259,9 +257,9 @@ func (s *session) upload(location string) (storage.Upload, io.Closer, error) {
 }
 
 func (s *session) push(info os.FileInfo, reader io.Reader) error {
-	if info.Mode() & os.ModeSymlink > 0 {
+	if info.Mode()&os.ModeSymlink > 0 {
 		//update size for symlink, otherwise size may be reported incorrectly
-		data, _ :=  ioutil.ReadAll(reader)
+		data, _ := ioutil.ReadAll(reader)
 		info = file.NewInfo(info.Name(), int64(len(data)), info.Mode().Perm(), info.ModTime(), info.IsDir())
 		reader = bytes.NewReader(data)
 	}
@@ -279,7 +277,7 @@ func (s *session) push(info os.FileInfo, reader io.Reader) error {
 		if _, err = io.Copy(s.writer, reader); err != nil {
 			return err
 		}
-		err = s.writeStatusOK();
+		err = s.writeStatusOK()
 		if err == nil {
 			err = s.readStatus()
 		}

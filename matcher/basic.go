@@ -17,6 +17,9 @@ type Basic struct {
 
 //Match matcher parent and info with matcher rules
 func (r *Basic) Match(parent string, info os.FileInfo) bool {
+	if r.Filter != "" && r.filter == nil {
+		r.filter, _ = regexp.Compile(r.Filter)
+	}
 	location := path.Join(parent, info.Name())
 	if r.filter != nil {
 		if !r.filter.MatchString(location) {
