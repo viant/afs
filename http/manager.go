@@ -11,12 +11,22 @@ type manager struct {
 	options        []storage.Option
 }
 
+
+func CloseIdleConnections(client interface{}) {
+	type closeIdler interface {
+		CloseIdleConnections()
+	}
+	if closer, ok := client.(closeIdler); ok {
+		closer.CloseIdleConnections()
+	}
+}
+
 func (s *manager) Close() error {
 	if s.client != nil {
-		s.client.CloseIdleConnections()
+		CloseIdleConnections(s.client)
 	}
 	for _, client := range s.baseURLClients {
-		client.CloseIdleConnections()
+		CloseIdleConnections(client)
 	}
 	return nil
 }
