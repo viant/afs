@@ -37,7 +37,7 @@ func (r *registry) Get(uRLScheme string) (Provider, error) {
 	defer r.RUnlock()
 	provider, ok := r.proviers[uRLScheme]
 	if !ok {
-		return nil, fmt.Errorf("failed to lookup storege provider %v", uRLScheme)
+		return nil, fmt.Errorf("failed to lookup storage provider %v", uRLScheme)
 	}
 	return provider, nil
 }

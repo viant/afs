@@ -64,7 +64,7 @@ func (f *Folder) file(name string) (*File, error) {
 	defer f.mutex.RUnlock()
 	result, ok := f.files[name]
 	if !ok {
-		return nil, fmt.Errorf("%v: No such file or directory", url.Join(f.URL(), name))
+		return nil, fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
 	}
 	return result, nil
 }
@@ -75,7 +75,7 @@ func (f *Folder) folder(name string) (*Folder, error) {
 	defer f.mutex.RUnlock()
 	result, ok := f.folders[name]
 	if !ok {
-		return nil, fmt.Errorf("%v: No such file or directory", url.Join(f.URL(), name))
+		return nil, fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
 	}
 	return result, nil
 }
@@ -154,7 +154,7 @@ func (f *Folder) Delete(name string) error {
 	if hasFile || hasFolder {
 		return nil
 	}
-	return fmt.Errorf("%v: No such file or directory", url.Join(f.URL(), name))
+	return fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
 }
 
 //Put adds object to this folder
