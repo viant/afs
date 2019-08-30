@@ -368,6 +368,39 @@ func mian(){
 }	
 ```
 
+
+
+**[Modification Time Matcher](matcher/modification.go)**
+
+Modification Time Matcher represents matcher that matches file that were modified either before or after specified time.
+
+```go
+func mian(){
+	
+	before, err := toolbox.TimeAt("2 days ago in UTC")
+    if err != nil {
+		log.Fatal(err)
+	}	
+	modTimeMatcher, err := matcher.NewModification(before, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	service := afs.New()
+	ctx := context.Background()
+	objects, err := service.List(ctx, "/tmp/folder", modTimeMatcher.Match)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, object := range objects {
+		fmt.Printf("%v %v\n", object.Name(), object.URL())
+		if object.IsDir() {
+			continue
+		}
+	}
+}	
+```
+
+
 ## Content modifiers
 
 To modify resource content on the fly you can use [Modifier](option/modifier.go) option.
