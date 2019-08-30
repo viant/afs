@@ -2,7 +2,7 @@
 
 [![GoReportCard](https://goreportcard.com/badge/github.com/viant/afs)](https://goreportcard.com/report/github.com/viant/afs)
 [![GoDoc](https://godoc.org/github.com/viant/afs?status.svg)](https://godoc.org/github.com/viant/afs)
-
+<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Go%20Coverage-73%25-brightgreen.svg?longCache=true&style=flat)</a>
 
 This library is compatible with Go 1.11+
 
