@@ -18,6 +18,7 @@ type Resource struct {
 	Link     string
 	Name     string
 	Mode     os.FileMode
+	ModTime  *time.Time
 	Data     []byte
 	FileInfo os.FileInfo
 }
@@ -27,11 +28,15 @@ func (r Resource) Info() os.FileInfo {
 	if r.FileInfo != nil {
 		return r.FileInfo
 	}
+	modTime := time.Now()
+	if r.ModTime != nil {
+		modTime = *r.ModTime
+	}
 	name := r.Name
 	if strings.Contains(name, "/") {
 		_, name = path.Split(r.Name)
 	}
-	r.FileInfo = file.NewInfo(name, int64(len(r.Data)), r.Mode, time.Now(), r.Dir, object.NewLink(r.Link, r.Link, nil))
+	r.FileInfo = file.NewInfo(name, int64(len(r.Data)), r.Mode, modTime, r.Dir, object.NewLink(r.Link, r.Link, nil))
 	return r.FileInfo
 }
 
