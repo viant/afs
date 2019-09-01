@@ -31,7 +31,7 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	if err != nil {
 		return nil, err
 	}
-	files, err := storager.List(ctx, URLPath, options)
+	files, err := storager.List(ctx, URLPath, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +52,7 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 		_, name := path.Split(URLPath)
 		files[0] = file.NewInfo(name, files[0].Size(), files[0].Mode(), files[0].ModTime(), files[0].IsDir())
 	}
+
 	objects[0] = object.New(url.Join(baseURL, URLPath), files[0], nil)
 	for i := 1; i < len(files); i++ {
 		fileURL := url.Join(baseURL, path.Join(URLPath, files[i].Name()))
