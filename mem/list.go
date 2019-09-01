@@ -18,13 +18,14 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	if err != nil {
 		return nil, err
 	}
+
 	if object.IsDir() {
 		folder := &Folder{}
 		if err = object.Unwrap(&folder); err != nil {
 			return nil, err
 		}
 		var objects = folder.Objects()
-		var result = make([]os.FileInfo, len(objects))
+		var result = make([]os.FileInfo, 0)
 
 		for i := range objects {
 			if !matcher(location, objects[i]) {
@@ -34,7 +35,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 			if page.ShallSkip() {
 				continue
 			}
-			result[i] = objects[i]
+			result = append(result, objects[i])
 			if page.HasReachedLimit() {
 				break
 			}

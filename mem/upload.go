@@ -2,9 +2,12 @@ package mem
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"os"
+	"time"
 )
 
 //Upload writes fakeReader TestContent to supplied URL path.
@@ -13,6 +16,9 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	if err != nil {
 		return err
 	}
-	memFile := NewFile(location, mode, data)
+	modTime := time.Now()
+	option.Assign(options, &modTime)
+	fmt.Printf("mod time: %v\n", modTime)
+	memFile := NewFile(location, mode, data, modTime)
 	return parent.Put(memFile.Object)
 }

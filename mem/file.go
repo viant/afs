@@ -19,6 +19,7 @@ import (
 type File struct {
 	storage.Object
 	content       []byte
+	modTime       time.Time
 	downloadError error
 	uploadError   error
 	readerError   error
@@ -50,11 +51,11 @@ func (f *File) SetErrors(errors ...*option.Error) {
 }
 
 //NewFile create a file
-func NewFile(URL string, mode os.FileMode, content []byte, errors ...*option.Error) *File {
+func NewFile(URL string, mode os.FileMode, content []byte, modTime time.Time) *File {
 	baseURL, URLPath := Split(URL)
 	URL = url.Join(baseURL, URLPath)
 	_, name := path.Split(URLPath)
-	info := file.NewInfo(name, 0, mode, time.Now(), false)
+	info := file.NewInfo(name, 0, mode, modTime, false)
 	result := &File{
 		content: content,
 	}
