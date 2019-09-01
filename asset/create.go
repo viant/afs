@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 //Create creates supplied assets, links or folders in provided location (for testing purpose)
@@ -37,7 +38,11 @@ func Create(manager storage.Manager, URL string, resources []*Resource) error {
 			continue
 		}
 		resourceURL := url.Join(baseURL, path.Join(URLPath, asset.Name))
-		if err := manager.Upload(ctx, resourceURL, asset.Mode, bytes.NewReader(asset.Data)); err != nil {
+		modTime := time.Now()
+		if asset.ModTime != nil {
+			modTime = *asset.ModTime
+		}
+		if err := manager.Upload(ctx, resourceURL, asset.Mode, bytes.NewReader(asset.Data), modTime); err != nil {
 			return err
 		}
 	}
