@@ -18,7 +18,6 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	}
 	modTime := time.Now()
 	option.Assign(options, &modTime)
-	fmt.Printf("mod time: %v\n", modTime)
 	memFile := NewFile(location, mode, data, modTime)
 	return parent.Put(memFile.Object)
 }
