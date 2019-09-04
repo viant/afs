@@ -16,7 +16,7 @@ func (p *Page) ShallSkip() bool {
 	if p.limit == 0 {
 		return false
 	}
-	return int(atomic.LoadUint32(&p.counter)) <= p.offset
+	return int(atomic.LoadUint32(&p.counter)) < p.offset
 }
 
 //MaxResult returns max results or zero
