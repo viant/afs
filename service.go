@@ -230,14 +230,9 @@ func (s *service) manager(ctx context.Context, URL string, options ...storage.Op
 	if ok {
 		return result, nil
 	}
-	s.mutex.Lock()
-	//retry in case
-	result, ok = s.managers[key]
-	if ok {
-		return result, nil
-	}
-	defer s.mutex.Unlock()
 	manager, err := s.newManager(ctx, scheme, options...)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if err == nil {
 		s.managers[key] = manager
 	}
