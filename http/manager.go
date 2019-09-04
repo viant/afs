@@ -11,7 +11,6 @@ type manager struct {
 	options        []storage.Option
 }
 
-
 func CloseIdleConnections(client interface{}) {
 	type closeIdler interface {
 		CloseIdleConnections()

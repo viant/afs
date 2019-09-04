@@ -3,7 +3,7 @@
 [![GoReportCard](https://goreportcard.com/badge/github.com/viant/afs)](https://goreportcard.com/report/github.com/viant/afs)
 [![GoDoc](https://godoc.org/github.com/viant/afs?status.svg)](https://godoc.org/github.com/viant/afs)
 ![goversion-image](https://img.shields.io/badge/Go-1.11+-00ADD8.svg)
-<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Go%20Coverage-73%25-brightgreen.svg?longCache=true&style=flat)</a>
+<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Go%20Coverage-78%25-brightgreen.svg?longCache=true&style=flat)</a>
 
 
 Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes.
