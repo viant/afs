@@ -48,13 +48,12 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 		return objects, nil
 	}
 
+	_, name := path.Split(URLPath)
 	if files[0].Name() == "" {
-		_, name := path.Split(URLPath)
 		files[0] = file.NewInfo(name, files[0].Size(), files[0].Mode(), files[0].ModTime(), files[0].IsDir())
 	}
 
-	objects[0] = object.New(url.Join(baseURL, URLPath), files[0], nil)
-	for i := 1; i < len(files); i++ {
+	for i := 0; i < len(files); i++ {
 		fileURL := url.Join(baseURL, path.Join(URLPath, files[i].Name()))
 		objects[i] = object.New(fileURL, files[i], nil)
 	}
@@ -158,6 +157,13 @@ func (m *Manager) Storager(ctx context.Context, baseURL string, options ...stora
 	baseURL, _ = url.Base(baseURL, m.scheme)
 	storager, ok := m.storagers[baseURL]
 	m.mutex.RUnlock()
+	if ok {
+		return storager, nil
+	}
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	//double check if storager has been added
+	storager, ok = m.storagers[baseURL]
 	if ok {
 		return storager, nil
 	}
