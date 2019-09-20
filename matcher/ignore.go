@@ -51,6 +51,9 @@ func (i *Ignore) Match(parent string, info os.FileInfo) bool {
 	return !i.shouldSkip(parent, info)
 
 }
+
+
+
 func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
 
 	location := path.Join(parent, info.Name())
@@ -62,6 +65,7 @@ func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
 		if info.Name() == expr {
 			return true
 		} else if strings.Contains(expr, "/") {
+
 			if strings.HasPrefix(expr, "/") {
 				prefix := expr[1:]
 				if strings.HasPrefix(location, prefix) && prefix != location {
@@ -86,6 +90,7 @@ func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
 					return true
 				}
 			}
+
 		} else {
 
 			if strings.HasSuffix(expr, "*") {

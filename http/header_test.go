@@ -55,9 +55,10 @@ func TestHeader(t *testing.T) {
 	for _, useCase := range useCases {
 		manager := newManager()
 		reader, err := manager.DownloadWithURL(ctx, useCase.URL, useCase.header)
-		assert.Nil(t, err)
-		if useCase.hasError {
+		if err != nil && useCase.hasError  {
 			assert.NotNil(t, err, useCase.description)
+		}
+		if useCase.hasError {
 			continue
 		}
 		if !assert.Nil(t, err, useCase.description) {
