@@ -62,11 +62,12 @@ func TestNewStorager(t *testing.T) {
 		assert.False(t, ok, useCase.description)
 
 		parent, _ := path.Split(useCase.resource.Name)
-		objects, _ := storager.List(ctx, parent)
-		assert.EqualValues(t, 0, len(objects), useCase.description)
+		objects, err := storager.List(ctx, parent)
+
 		if len(useCase.init) == 0 && !assert.NotNil(t, err, useCase.description) {
 			continue
 		}
+		assert.EqualValues(t, 0, len(objects), useCase.description)
 
 		err = storager.Upload(ctx, useCase.resource.Name, useCase.resource.Mode, useCase.resource.Data, useCase.options...)
 		assert.Nil(t, err, useCase.description)
