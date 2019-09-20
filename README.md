@@ -517,8 +517,8 @@ Check out [storage manager](#storage-managers) for additional options.
 - [HTTP](http/README.md)
 - [Tar](tar/README.md)
 - [Zip](zip/README.md)
-- [GCP - GS](https://github.com/viant/afsc/gs)
-- [AWS - S3](https://github.com/viant/afsc/s3)
+- [GCP - GS](https://github.com/viant/afsc/tree/master/gs)
+- [AWS - S3](https://github.com/viant/afsc/tree/master/s3)
 
 ## Testing service
 
