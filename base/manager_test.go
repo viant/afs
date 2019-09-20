@@ -43,7 +43,6 @@ func TestNew(t *testing.T) {
 				asset.NewFile("asset3.txt", []byte("test 2"), 0644),
 			},
 		},
-
 	}
 
 	mgr := mem.Singleton()
@@ -51,10 +50,8 @@ func TestNew(t *testing.T) {
 	for _, useCase := range useCases {
 		service := afs.New()
 
-
 		_ = asset.Cleanup(mgr, useCase.source)
 		_ = asset.Cleanup(mgr, useCase.dest)
-
 
 		err := asset.Create(mgr, useCase.source, useCase.assets)
 		assert.Nil(t, err, useCase.description)
@@ -64,7 +61,6 @@ func TestNew(t *testing.T) {
 
 		err = service.Copy(ctx, useCase.source, useCase.dest)
 		assert.Nil(t, err, useCase.description)
-
 
 		actuals, err := asset.Load(mgr, useCase.dest)
 		assert.Nil(t, err, useCase.description)

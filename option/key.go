@@ -15,6 +15,7 @@ type AES256Key struct {
 	Base64KeySha256Hash string
 }
 
+//Init initialises key
 func (k *AES256Key) Init() (err error) {
 	if k.Base64Key != "" && len(k.Key) == 0 {
 		if k.Key, err = base64.StdEncoding.DecodeString(k.Base64Key); err != nil {
@@ -35,6 +36,7 @@ func (k *AES256Key) Init() (err error) {
 	return err
 }
 
+//Validate checks if key is valid
 func (k *AES256Key) Validate() error {
 	if len(k.Key) != 32 {
 		return fmt.Errorf("%s: not a 32-byte AES-256 key", k.Key)

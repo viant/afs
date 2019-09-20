@@ -140,7 +140,7 @@ func CreateHandler(location string, mode os.FileMode, data []byte, isDir bool) f
 	}
 }
 
-//CreateHandler represents on rewrite upload create handler
+//UploadHandler represents on rewrite upload create handler
 func UploadHandler(toUpload []*asset.Resource) func(resources []*asset.Resource) ([]*asset.Resource, error) {
 	return func(resources []*asset.Resource) ([]*asset.Resource, error) {
 		var existing = make(map[string]*asset.Resource)

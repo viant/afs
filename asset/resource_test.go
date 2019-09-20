@@ -20,11 +20,13 @@ func TestNew(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	resources, err := asset.Load(mgr, baseURL)
+	assert.Nil(t, err)
 	assert.NotNil(t, resources["file1.txt"])
 
 	resource := resources["file1.txt"]
 	assert.EqualValues(t, resource.Info().Name(), "file1.txt")
 	data, err := ioutil.ReadAll(resource.Reader())
+	assert.Nil(t, err)
 	assert.EqualValues(t, "123", data)
 	err = resource.MergeInto(resource)
 	assert.Nil(t, err)

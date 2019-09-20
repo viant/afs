@@ -16,10 +16,8 @@ func Path(URL string) string {
 		index := strings.Index(location, "/")
 		if index == -1 {
 			return ""
-		} else {
-			location = string(location[index:])
 		}
-
+		location = string(location[index:])
 	}
 	return location
 }

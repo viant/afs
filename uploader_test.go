@@ -78,6 +78,9 @@ func TestService_Uploader(t *testing.T) {
 		_ = closer.Close()
 
 		actuals, err := asset.Load(destManager, useCase.destURL)
+		if !assert.Nil(t, err) {
+			continue
+		}
 		for _, expect := range useCase.assets {
 			actual, ok := actuals[expect.Name]
 			if !assert.True(t, ok, useCase.description+": "+expect.Name+fmt.Sprintf(" - actuals: %v", actuals)) {

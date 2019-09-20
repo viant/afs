@@ -22,11 +22,11 @@ Each line is one of the following:
     blank line: A blank line is ignored and useful for readability.
 
 */
-
 type Ignore struct {
 	Rules []string
 }
 
+//Load loads matcher rules from location
 func (i *Ignore) Load(location string) error {
 	content, err := ioutil.ReadFile(location)
 	if err != nil {

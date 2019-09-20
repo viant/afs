@@ -7,14 +7,14 @@ import (
 )
 
 //NewMode returns a new file mode for supplied attributes
-func NewMode(atributes string) (os.FileMode, error) {
+func NewMode(attributes string) (os.FileMode, error) {
 	var result os.FileMode
-	if len(atributes) != 10 {
-		return result, fmt.Errorf("invalid attribute length %v %v", atributes, len(atributes))
+	if len(attributes) != 10 {
+		return result, fmt.Errorf("invalid attribute length %v %v", attributes, len(attributes))
 	}
 
 	const fileType = "dalTLDpSugct?"
-	var fileModePosition = strings.Index(fileType, string(atributes[0]))
+	var fileModePosition = strings.Index(fileType, string(attributes[0]))
 
 	if fileModePosition != -1 {
 		result = 1 << uint(32-1-fileModePosition)
@@ -22,7 +22,7 @@ func NewMode(atributes string) (os.FileMode, error) {
 
 	const filePermission = "rwxrwxrwx"
 	for i, c := range filePermission {
-		if c == rune(atributes[i+1]) {
+		if c == rune(attributes[i+1]) {
 			result = result | 1<<uint(9-1-i)
 		}
 	}

@@ -63,6 +63,7 @@ func TestNewStorager(t *testing.T) {
 
 		parent, _ := path.Split(useCase.resource.Name)
 		objects, err := storager.List(ctx, parent)
+		assert.Nil(t, err)
 
 		assert.EqualValues(t, 0, len(objects), useCase.description)
 		if len(useCase.init) == 0 && !assert.NotNil(t, err, useCase.description) {
@@ -83,6 +84,7 @@ func TestNewStorager(t *testing.T) {
 			continue
 		}
 		data, err := ioutil.ReadAll(reader)
+		assert.Nil(t, err)
 		_ = reader.Close()
 		assert.EqualValues(t, useCase.resource.Data, string(data), useCase.description)
 

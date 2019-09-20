@@ -11,6 +11,7 @@ type manager struct {
 	options        []storage.Option
 }
 
+//CloseIdleConnections closes iddle connections
 func CloseIdleConnections(client interface{}) {
 	type closeIdler interface {
 		CloseIdleConnections()
@@ -20,6 +21,7 @@ func CloseIdleConnections(client interface{}) {
 	}
 }
 
+//Close closes mananger
 func (s *manager) Close() error {
 	if s.client != nil {
 		CloseIdleConnections(s.client)
@@ -30,6 +32,7 @@ func (s *manager) Close() error {
 	return nil
 }
 
+//Scheme returns schmea
 func (s *manager) Scheme() string {
 	return Scheme
 }
