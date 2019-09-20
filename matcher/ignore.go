@@ -52,71 +52,79 @@ func (i *Ignore) Match(parent string, info os.FileInfo) bool {
 
 }
 
+func (i *Ignore) shouldSkipFolderExpression(expr, location string) bool {
+	if strings.HasPrefix(expr, "/") {
+		prefix := expr[1:]
+		if strings.HasPrefix(location, prefix) && prefix != location {
+			return true
+		}
+	} else if strings.HasSuffix(expr, "/**") {
+		index := strings.LastIndex(expr, "/**")
+		prefix := string(expr[0:index])
+		if strings.HasPrefix(location, prefix) {
+			return true
+		}
+	} else if strings.HasSuffix(expr, "/") {
+		index := strings.LastIndex(expr, "/")
+		prefix := string(expr[0:index])
+		if strings.HasPrefix(location, prefix) {
+			return true
+		}
+	} else if strings.HasPrefix(expr, "**/") {
+		index := strings.Index(expr, "**/")
+		suffix := string(expr[index+3:])
+		if strings.HasSuffix(location, suffix) {
+			return true
+		}
+	}
+	return false
+}
 
+func (i *Ignore) shouldSkipWildcardExpression(expr, location string, info os.FileInfo) bool {
+	if strings.HasSuffix(expr, "*") {
+		index := strings.Index(expr, "*")
+		prefix := expr[:index]
+		if strings.HasPrefix(location, prefix) || strings.HasPrefix(info.Name(), prefix) {
+			return true
+		}
+
+	} else if strings.HasPrefix(expr, "*") {
+		index := strings.Index(expr, "*")
+		suffix := expr[index+1:]
+		if strings.HasSuffix(location, suffix) {
+			return true
+		}
+
+	} else if strings.Contains(expr, "*") {
+		index := strings.Index(expr, "*")
+		prefix := expr[:index]
+		suffix := expr[index+1:]
+		if strings.HasPrefix(location, prefix) && strings.HasSuffix(location, suffix) {
+			return true
+		}
+		if strings.HasPrefix(info.Name(), prefix) && strings.HasSuffix(info.Name(), suffix) {
+			return true
+		}
+	}
+	return false
+}
 
 func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
-
 	location := path.Join(parent, info.Name())
 	if strings.HasPrefix(location, "/") {
 		location = string(location[1:])
 	}
-
 	for _, expr := range i.Rules {
 		if info.Name() == expr {
 			return true
 		} else if strings.Contains(expr, "/") {
 
-			if strings.HasPrefix(expr, "/") {
-				prefix := expr[1:]
-				if strings.HasPrefix(location, prefix) && prefix != location {
-					return true
-				}
-			} else if strings.HasSuffix(expr, "/**") {
-				index := strings.LastIndex(expr, "/**")
-				prefix := string(expr[0:index])
-				if strings.HasPrefix(location, prefix) {
-					return true
-				}
-			} else if strings.HasSuffix(expr, "/") {
-				index := strings.LastIndex(expr, "/")
-				prefix := string(expr[0:index])
-				if strings.HasPrefix(location, prefix) {
-					return true
-				}
-			} else if strings.HasPrefix(expr, "**/") {
-				index := strings.Index(expr, "**/")
-				suffix := string(expr[index+3:])
-				if strings.HasSuffix(location, suffix) {
-					return true
-				}
+			if i.shouldSkipFolderExpression(expr, location) {
+				return true
 			}
-
 		} else {
-
-			if strings.HasSuffix(expr, "*") {
-				index := strings.Index(expr, "*")
-				prefix := expr[:index]
-				if strings.HasPrefix(location, prefix) || strings.HasPrefix(info.Name(), prefix) {
-					return true
-				}
-
-			} else if strings.HasPrefix(expr, "*") {
-				index := strings.Index(expr, "*")
-				suffix := expr[index+1:]
-				if strings.HasSuffix(location, suffix) {
-					return true
-				}
-
-			} else if strings.Contains(expr, "*") {
-				index := strings.Index(expr, "*")
-				prefix := expr[:index]
-				suffix := expr[index+1:]
-				if strings.HasPrefix(location, prefix) && strings.HasSuffix(location, suffix) {
-					return true
-				}
-				if strings.HasPrefix(info.Name(), prefix) && strings.HasSuffix(info.Name(), suffix) {
-					return true
-				}
+			if i.shouldSkipWildcardExpression(expr, location, info) {
+				return true
 			}
 		}
 
