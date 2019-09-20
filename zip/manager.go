@@ -18,7 +18,6 @@ type manager struct {
 func (m *manager) provider(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	var manager storage.Manager
 	option.Assign(options, &manager)
-	options = m.Options(options)
 	URL := url.SchemeExtensionURL(baseURL)
 	if URL == "" {
 		return nil, fmt.Errorf("extneded URL was empty: %v", baseURL)

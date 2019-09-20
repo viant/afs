@@ -71,7 +71,7 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 
 	var storageMatcher option.Matcher
 	var modifier option.Modifier
-	options, _ = option.Assign(options, &storageMatcher, &modifier)
+	option.Assign(options, &storageMatcher, &modifier)
 	storageMatcher = option.GetMatcher(storageMatcher)
 
 	return s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {

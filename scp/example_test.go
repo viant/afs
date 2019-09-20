@@ -20,7 +20,9 @@ func Example_Storager() {
 	}
 	provider := scp.NewAuthProvider(auth, nil)
 	config, err := provider.ClientConfig()
-
+	if err != nil {
+		log.Fatal(err)
+	}
 	service, err := scp.NewStorager("127.0.0.1:22", 15000, config)
 	if err != nil {
 		log.Fatal(err)
@@ -36,6 +38,9 @@ func Example_Storager() {
 		log.Fatal(err)
 	}
 	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf("data: %s\n", data)
 
 	has, _ := service.Exists(ctx, location)

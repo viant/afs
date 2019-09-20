@@ -57,6 +57,7 @@ func TestManager_Download(t *testing.T) {
 			continue
 		}
 		data, err := ioutil.ReadAll(reader)
+		assert.Nil(t, err)
 		_ = reader.Close()
 		assert.EqualValues(t, useCase.expect, string(data), useCase.description)
 

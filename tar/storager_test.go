@@ -83,6 +83,7 @@ func TestNewStorager(t *testing.T) {
 			continue
 		}
 		data, err := ioutil.ReadAll(reader)
+		assert.Nil(t, err)
 		_ = reader.Close()
 		assert.EqualValues(t, useCase.resource.Data, string(data), useCase.description)
 

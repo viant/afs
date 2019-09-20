@@ -58,6 +58,7 @@ func TestManager_Run(t *testing.T) {
 			continue
 		}
 		data, err := ioutil.ReadAll(reader)
+		assert.Nil(t, err)
 		_ = reader.Close()
 		assert.EqualValues(t, http.StatusOK, response.StatusCode)
 		assert.EqualValues(t, useCase.expect, string(data), useCase.description)

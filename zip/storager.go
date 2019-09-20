@@ -62,7 +62,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Walk visits location resources
-func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
+func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error), opts ...storage.Option) error {
 	if !s.exists {
 		return fmt.Errorf("%v: not found", s.URL)
 	}
@@ -71,7 +71,7 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 
 	var storageMatcher option.Matcher
 	var modifier option.Modifier
-	options, _ = option.Assign(options, &storageMatcher, &modifier)
+	option.Assign(opts, &storageMatcher, &modifier)
 	storageMatcher = option.GetMatcher(storageMatcher)
 
 	return s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
