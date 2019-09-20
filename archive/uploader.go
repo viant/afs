@@ -15,7 +15,7 @@ type RewriteUploader struct {
 	listener  func(resources []*asset.Resource) error
 }
 
-//Uploader returns upload handler, and upload closer for batch upload or error
+//Upload	 returns upload handler, and upload closer for batch upload or error
 func (r *RewriteUploader) Upload(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
 	var data []byte
 	var err error

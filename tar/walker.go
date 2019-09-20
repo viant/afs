@@ -71,7 +71,6 @@ func (w *walker) buildCache(reader *tar.Reader, cache map[string][]byte) {
 	}
 }
 
-
 func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
 	data, err := w.load(ctx, URL, options...)

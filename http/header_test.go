@@ -64,6 +64,7 @@ func TestHeader(t *testing.T) {
 			continue
 		}
 		data, err := ioutil.ReadAll(reader)
+		assert.Nil(t, err)
 		assert.EqualValues(t, useCase.expect, string(data))
 
 	}
