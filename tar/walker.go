@@ -77,66 +77,78 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	if err != nil {
 		return err
 	}
+	var shallContinue bool
+	var ioReader io.Reader
 	reader := tar.NewReader(bytes.NewReader(data))
 	buffer := new(bytes.Buffer)
 	//cache is only used if sym link are used
 	var cache = make(map[string][]byte)
-outer:
 	for {
 		header, err := reader.Next()
 		if err == io.EOF || header == nil {
 			break
 		}
 		relative, name := path.Split(header.Name)
-		mode := header.Mode
-		if header.Typeflag == tar.TypeSymlink {
-			mode |= int64(os.ModeSymlink)
-		}
-		if header.Typeflag == tar.TypeDir {
-			mode |= int64(os.ModeDir)
-		}
-
+		mode := getFileMode(header)
 		info := file.NewInfo(name, header.Size, os.FileMode(mode), header.ModTime, header.Typeflag == tar.TypeDir)
-
 		switch header.Typeflag {
 		case tar.TypeDir:
-			shallContinue, err := handler(ctx, URL, relative, info, nil)
-			if err != nil || !shallContinue {
-				break outer
-			}
-
+			shallContinue, err = handler(ctx, URL, relative, info, nil)
 		case tar.TypeReg:
-			_, err = io.Copy(buffer, reader)
-			if err != nil {
-				return err
-			}
-			shallContinue, err := handler(ctx, URL, relative, info, buffer)
-			if err != nil || !shallContinue {
-				break outer
-			}
-			buffer.Reset()
+			shallContinue, err = visitRegularHeader(ctx, reader, buffer, handler, URL, relative, info)
 		case tar.TypeSymlink:
 			linkPath := path.Clean(path.Join(relative, header.Linkname))
-			reader, err := w.fetch(tar.NewReader(bytes.NewReader(data)), linkPath, cache)
-			if err != nil {
-				return err
+			if ioReader, err = w.fetch(tar.NewReader(bytes.NewReader(data)), linkPath, cache); err == nil {
+				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader, buffer, handler, URL, relative, info)
 			}
-			link := object.NewLink(header.Linkname, url.Join(URL, linkPath), nil)
-			info = file.NewInfo(name, header.Size, os.FileMode(mode), header.ModTime, header.Typeflag == tar.TypeDir, link)
-			_, err = io.Copy(buffer, reader)
-			if err != nil {
-				return err
-			}
-			shallContinue, err := handler(ctx, URL, relative, info, buffer)
-			if err != nil || !shallContinue {
-				return err
-			}
-			buffer.Reset()
 		default:
 			return fmt.Errorf("unknown header type: %v", header.Typeflag)
 		}
+		if err != nil || !shallContinue {
+			return err
+		}
 	}
 	return nil
+}
+
+func getFileMode(header *tar.Header) int64 {
+	mode := header.Mode
+	if header.Typeflag == tar.TypeSymlink {
+		mode |= int64(os.ModeSymlink)
+	}
+	if header.Typeflag == tar.TypeDir {
+		mode |= int64(os.ModeDir)
+	}
+	return mode
+}
+
+func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string, reader io.Reader, buffer *bytes.Buffer, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+	relative, name := path.Split(header.Name)
+	link := object.NewLink(header.Linkname, url.Join(URL, linkPath), nil)
+	info = file.NewInfo(name, header.Size, os.FileMode(info.Mode()), header.ModTime, header.Typeflag == tar.TypeDir, link)
+	_, err := io.Copy(buffer, reader)
+	if err != nil {
+		return false, err
+	}
+	shallContinue, err := handler(ctx, URL, relative, info, buffer)
+	if err != nil || !shallContinue {
+		return shallContinue, err
+	}
+	buffer.Reset()
+	return true, nil
+}
+
+func visitRegularHeader(ctx context.Context, reader io.Reader, buffer *bytes.Buffer, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+	_, err := io.Copy(buffer, reader)
+	if err != nil {
+		return false, err
+	}
+	shallContinue, err := handler(ctx, URL, relative, info, buffer)
+	if err != nil || !shallContinue {
+		return shallContinue, err
+	}
+	buffer.Reset()
+	return true, nil
 }
 
 //newWalker returns a walker
