@@ -42,8 +42,9 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 		return err
 	}
 	defer func() {
+		closeErr := closer.Close()
 		if err == nil {
-			err = closer.Close()
+			err = closeErr
 		}
 	}()
 	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
