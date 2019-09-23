@@ -27,7 +27,7 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 }
 
 func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOptions *option.Source, destOptions *option.Dest,
-	walker storage.Walker, uploader storage.BatchUploader) error {
+	walker storage.Walker, uploader storage.BatchUploader) (err error) {
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 	if err == nil && object.IsDir() {
@@ -42,12 +42,15 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 		return err
 	}
 	defer func() {
-		_ = closer.Close()
+		if err == nil {
+			err = closer.Close()
+		}
 	}()
-	return walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		err = upload(ctx, parent, info, reader)
 		return err == nil, err
 	}, *srcOptions...)
+	return err
 
 }
 
