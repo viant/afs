@@ -125,6 +125,7 @@ func LocalhostKeyAuth(keyPassword string, locations ...string) (KeyAuth, error) 
 	if username == "" {
 		return nil, fmt.Errorf("username was empty")
 	}
+	locations = append(locations, path.Join(os.Getenv("HOME"), ".secret", "id_rsa"))
 	locations = append(locations, path.Join(os.Getenv("HOME"), ".ssh", "id_rsa"))
 	keyLocation := ""
 	for _, candidate := range locations {
