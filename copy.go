@@ -7,6 +7,7 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 )
@@ -47,7 +48,15 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			err = closeErr
 		}
 	}()
+	var modifier option.Modifier
+	option.Assign(destOpts, &modifier)
 	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		if modifier != nil {
+			reader, err = modifier(info, ioutil.NopCloser(reader))
+			if err != nil {
+				return false, err
+			}
+		}
 		err = upload(ctx, parent, info, reader)
 		return err == nil, err
 	}, *srcOptions...)
