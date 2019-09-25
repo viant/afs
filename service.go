@@ -52,7 +52,7 @@ type service struct {
 
 func (s *service) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (s *service) List(ctx context.Context, URL string, options ...storage.Optio
 
 func (s *service) Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (s *service) Download(ctx context.Context, object storage.Object, options .
 	}
 	var modifier option.Modifier
 	option.Assign(options, &modifier)
-	manager, err := s.manager(ctx, object.URL(), options...)
+	manager, err := s.manager(ctx, object.URL(), options)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (s *service) Download(ctx context.Context, object storage.Object, options .
 
 func (s *service) Delete(ctx context.Context, URL string, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (s *service) Delete(ctx context.Context, URL string, options ...storage.Opt
 
 func (s *service) Create(ctx context.Context, URL string, mode os.FileMode, isDir bool, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *service) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 }
 
 func (s *service) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (s *service) object(ctx context.Context, manager storage.Manager, URL strin
 
 func (s *service) Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error) {
 	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return false, err
 	}
@@ -147,7 +147,7 @@ func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...st
 	URL = url.Normalize(URL, file.Scheme)
 	var modifier option.Modifier
 	option.Assign(options, &modifier)
-	manager, err := s.manager(ctx, URL, options...)
+	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (s *service) newManager(ctx context.Context, scheme string, options ...stor
 
 func (s *service) Init(ctx context.Context, baseURL string, options ...storage.Option) error {
 	baseURL = url.Normalize(baseURL, file.Scheme)
-	_, err := s.manager(ctx, baseURL, options...)
+	_, err := s.manager(ctx, baseURL, options)
 	return err
 }
 
@@ -203,7 +203,7 @@ func (s *service) CloseAll() error {
 	return err
 }
 
-func (s *service) manager(ctx context.Context, URL string, options ...storage.Option) (storage.Manager, error) {
+func (s *service) manager(ctx context.Context, URL string, options []storage.Option) (storage.Manager, error) {
 	scheme := url.Scheme(URL, file.Scheme)
 	noCache := &option.NoCache{}
 	options, _ = option.Assign(options, &noCache)
@@ -216,7 +216,7 @@ func (s *service) manager(ctx context.Context, URL string, options ...storage.Op
 
 	if extURL != "" {
 		if extScheme := url.Scheme(extURL, file.Scheme); extScheme != scheme {
-			extManager, err := s.manager(ctx, extURL, options...)
+			extManager, err := s.manager(ctx, extURL, options)
 			if err != nil {
 				return nil, err
 			}

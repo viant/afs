@@ -19,7 +19,7 @@ func (s *service) Move(ctx context.Context, sourceURL, destURL string, options .
 	destOptions := option.NewDest()
 	option.Assign(options, &sourceOptions, &destOptions)
 	if sourceScheme == destScheme {
-		if manager, err := s.manager(ctx, sourceURL, *sourceOptions...); err == nil {
+		if manager, err := s.manager(ctx, sourceURL, *sourceOptions); err == nil {
 			if mover, ok := manager.(storage.Mover); ok {
 				return mover.Move(ctx, sourceURL, destURL, options...)
 			}
