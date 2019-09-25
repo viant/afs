@@ -7,7 +7,6 @@ import (
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-
 	"github.com/viant/afs/url"
 	"io"
 	"io/ioutil"
@@ -70,6 +69,9 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	option.Assign(options, &basicAuth, &keyAuth, &authProvider, &timeout)
 	if timeout.Duration == 0 {
 		timeout = option.NewTimeout(defaultTimeoutMs)
+	}
+	if basicAuth == nil && keyAuth == nil && authProvider == nil {
+		keyAuth, _ = LocalhostKeyAuth("")
 	}
 	if authProvider == nil {
 		authProvider = NewAuthProvider(keyAuth, basicAuth)
