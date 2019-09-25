@@ -9,11 +9,12 @@ import (
 
 //Replace return modification handler with the specified replacements map
 func Replace(replacements map[string]string) Modifier {
-	return func(info os.FileInfo, reader io.Reader) (io.Reader, error) {
+	return func(info os.FileInfo, reader io.ReadCloser) (io.ReadCloser, error) {
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return nil, err
 		}
+		_ = reader.Close()
 		text := string(data)
 		for k, v := range replacements {
 			if count := strings.Count(text, k); count > 0 {
