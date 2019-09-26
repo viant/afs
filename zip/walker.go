@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -43,7 +44,7 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	}
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to read zip: %v", URL)
 	}
 	buffer := new(bytes.Buffer)
 	//cache is only used if sym link are used
