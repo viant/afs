@@ -2,7 +2,6 @@ package base
 
 import (
 	"context"
-	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
@@ -28,7 +27,6 @@ type Manager struct {
 //List lists content for supplied URL
 func (m *Manager) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	fmt.Printf("list: %v %v\n", baseURL, options)
 	storager, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return nil, err

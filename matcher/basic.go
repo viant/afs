@@ -9,13 +9,12 @@ import (
 
 //Basic represents prefix, suffix or regexp matcher
 type Basic struct {
-	Prefix string
-	Suffix string
-	Filter string
+	Prefix    string
+	Suffix    string
+	Filter    string
 	Directory *bool
-	filter *regexp.Regexp
+	filter    *regexp.Regexp
 }
-
 
 //Match matcher parent and info with matcher rules
 func (r *Basic) Match(parent string, info os.FileInfo) bool {
@@ -51,10 +50,10 @@ func (r *Basic) Match(parent string, info os.FileInfo) bool {
 //NewBasic creates basic matcher
 func NewBasic(prefix, suffix, filter string, dir *bool) (matcher *Basic, err error) {
 	matcher = &Basic{
-		Prefix: prefix,
-		Suffix: suffix,
-		Filter: filter,
-		Directory:dir,
+		Prefix:    prefix,
+		Suffix:    suffix,
+		Filter:    filter,
+		Directory: dir,
 	}
 	if filter != "" {
 		matcher.filter, err = regexp.Compile(filter)

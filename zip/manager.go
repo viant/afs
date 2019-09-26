@@ -25,6 +25,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	if manager == nil {
 		return nil, fmt.Errorf("manager for URL was empty: %v", URL)
 	}
+	fmt.Printf("underlying: %v\n", baseURL)
 	return newStorager(ctx, baseURL, manager)
 
 }
