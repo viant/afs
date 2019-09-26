@@ -93,7 +93,7 @@ func TestModification_Match(t *testing.T) {
 	}
 
 	for _, useCase := range useCases {
-		basic, err := NewBasic(useCase.prefix, useCase.suffix, useCase.filter)
+		basic, err := NewBasic(useCase.prefix, useCase.suffix, useCase.filter, nil)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

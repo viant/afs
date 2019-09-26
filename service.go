@@ -223,7 +223,6 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 			options = append(options, extManager)
 		}
 	}
-
 	s.mutex.RLock()
 	result, ok := s.managers[key]
 	s.mutex.RUnlock()

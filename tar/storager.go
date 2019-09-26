@@ -44,7 +44,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	}
 	var result = make([]os.FileInfo, 0)
 	location = strings.Trim(location, "/")
-	basicMatcher, _ := matcher.NewBasic(location, "", "")
+	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
 	var listMatcher option.Matcher
 	option.Assign(options, &listMatcher)
 	listMatcher = option.GetMatcher(listMatcher)
@@ -67,7 +67,7 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 		return fmt.Errorf("%v: not found", s.URL)
 	}
 	location = strings.Trim(location, "/")
-	basicMatcher, _ := matcher.NewBasic(location, "", "")
+	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
 
 	var storageMatcher option.Matcher
 	var modifier option.Modifier

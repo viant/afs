@@ -58,7 +58,7 @@ func TestRegExpr_Match(t *testing.T) {
 	}
 
 	for _, useCase := range useCases {
-		matcher, err := NewBasic(useCase.prefix, useCase.suffix, useCase.filter)
+		matcher, err := NewBasic(useCase.prefix, useCase.suffix, useCase.filter, nil)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

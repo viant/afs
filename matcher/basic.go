@@ -12,11 +12,20 @@ type Basic struct {
 	Prefix string
 	Suffix string
 	Filter string
+	Directory *bool
 	filter *regexp.Regexp
 }
 
+
 //Match matcher parent and info with matcher rules
 func (r *Basic) Match(parent string, info os.FileInfo) bool {
+
+	if r.Directory != nil {
+		expectDir := *r.Directory
+		if expectDir != info.IsDir() {
+			return false
+		}
+	}
 	if r.Filter != "" && r.filter == nil {
 		r.filter, _ = regexp.Compile(r.Filter)
 	}
@@ -40,11 +49,12 @@ func (r *Basic) Match(parent string, info os.FileInfo) bool {
 }
 
 //NewBasic creates basic matcher
-func NewBasic(prefix, suffix, filter string) (matcher *Basic, err error) {
+func NewBasic(prefix, suffix, filter string, dir *bool) (matcher *Basic, err error) {
 	matcher = &Basic{
 		Prefix: prefix,
 		Suffix: suffix,
 		Filter: filter,
+		Directory:dir,
 	}
 	if filter != "" {
 		matcher.filter, err = regexp.Compile(filter)
