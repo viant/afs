@@ -127,7 +127,7 @@ func CreateHandler(location string, mode os.FileMode, data []byte, isDir bool) f
 		var dirs = make(map[string]*asset.Resource)
 		for i, resource := range resources {
 			if resources[i].Name == location {
-				err := resources[i].MergeInto(newResource)
+				err := resources[i].MergeFrom(newResource)
 				return resources, err
 			}
 			if resource.Dir {
@@ -150,7 +150,7 @@ func UploadHandler(toUpload []*asset.Resource) func(resources []*asset.Resource)
 		var err error
 		for _, resource := range toUpload {
 			if existing, ok := existing[resource.Name]; ok {
-				err = existing.MergeInto(resource)
+				err = existing.MergeFrom(resource)
 				if err != nil {
 					return nil, err
 				}
