@@ -31,8 +31,13 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	walker storage.Walker, uploader storage.BatchUploader) (err error) {
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
-	if err == nil && object.IsDir() {
-		err = s.Create(ctx, destURL, object.Mode()|os.ModeDir, object.IsDir(), destOpts...)
+
+	if err == nil {
+		if object.IsDir() {
+			err = s.Create(ctx, destURL, object.Mode()|os.ModeDir, object.IsDir(), destOpts...)
+		} else {
+			destURL, _ = url.Split(destURL, file.Scheme)
+		}
 	}
 	if err != nil {
 		return err
@@ -69,7 +74,7 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destURL = url.Normalize(destURL, file.Scheme)
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()
-	destURL = s.updateDestURL(sourceURL, destURL)
+
 	var walker storage.Walker
 	var uploader storage.BatchUploader
 	var matcher option.Matcher
@@ -87,5 +92,7 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	if uploader == nil {
 		uploader = s
 	}
+
+	destURL = s.updateDestURL(sourceURL, destURL)
 	return s.copy(ctx, sourceURL, destURL, sourceOptions, destOptions, walker, uploader)
 }
