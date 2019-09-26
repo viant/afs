@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 	data, err := ioutil.ReadAll(resource.Reader())
 	assert.Nil(t, err)
 	assert.EqualValues(t, "123", data)
-	err = resource.MergeInto(resource)
+	err = resource.MergeFrom(resource)
 	assert.Nil(t, err)
 	assert.NotNil(t, resources["file2.txt"])
 	assert.NotNil(t, resources["dir1"])
