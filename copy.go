@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 //updateDestURL updated dest file
@@ -21,7 +22,8 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 	if destName == sourceName {
 		return destURL
 	}
-	if len(path.Ext(sourceName)) != len(path.Ext(destName)) {
+	sourceExt := path.Ext(sourceName)
+	if sourceExt != "" && !strings.Contains(destName, sourceExt) {
 		destPath = path.Join(destPath, sourceName)
 	}
 	return url.Join(baseURL, destPath)
@@ -32,11 +34,12 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 
+	mappedName := ""
 	if err == nil {
 		if object.IsDir() {
 			err = s.Create(ctx, destURL, object.Mode()|os.ModeDir, object.IsDir(), destOpts...)
 		} else {
-			destURL, _ = url.Split(destURL, file.Scheme)
+			destURL, mappedName = url.Split(destURL, file.Scheme)
 		}
 	}
 	if err != nil {
@@ -56,6 +59,9 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	var modifier option.Modifier
 	option.Assign(destOpts, &modifier)
 	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
+		if mappedName != "" {
+			info = file.NewInfo(mappedName, info.Size(), info.Mode(), info.ModTime(), info.IsDir())
+		}
 		if modifier != nil {
 			reader, err = modifier(info, ioutil.NopCloser(reader))
 			if err != nil {
