@@ -36,9 +36,14 @@ func Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader,
 	if link.Linkname != "" {
 		return os.Symlink(filePath, link.Linkname)
 	}
+
+	stat, _ := os.Stat(filePath)
+	if stat != nil {
+		_ = os.Remove(filePath)
+	}
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, mode)
 	if err != nil {
-		return errors.Wrap(err, "unable to open file "+filePath)
+		return errors.Wrapf(err, "unable to open file: %v ", filePath)
 	}
 	_, err = io.Copy(file, reader)
 	if closeErr := file.Close(); err == nil {
