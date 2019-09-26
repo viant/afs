@@ -48,8 +48,8 @@ func (r Resource) Reader() io.Reader {
 	return bytes.NewReader(r.Data)
 }
 
-//MergeInto merges into supplied resource
-func (r *Resource) MergeInto(resource *Resource) error {
+//MergeFrom merges into supplied resource
+func (r *Resource) MergeFrom(resource *Resource) error {
 	if r.Dir != resource.Dir {
 		not := ""
 		if !resource.Dir {
