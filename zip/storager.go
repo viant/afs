@@ -101,7 +101,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	var result io.ReadCloser
 	err := s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		filename := path.Join(parent, info.Name())
-		if location == filename {
+		if location == filename && !info.IsDir() {
 			data, err := ioutil.ReadAll(reader)
 			if err != nil {
 				return false, err
