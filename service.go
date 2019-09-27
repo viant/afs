@@ -83,7 +83,8 @@ func (s *service) Download(ctx context.Context, object storage.Object, options .
 	if modifier == nil || err != nil {
 		return reader, err
 	}
-	return modifier(object, reader)
+	_, reader, err = modifier(object, reader)
+	return reader, err
 }
 
 func (s *service) Delete(ctx context.Context, URL string, options ...storage.Option) error {
@@ -158,7 +159,8 @@ func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...st
 	_, URLPath := url.Base(URL, file.Scheme)
 	_, name := path.Split(URLPath)
 	info := file.NewInfo(name, 0, file.DefaultFileOsMode, time.Now(), false)
-	return modifier(info, reader)
+	_, reader, err = modifier(info, reader)
+	return reader, err
 }
 
 func (s *service) newManager(ctx context.Context, scheme string, options ...storage.Option) (storage.Manager, error) {

@@ -64,3 +64,16 @@ func NewInfo(name string, size int64, mode os.FileMode, modificationTime time.Ti
 		Link:    link,
 	}
 }
+
+//AdjustInfoSize adjust file info size
+func AdjustInfoSize(info os.FileInfo, size int) os.FileInfo {
+	if int(info.Size()) == size {
+		return info
+	}
+	if fileInfo, ok := info.(*Info); ok {
+		fileInfo.size = int64(size)
+	} else {
+		info = NewInfo(info.Name(), int64(size), info.Mode().Perm(), info.ModTime(), info.IsDir(), info.Sys())
+	}
+	return info
+}

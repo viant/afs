@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/viant/afs"
+	"github.com/viant/afs/modifier"
 	"github.com/viant/afs/option"
 	"github.com/viant/afsc/gs"
 	"io/ioutil"
@@ -44,7 +45,7 @@ func runArchiveSubstitution(baseDir string) {
 	ctx := context.Background()
 	sourceURL := "file:/tmp/app.war/zip://localhost/WEB-INF/classes/config.properties"
 	destURL := "file:/tmp/app.war/zip://localhost/"
-	err := service.Copy(ctx, sourceURL, destURL, option.Replace(map[string]string{
+	err := service.Copy(ctx, sourceURL, destURL, modifier.Replace(map[string]string{
 		"${changeMe}": os.Getenv("USER"),
 	}))
 	if err != nil {

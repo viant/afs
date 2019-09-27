@@ -99,17 +99,17 @@ func TestService_DownloadWithURL(t *testing.T) {
 				"foo1.txt": "test run by " + os.Getenv("USER"),
 				"foo2.txt": "test run by $os.User",
 			},
-			modifier: func(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser, e error) {
+			modifier: func(info os.FileInfo, reader io.ReadCloser) (inf os.FileInfo, closer io.ReadCloser, e error) {
 				if info.Name() == "foo1.txt" {
 					data, err := ioutil.ReadAll(reader)
 					if err != nil {
-						return nil, err
+						return info, nil, err
 					}
 					_ = reader.Close()
 					expanded := strings.Replace(string(data), "$os.User", os.Getenv("USER"), 1)
 					reader = ioutil.NopCloser(strings.NewReader(expanded))
 				}
-				return reader, nil
+				return info, reader, nil
 			},
 		},
 	}

@@ -5,5 +5,5 @@ import (
 	"os"
 )
 
-//Modifier option to modify content
-type Modifier func(info os.FileInfo, reader io.ReadCloser) (io.ReadCloser, error)
+//Modifier option to modify content,
+type Modifier func(info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error)

@@ -1,6 +1,8 @@
-package option
+package modifier
 
 import (
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
 	"io"
 	"io/ioutil"
 	"os"
@@ -8,11 +10,11 @@ import (
 )
 
 //Replace return modification handler with the specified replacements map
-func Replace(replacements map[string]string) Modifier {
-	return func(info os.FileInfo, reader io.ReadCloser) (io.ReadCloser, error) {
+func Replace(replacements map[string]string) option.Modifier {
+	return func(info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error) {
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		_ = reader.Close()
 		text := string(data)
@@ -21,6 +23,7 @@ func Replace(replacements map[string]string) Modifier {
 				text = strings.Replace(text, k, v, count)
 			}
 		}
-		return ioutil.NopCloser(strings.NewReader(text)), nil
+		info = file.AdjustInfoSize(info, len(text))
+		return info, ioutil.NopCloser(strings.NewReader(text)), nil
 	}
 }

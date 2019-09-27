@@ -63,7 +63,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			info = file.NewInfo(mappedName, info.Size(), info.Mode(), info.ModTime(), info.IsDir())
 		}
 		if modifier != nil {
-			reader, err = modifier(info, ioutil.NopCloser(reader))
+			info, reader, err = modifier(info, ioutil.NopCloser(reader))
 			if err != nil {
 				return false, err
 			}
