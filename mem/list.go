@@ -9,16 +9,12 @@ import (
 
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
-	page := &option.Page{}
-	var matcher option.Matcher
-	_, _ = option.Assign(options, &page, &matcher)
 	root := s.Root
 	object, err := root.Lookup(location, 0)
-	matcher = option.GetMatcher(matcher)
 	if err != nil {
 		return nil, err
 	}
-
+	match, page := option.GetListOptions(options)
 	if object.IsDir() {
 		folder := &Folder{}
 		if err = object.Unwrap(&folder); err != nil {
@@ -28,7 +24,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 		var result = make([]os.FileInfo, 0)
 
 		for i := range objects {
-			if !matcher(location, objects[i]) {
+			if !match(location, objects[i]) {
 				continue
 			}
 			page.Increment()
@@ -42,7 +38,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 		}
 		return result, nil
 	}
-	if !matcher(location, object) {
+	if !match(location, object) {
 		return []os.FileInfo{}, nil
 	}
 	return []os.FileInfo{object}, nil

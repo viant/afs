@@ -18,10 +18,7 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to open "+filePath)
 	}
-	var matcher option.Matcher
-	page := option.Page{}
-	option.Assign(options, &matcher, &page)
-	matcher = option.GetMatcher(matcher)
+	match, page := option.GetListOptions(options)
 	defer func() { _ = file.Close() }()
 	stat, err := file.Stat()
 	if err != nil {
@@ -40,7 +37,7 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	var result = make([]storage.Object, 0)
 	result = append(result, object.New(URL, stat, nil))
 	for _, fileInfo := range files {
-		if !matcher(filePath, fileInfo) {
+		if !match(filePath, fileInfo) {
 			continue
 		}
 		page.Increment()

@@ -39,9 +39,8 @@ func TestCreate(t *testing.T) {
 			URL:         path.Join(tempDir, "afs", "create", "subdir"),
 		},
 		{
-			description: "override error directory",
+			description: "override directory",
 			override:    true,
-			hasError:    true,
 			URL:         path.Join(tempDir, "afs", "create", "error"),
 		},
 	}

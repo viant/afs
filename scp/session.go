@@ -115,11 +115,11 @@ func (s *session) readContent(info os.FileInfo) (io.Reader, error) {
 }
 
 func (s *session) processNewResource(relativeElements *[]string, response []byte, modified *time.Time, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error)) (bool, error) {
+
 	fileInfo, err := NewInfo(string(response), modified)
 	if err != nil {
 		return false, err
 	}
-
 	var reader io.Reader
 	parent := path.Join(*relativeElements...)
 	if fileInfo.IsDir() {
@@ -148,6 +148,7 @@ func (s *session) download(ctx context.Context, skipBaseDir bool, location strin
 	s.skipBaseDir = skipBaseDir
 	now := time.Now()
 	modified := &now
+
 	var pathElements = make([]string, 0)
 	for {
 		err = s.pull(&pathElements, modified, handler)

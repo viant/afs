@@ -145,7 +145,9 @@ func TestService_Copy(t *testing.T) {
 			err = service.Copy(ctx, useCase.sourceLocation, useCase.dest)
 		}
 
-		assert.Nil(t, err, useCase.description)
+		if ! assert.Nil(t, err, useCase.description) {
+			continue
+		}
 
 		actuals, err := asset.Load(fileManager, useCase.dest)
 		assert.Nil(t, err, useCase.description)

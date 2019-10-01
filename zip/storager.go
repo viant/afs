@@ -45,14 +45,19 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	var result = make([]os.FileInfo, 0)
 	location = strings.Trim(location, "/")
 	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
-	var listMatcher option.Matcher
-	option.Assign(options, &listMatcher)
-	listMatcher = option.GetMatcher(listMatcher)
+
+	match, page := option.GetListOptions(options)
+
 	err := s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if !basicMatcher.Match(parent, info) {
 			return true, nil
 		}
-		if !listMatcher(parent, info) {
+		page.Increment()
+		if page.ShallSkip() {
+			return true, nil
+		}
+
+		if !match(parent, info) {
 			return true, nil
 		}
 		result = append(result, info)
@@ -62,24 +67,19 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Walk visits location resources
-func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error), opts ...storage.Option) error {
+func (s *storager) Walk(ctx context.Context, location string, handler func(parent string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
 	if !s.exists {
 		return fmt.Errorf("%v: not found", s.URL)
 	}
 	location = strings.Trim(location, "/")
 	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
-
-	var storageMatcher option.Matcher
-	var modifier option.Modifier
-	option.Assign(opts, &storageMatcher, &modifier)
-	storageMatcher = option.GetMatcher(storageMatcher)
-
+	match, modifier := option.GetWalkOptions(options)
 	return s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if !basicMatcher.Match(parent, info) {
 			return true, nil
 		}
 
-		if !storageMatcher(parent, info) {
+		if !match(parent, info) {
 			return true, nil
 		}
 		if modifier != nil {

@@ -26,7 +26,7 @@ func TestManager_List(t *testing.T) {
 		location     string
 		baseLocation string
 		assets       map[string]string
-		matcher      option.Matcher
+		matcher      option.Match
 	}{
 		{
 			description:  "location download",

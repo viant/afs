@@ -34,6 +34,8 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 
+
+
 	mappedName := ""
 	if err == nil {
 		if object.IsDir() {
@@ -42,10 +44,11 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			destURL, mappedName = url.Split(destURL, file.Scheme)
 		}
 	}
+
+
 	if err != nil {
 		return err
 	}
-
 	upload, closer, err := uploader.Uploader(ctx, destURL, destOpts...)
 	if err != nil {
 		return err
@@ -56,6 +59,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			err = closeErr
 		}
 	}()
+
 	var modifier option.Modifier
 	option.Assign(destOpts, &modifier)
 	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
@@ -83,11 +87,11 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 
 	var walker storage.Walker
 	var uploader storage.BatchUploader
-	var matcher option.Matcher
-	var modifier option.Modifier
-	option.Assign(options, &sourceOptions, &destOptions, &matcher, &walker, &uploader, &modifier)
-	if matcher != nil {
-		*sourceOptions = append(*sourceOptions, matcher)
+
+	match, modifier := option.GetWalkOptions(options)
+	option.Assign(options, &sourceOptions, &destOptions, &match, &walker, &uploader, &modifier)
+	if match != nil {
+		*sourceOptions = append(*sourceOptions, match)
 	}
 	if modifier != nil {
 		*sourceOptions = append(*sourceOptions, modifier)

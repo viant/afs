@@ -45,17 +45,23 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	var result = make([]os.FileInfo, 0)
 	location = strings.Trim(location, "/")
 	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
-	var listMatcher option.Matcher
-	option.Assign(options, &listMatcher)
-	listMatcher = option.GetMatcher(listMatcher)
+	match, page := option.GetListOptions(options)
+
 	err := s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if !basicMatcher.Match(parent, info) {
 			return true, nil
 		}
-		if !listMatcher(parent, info) {
+		if !match(parent, info) {
+			return true, nil
+		}
+		page.Increment()
+		if page.ShallSkip() {
 			return true, nil
 		}
 		result = append(result, info)
+		if page.HasReachedLimit() {
+			return false, nil
+		}
 		return true, nil
 	})
 	return result, err
@@ -68,18 +74,13 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 	}
 	location = strings.Trim(location, "/")
 	basicMatcher, _ := matcher.NewBasic(location, "", "", nil)
-
-	var storageMatcher option.Matcher
-	var modifier option.Modifier
-	option.Assign(options, &storageMatcher, &modifier)
-	storageMatcher = option.GetMatcher(storageMatcher)
-
+	match, modifier := option.GetWalkOptions(options)
 	return s.walker.Walk(ctx, s.URL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if !basicMatcher.Match(parent, info) {
 			return true, nil
 		}
 
-		if !storageMatcher(parent, info) {
+		if !match(parent, info) {
 			return true, nil
 		}
 		if modifier != nil {

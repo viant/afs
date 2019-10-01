@@ -10,7 +10,7 @@ import (
 type Modification struct {
 	After    *time.Time
 	Before   *time.Time
-	matchers []option.Matcher
+	matchers []option.Match
 }
 
 //Match matcher parent and info with matcher rules
@@ -34,7 +34,7 @@ func (r *Modification) Match(parent string, info os.FileInfo) bool {
 }
 
 //NewModification creates a modification time matcher
-func NewModification(before, after *time.Time, matchers ...option.Matcher) *Modification {
+func NewModification(before, after *time.Time, matchers ...option.Match) *Modification {
 	return &Modification{
 		Before:   before,
 		After:    after,

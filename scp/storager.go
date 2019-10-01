@@ -58,13 +58,12 @@ func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
 
 //List lists location assets
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
-	page := &option.Page{}
-	var matcher option.Matcher
-	option.Assign(options, &page, &matcher)
-	matcher = option.GetMatcher(matcher)
+	match, page := option.GetListOptions(options)
 	var result = make([]os.FileInfo, 0)
-	err := s.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
-		if !matcher(relative, info) {
+	err := s.walk(ctx, location, false, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
+
+
+		if !match(relative, info) {
 			return true, nil
 		}
 		page.Increment()
@@ -80,13 +79,19 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 
 //Walk visits location resources
 func (s *storager) Walk(ctx context.Context, location string, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
+	return s.walk(ctx, location, true, handler)
+}
+
+//Walk visits location resources
+func (s *storager) walk(ctx context.Context, location string, skipBaseLocation bool, handler func(relative string, info os.FileInfo, reader io.Reader) (bool, error), options ...storage.Option) error {
 	session, err := newSession(s.Client, modeRead, true, s.timeout)
 	if err != nil {
 		return err
 	}
 	location = path.Clean(location)
-	return session.download(ctx, true, location, handler)
+	return session.download(ctx, skipBaseLocation, location, handler)
 }
+
 
 //Download fetches content for supplied location
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {

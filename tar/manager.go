@@ -31,10 +31,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 
 func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, Scheme)
-	var matcher option.Matcher
-
-	options, _ = option.Assign(options, &matcher)
-	matcher = option.GetMatcher(matcher)
+	match, modifier := option.GetWalkOptions(options)
 	srv, err := m.Storager(ctx, baseURL, options...)
 	if err != nil {
 		return err
@@ -44,11 +41,16 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 		return fmt.Errorf("unsupported storager type: expected: %T, but had %T", service, srv)
 	}
 	return service.Walk(ctx, URLPath, func(parent string, info os.FileInfo, reader io.Reader) (shallContinue bool, err error) {
-		if !matcher(parent, info) {
+		if !match(parent, info) {
 			return true, nil
 		}
-		shallContinue, err = handler(ctx, baseURL, parent, info, ioutil.NopCloser(reader))
-		return shallContinue, err
+		if modifier != nil {
+			info, reader, err = modifier(info, ioutil.NopCloser(reader))
+			if err != nil {
+				return false, err
+			}
+		}
+		return handler(ctx, baseURL, parent, info, ioutil.NopCloser(reader))
 	}, options...)
 }
 

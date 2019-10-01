@@ -2,15 +2,20 @@ package option
 
 import "os"
 
+//Match represents a matching function
+type Match func(parent string, info os.FileInfo) bool
+
 //Matcher represents a matcher
-type Matcher func(parent string, info os.FileInfo) bool
+type Matcher interface {
+	Match(parent string, info os.FileInfo) bool
+}
 
 func defaultMatcher(parent string, info os.FileInfo) bool {
 	return true
 }
 
-//GetMatcher returns supplied matcher or default matcher
-func GetMatcher(matcher Matcher) Matcher {
+//GetMatchFunc returns supplied matcher or default matcher
+func GetMatchFunc(matcher Match) Match {
 	if matcher != nil {
 		return matcher
 	}
