@@ -21,21 +21,21 @@ type Registry interface {
 }
 
 type registry struct {
-	proviers map[string]Provider
+	providers map[string]Provider
 	*sync.RWMutex
 }
 
 func (r *registry) Register(URLScheme string, provider Provider) {
 	r.Lock()
 	defer r.Unlock()
-	r.proviers[URLScheme] = provider
+	r.providers[URLScheme] = provider
 
 }
 
 func (r *registry) Get(uRLScheme string) (Provider, error) {
 	r.RLock()
 	defer r.RUnlock()
-	provider, ok := r.proviers[uRLScheme]
+	provider, ok := r.providers[uRLScheme]
 	if !ok {
 		return nil, fmt.Errorf("failed to lookup storage provider %v", uRLScheme)
 	}
@@ -50,8 +50,8 @@ func GetRegistry() Registry {
 		return singleton
 	}
 	singleton = &registry{
-		proviers: make(map[string]Provider),
-		RWMutex:  &sync.RWMutex{},
+		providers: make(map[string]Provider),
+		RWMutex:   &sync.RWMutex{},
 	}
 	return singleton
 }
