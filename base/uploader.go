@@ -16,6 +16,11 @@ type uploader struct {
 	storage.Manager
 }
 
+//Close implements closer
+func (u *uploader) Close() error {
+	return nil
+}
+
 func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
 	index := int32(0)
 	handler := func(ctx context.Context, parent string, info os.FileInfo, reader io.Reader) error {
@@ -37,7 +42,7 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 		}
 		return u.Manager.Upload(ctx, URL, info.Mode(), reader, options...)
 	}
-	return handler, u.Manager, nil
+	return handler, u, nil
 }
 
 //NewUploader creates a new batch uploader
