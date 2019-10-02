@@ -62,7 +62,6 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	var result = make([]os.FileInfo, 0)
 	err := s.walk(ctx, location, false, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
 
-
 		if !match(relative, info) {
 			return true, nil
 		}
@@ -91,7 +90,6 @@ func (s *storager) walk(ctx context.Context, location string, skipBaseLocation b
 	location = path.Clean(location)
 	return session.download(ctx, skipBaseLocation, location, handler)
 }
-
 
 //Download fetches content for supplied location
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {

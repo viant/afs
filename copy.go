@@ -34,8 +34,6 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	object, err := s.Object(ctx, sourceURL, *srcOptions...)
 	destOpts := *destOptions
 
-
-
 	mappedName := ""
 	if err == nil {
 		if object.IsDir() {
@@ -44,7 +42,6 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			destURL, mappedName = url.Split(destURL, file.Scheme)
 		}
 	}
-
 
 	if err != nil {
 		return err

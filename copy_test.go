@@ -145,7 +145,7 @@ func TestService_Copy(t *testing.T) {
 			err = service.Copy(ctx, useCase.sourceLocation, useCase.dest)
 		}
 
-		if ! assert.Nil(t, err, useCase.description) {
+		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 
