@@ -10,7 +10,7 @@ type Matcher interface {
 	Match(parent string, info os.FileInfo) bool
 }
 
-func defaultMatcher(parent string, info os.FileInfo) bool {
+func DefaultMatch(parent string, info os.FileInfo) bool {
 	return true
 }
 
@@ -19,5 +19,5 @@ func GetMatchFunc(matcher Match) Match {
 	if matcher != nil {
 		return matcher
 	}
-	return defaultMatcher
+	return DefaultMatch
 }
