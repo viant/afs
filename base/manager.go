@@ -80,7 +80,7 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 		return err
 	}
 	var data []byte
-	if bufferReader, ok := reader.(*bytes.Buffer) ; ok{
+	if bufferReader, ok := reader.(*bytes.Buffer); ok {
 		data = bufferReader.Bytes()
 	} else {
 		if data, err = ioutil.ReadAll(reader); err != nil {

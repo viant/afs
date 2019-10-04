@@ -1,3 +1,6 @@
+## October 4 2019 0.2.1
+  * Optimized upload
+    
 ## October 1 2019 0.2.1
 
   * Patched default BatchUploader close
