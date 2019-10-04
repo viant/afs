@@ -52,6 +52,7 @@ func TestNewService(t *testing.T) {
 
 		files, err := service.List(ctx, dest, 0, 1)
 		assert.Nil(t, err, useCase.description)
+
 		if assert.EqualValues(t, 1, len(files), useCase.description) {
 			assert.EqualValues(t, useCase.asset.Name, files[0].Name())
 		}

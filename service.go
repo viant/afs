@@ -50,15 +50,6 @@ type service struct {
 	managers map[string]storage.Manager
 }
 
-func (s *service) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
-	URL = url.Normalize(URL, file.Scheme)
-	manager, err := s.manager(ctx, URL, options)
-	if err != nil {
-		return nil, err
-	}
-	return manager.List(ctx, URL, options...)
-}
-
 func (s *service) Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
 	manager, err := s.manager(ctx, URL, options)
@@ -174,6 +165,7 @@ func (s *service) newManager(ctx context.Context, scheme string, options ...stor
 	return provider(options...)
 }
 
+//Init initilises service
 func (s *service) Init(ctx context.Context, baseURL string, options ...storage.Option) error {
 	baseURL = url.Normalize(baseURL, file.Scheme)
 	_, err := s.manager(ctx, baseURL, options)

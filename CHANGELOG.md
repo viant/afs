@@ -1,5 +1,6 @@
-## October 4 2019 0.2.1
+## October 4 2019 0.3.0
   * Optimized upload
+  * Added option.Recursive for list operation
     
 ## October 1 2019 0.2.1
 
