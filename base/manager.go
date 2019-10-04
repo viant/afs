@@ -1,6 +1,7 @@
 package base
 
 import (
+	"bytes"
 	"context"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
@@ -78,10 +79,13 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	if err != nil {
 		return err
 	}
-
-	data, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return err
+	var data []byte
+	if bufferReader, ok := reader.(*bytes.Buffer) ; ok{
+		data = bufferReader.Bytes()
+	} else {
+		if data, err = ioutil.ReadAll(reader); err != nil {
+			return err
+		}
 	}
 	return storager.Upload(ctx, URLPath, mode, data, options...)
 }
