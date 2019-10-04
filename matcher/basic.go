@@ -9,10 +9,10 @@ import (
 
 //Basic represents prefix, suffix or regexp matcher
 type Basic struct {
-	Prefix    string
-	Suffix    string
-	Filter    string
-	Directory *bool
+	Prefix    string `json:",omitempty"`
+	Suffix    string `json:",omitempty"`
+	Filter    string `json:",omitempty"`
+	Directory *bool  `json:",omitempty"`
 	filter    *regexp.Regexp
 }
 
