@@ -38,7 +38,10 @@ func list(ctx context.Context, lister storage.Lister, URL string, recursive bool
 		if err != nil {
 			return err
 		}
-		for i := 1; i < len(folders); i++ {
+		for i := 0; i < len(folders); i++ {
+			if url.Equals(URL, folders[i].URL()) {
+				continue
+			}
 			*result = append(*result, folders[i])
 			if err = list(ctx, lister, folders[i].URL(), recursive, options, result); err != nil {
 				return err

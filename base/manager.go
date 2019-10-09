@@ -36,6 +36,7 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	if err != nil {
 		return nil, err
 	}
+
 	var objects = make([]storage.Object, len(files))
 	if len(objects) == 0 {
 		return objects, nil
@@ -54,8 +55,13 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 		files[0] = file.NewInfo(name, files[0].Size(), files[0].Mode(), files[0].ModTime(), files[0].IsDir())
 	}
 
+	fileURL := ""
 	for i := 0; i < len(files); i++ {
-		fileURL := url.Join(baseURL, path.Join(URLPath, files[i].Name()))
+		if len(files) == 1 && files[0].Name() == name {
+			fileURL = URLPath
+		} else {
+			fileURL = url.Join(baseURL, path.Join(URLPath, files[i].Name()))
+		}
 		objects[i] = object.New(fileURL, files[i], nil)
 	}
 	return objects, nil
