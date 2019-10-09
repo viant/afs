@@ -1,3 +1,8 @@
+## October 9 2019 0.3.1
+  * Patched URL for single file list operation
+  * Streamlined object function 
+  * Streamlined exists function
+  
 ## October 4 2019 0.3.0
   * Optimized base upload
   * Added option.Recursive for the list operation

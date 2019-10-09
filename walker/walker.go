@@ -70,7 +70,7 @@ func (f *walker) walk(ctx context.Context, URL, parent string, handler storage.O
 	}
 
 	for i := range objects {
-		if i == 0 && objects[i].IsDir() {
+		if objects[i].IsDir() && url.Equals(resourceURL, objects[i].URL()) {
 			continue
 		}
 		if err = f.visitResource(ctx, objects[i], URL, parent, handler, options); err != nil {

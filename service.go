@@ -105,6 +105,7 @@ func (s *service) Object(ctx context.Context, URL string, options ...storage.Opt
 }
 
 func (s *service) object(ctx context.Context, manager storage.Manager, URL string, options ...storage.Option) (storage.Object, error) {
+	options = append(options, option.NewPage(0, 1))
 	objects, err := manager.List(ctx, URL, options...)
 	if err != nil {
 		return nil, err
@@ -128,6 +129,7 @@ func (s *service) exists(ctx context.Context, manager storage.Manager, URL strin
 	if checker, ok := manager.(storage.Checker); ok {
 		return checker.Exists(ctx, URL, options...)
 	}
+	options = append(options, option.NewPage(0, 1))
 	objects, err := s.List(ctx, URL, options...)
 	if err != nil {
 		return false, nil

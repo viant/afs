@@ -55,6 +55,21 @@ func TestRegExpr_Match(t *testing.T) {
 			location:    "asset.txt",
 			expect:      false,
 		},
+
+		{
+			description: "regexpr no match",
+			filter:      "asset\\d+\\.txt",
+			location:    "asset.txt",
+			expect:      false,
+		},
+
+		{
+			description: "prefix and suffix match",
+			prefix:      "/aa-export/v/prod/export/aa/",
+			suffix:      ".gz",
+			location:    "/aa-export/v/prod/export/aa/20191005_000000000000.txt.gz",
+			expect:      true,
+		},
 	}
 
 	for _, useCase := range useCases {
