@@ -167,7 +167,7 @@ func (s *service) newManager(ctx context.Context, scheme string, options ...stor
 	return provider(options...)
 }
 
-//Init initilises service
+//Init initialises service
 func (s *service) Init(ctx context.Context, baseURL string, options ...storage.Option) error {
 	baseURL = url.Normalize(baseURL, file.Scheme)
 	_, err := s.manager(ctx, baseURL, options)
