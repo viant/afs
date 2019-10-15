@@ -11,14 +11,12 @@ import (
 func (s *service) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	sourceURL = url.Normalize(sourceURL, file.Scheme)
 	destURL = url.Normalize(destURL, file.Scheme)
-	sourceScheme := url.Scheme(sourceURL, file.Scheme)
-	destScheme := url.Scheme(destURL, file.Scheme)
 	destURL = s.updateDestURL(sourceURL, destURL)
 
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()
 	option.Assign(options, &sourceOptions, &destOptions)
-	if sourceScheme == destScheme {
+	if url.IsSchemeEquals(sourceURL, destURL) {
 		if manager, err := s.manager(ctx, sourceURL, *sourceOptions); err == nil {
 			if mover, ok := manager.(storage.Mover); ok {
 				return mover.Move(ctx, sourceURL, destURL, options...)
