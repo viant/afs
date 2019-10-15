@@ -51,7 +51,11 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 		if err != nil {
 			return err
 		}
+
 		if copier, ok := srcManager.(storage.Copier); ok {
+			if mappedName != "" {
+				destURL = url.Join(destURL, mappedName)
+			}
 			return copier.Copy(ctx, sourceURL, destURL, *srcOptions...)
 		}
 	}
