@@ -19,9 +19,9 @@ import (
 
 //ExampleService_List reading location content
 func ExampleService_List() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	objects, err := service.List(ctx, "/tmp/folder")
+	objects, err := fs.List(ctx, "/tmp/folder")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func ExampleService_List() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := service.Download(ctx, object)
+		reader, err := fs.Download(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,21 +45,21 @@ func ExampleService_List() {
 
 //ExampleService_Upload uploading content
 func ExampleService_Upload() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
 	keyAuth, err := scp.LocalhostKeyAuth("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = service.Init(ctx, "scp://127.0.0.1:22/", keyAuth)
+	err = fs.Init(ctx, "scp://127.0.0.1:22/", keyAuth)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = service.Upload(ctx, "scp://127.0.0.1:22/folder/asset.txt", 0644, strings.NewReader("test me"))
+	err = fs.Upload(ctx, "scp://127.0.0.1:22/folder/asset.txt", 0644, strings.NewReader("test me"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	ok, err := service.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
+	ok, err := fs.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,13 +68,13 @@ func ExampleService_Upload() {
 
 //ExampleService_Copy copy content
 func ExampleService_Copy() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
 	keyAuth, err := scp.LocalhostKeyAuth("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = service.Copy(ctx, "s3://mybucket/myfolder", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
+	err = fs.Copy(ctx, "s3://mybucket/myfolder", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,22 +82,22 @@ func ExampleService_Copy() {
 
 //ExampleService_Move moves content
 func ExampleService_Move() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
 	keyAuth, err := scp.LocalhostKeyAuth("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = service.Move(ctx, "/tmp/transient/app", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
+	err = fs.Move(ctx, "/tmp/transient/app", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func ExampleService_Uploader() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	upload, closer, err := service.Uploader(ctx, "/tmp/clone")
+	upload, closer, err := fs.Uploader(ctx, "/tmp/clone")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,9 +127,9 @@ func ExampleService_Uploader() {
 
 //Example_DownloadError download error simulation example
 func Example_DownloadError() {
-	service := afs.NewFaker()
+	fs := afs.NewFaker()
 	ctx := context.Background()
-	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
+	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
 	if err != nil {
 		log.Fatalf("expect upload error: %v", err)
 	}
@@ -137,13 +137,13 @@ func Example_DownloadError() {
 
 //Example_DownloadError download error simulation example
 func Example_UploadError() {
-	service := afs.NewFaker()
+	fs := afs.NewFaker()
 	ctx := context.Background()
-	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
+	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = service.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	_, err = fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}
@@ -151,13 +151,13 @@ func Example_UploadError() {
 
 //Example_DownloadError download error simulation example
 func Example_ReaderError() {
-	service := afs.NewFaker()
+	fs := afs.NewFaker()
 	ctx := context.Background()
-	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewReaderError(fmt.Errorf("test error")))
+	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewReaderError(fmt.Errorf("test error")))
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	reader, err := fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -77,29 +77,29 @@ func main() {
     ctx := context.Background()
     {
         //auth with first call 
-        service := afs.New()
-        defer service.Close()
+        fs := afs.New()
+        defer fs.Close()
         keyAuth, err := scp.LocalhostKeyAuth("")
         if err != nil {
            log.Fatal(err)
         }
-        reader1, err := service.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
+        reader1, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
         if err != nil {
                log.Fatal(err)
         }
         ...
-        reader2, err := service.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
+        reader2, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
     }
     
     {
         //auth per baseURL 
-        service := afs.New()
-        err = service.Init(ctx, "scp://host1:22/", keyAuth)
+        fs := afs.New()
+        err = fs.Init(ctx, "scp://host1:22/", keyAuth)
         if err != nil {
             log.Fatal(err)
         }
-        defer service.Destroy("scp://host1:22/")
-        reader, err := service.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt")
+        defer fs.Destroy("scp://host1:22/")
+        reader, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt")
      }
 }
 
@@ -112,9 +112,9 @@ func main() {
 ```go
 func main() {
 	
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
-    objects, err := service.List(ctx, "/tmp/folder")
+    objects, err := fs.List(ctx, "/tmp/folder")
     if err != nil {
         log.Fatal(err)
     }
@@ -123,7 +123,7 @@ func main() {
         if object.IsDir() {
             continue
         }
-        reader, err := service.Download(ctx, object)
+        reader, err := fs.Download(ctx, object)
         if err != nil {
             log.Fatal(err)
         }
@@ -141,26 +141,26 @@ func main() {
 ```go
 func main() {
 	
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
     keyAuth, err := scp.LocalhostKeyAuth("")
     if err != nil {
         log.Fatal(err)
     }
-    err  = service.Init(ctx, "scp://127.0.0.1:22/", keyAuth)
+    err  = fs.Init(ctx, "scp://127.0.0.1:22/", keyAuth)
     if err != nil {
         log.Fatal(err)
     }	
-    err = service.Upload(ctx, "scp://127.0.0.1:22/folder/asset.txt", 0644, strings.NewReader("test me"))
+    err = fs.Upload(ctx, "scp://127.0.0.1:22/folder/asset.txt", 0644, strings.NewReader("test me"))
     if err != nil {
         log.Fatal(err)
     }
-    ok, err := service.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
+    ok, err := fs.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
     if err != nil {
         log.Fatal(err)
     }
     fmt.Printf("has file: %v\n", ok)
-    _ = service.Delete(ctx, "scp://127.0.0.1:22/folder/asset.txt")
+    _ = fs.Delete(ctx, "scp://127.0.0.1:22/folder/asset.txt")
 }
 ```
 
@@ -170,13 +170,13 @@ func main() {
 ```go
 func main() {
 
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
     keyAuth, err := scp.LocalhostKeyAuth("")
     if err != nil {
         log.Fatal(err)
     }
-    err = service.Copy(ctx, "s3://mybucket/myfolder", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
+    err = fs.Copy(ctx, "s3://mybucket/myfolder", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
     if err != nil {
         log.Fatal(err)
     }
@@ -196,9 +196,9 @@ func main() {
     }
     sourceURL := "mylocalPath/"
     destURL := "gs:mybucket/test.zip/zip://localhost/dir1"
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
-    err = service.Copy(ctx, sourceURL, destURL, option.NewDest(auth))
+    err = fs.Copy(ctx, sourceURL, destURL, option.NewDest(auth))
     if err != nil {
         log.Fatal(err)
     }
@@ -215,9 +215,9 @@ Walker can be created for tar or zip archive.
 func main() {
 	
     ctx := context.Background()
-	service := afs.New()
+	fs := afs.New()
 	walker := tar.NewWalker(s3afs.New())
-	err := service.Copy(ctx, "/tmp/test.tar", "s3:///dest/folder/test", walker)
+	err := fs.Copy(ctx, "/tmp/test.tar", "s3:///dest/folder/test", walker)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -232,9 +232,9 @@ Uploader can be created for tar or zip archive.
 func main() {
 	
     ctx := context.Background()
-	service := afs.New()
+	fs := afs.New()
 	uploader := zip.NewBatchUploader(gsafs.New())
-	err := service.Copy(ctx, "gs:///tmp/test/data", "/tmp/data.zip", uploader)
+	err := fs.Copy(ctx, "gs:///tmp/test/data", "/tmp/data.zip", uploader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -247,13 +247,13 @@ func main() {
 ```go
 func main() {
 	
-    service := afs.New()
+    fs := afs.New()
 	ctx := context.Background()
 	keyAuth, err := scp.LocalhostKeyAuth("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = service.Move(ctx, "/tmp/transient/app", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
+	err = fs.Move(ctx, "/tmp/transient/app", "scp://127.0.0.1/tmp", option.NewSource(), option.NewDest(keyAuth))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -265,9 +265,9 @@ func main() {
 ```go
 func main() {
 	
-    service := afs.New()
+    fs := afs.New()
 	ctx := context.Background()
-	upload, closer, err := service.Uploader(ctx, "/tmp/clone")
+	upload, closer, err := fs.Uploader(ctx, "/tmp/clone")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -307,9 +307,9 @@ The following have been implemented.
 func main() {
 	
     matcher, err := NewBasic("/data", ".avro", nil)
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
-    err := service.Copy(ctx, "/tmp/data", "s3://mybucket/data/", matcher.Match)
+    err := fs.Copy(ctx, "/tmp/data", "s3://mybucket/data/", matcher.Match)
     if err != nil {
         log.Fatal(err)
     }
@@ -328,9 +328,9 @@ OS style filepath match, with the following terms:
 func main() {
 	
     matcher := matcher.Filepath("*.avro")
-    service := afs.New()
+    fs := afs.New()
     ctx := context.Background()
-    err := service.Copy(ctx, "/tmp/data", "gs://mybucket/data/", matcher)
+    err := fs.Copy(ctx, "/tmp/data", "gs://mybucket/data/", matcher)
     if err != nil {
         log.Fatal(err)
     }
@@ -353,9 +353,9 @@ func mian(){
 	if err != nil {
 		log.Fatal(err)
 	}
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	objects, err := service.List(ctx, "/tmp/folder", ignoreMatcher.Match)
+	objects, err := fs.List(ctx, "/tmp/folder", ignoreMatcher.Match)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -385,9 +385,9 @@ func mian(){
 	if err != nil {
 		log.Fatal(err)
 	}
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	objects, err := service.List(ctx, "/tmp/folder", modTimeMatcher.Match)
+	objects, err := fs.List(ctx, "/tmp/folder", modTimeMatcher.Match)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -407,11 +407,11 @@ To modify resource content on the fly you can use [Modifier](option/modifier.go)
 
 ```go
 func main() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
 	sourceURL := "file:/tmp/app.war/zip://localhost/WEB-INF/classes/config.properties"
 	destURL := "file:/tmp/app.war/zip://localhost/"
-	err := service.Copy(ctx, sourceURL, destURL, modifier.Replace(map[string]string{
+	err := fs.Copy(ctx, sourceURL, destURL, modifier.Replace(map[string]string{
 		"${changeMe}": os.Getenv("USER"),
 	}))
 	if err != nil {
@@ -450,8 +450,8 @@ func modifyContent(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser
 
 func main() {
 
-    service := afs.New()
-    reader ,err := service.DownloadWithURL(context.Background(), "s3://mybucket/meta.info", modifyContent)
+    fs := afs.New()
+    reader ,err := fs.DownloadWithURL(context.Background(), "s3://mybucket/meta.info", modifyContent)
     if err != nil {
         log.Fatal(err)	
     }
@@ -490,7 +490,7 @@ Groups options by source or destination options. This options work with Copy or 
 
 func main() {
 	
-    service := afs.New()
+    fs := afs.New()
     secretPath :=  path.Join(os.Getenv("HOME"), ".secret","gcp.json")
     jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
     if err != nil {
@@ -502,7 +502,7 @@ func main() {
         log.Fatal(err)
     }
     destOptions := option.NewDest(authConfig)
-	err = service.Copy(ctx, "gs://mybucket/data", "s3://mybucket/data",  sourceOptions, destOptions)
+	err = fs.Copy(ctx, "gs://mybucket/data", "s3://mybucket/data",  sourceOptions, destOptions)
 }
 
 ```
@@ -520,9 +520,9 @@ Check out [storage manager](#storage-managers) for additional options.
 - [GCP - GS](https://github.com/viant/afsc/tree/master/gs)
 - [AWS - S3](https://github.com/viant/afsc/tree/master/s3)
 
-## Testing service
+## Testing fs
 
-To unit test all storage operation all in memory you can use faker service.
+To unit test all storage operation all in memory you can use faker fs.
 
 In addition you can use error options to test exception handling.
 
@@ -530,9 +530,9 @@ In addition you can use error options to test exception handling.
 ```go
 
 func mian() {
-	service := afs.NewFaker()
+	fs := afs.NewFaker()
 	ctx := context.Background()
-	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
+	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
 	if err != nil {
 		log.Fatalf("expect upload error: %v", err)
 	}
@@ -543,13 +543,13 @@ func mian() {
 ```go
 
 func mian() {
-    service := afs.NewFaker()
+    fs := afs.NewFaker()
 	ctx := context.Background()
-	err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
+	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = service.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	_, err = fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}
@@ -560,9 +560,9 @@ func mian() {
 ```go
 
 func mian() {
-    service := afs.NewFaker()
+    fs := afs.NewFaker()
     ctx := context.Background()
-    err := service.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
+    err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
     if err != nil {
         log.Fatalf("expect upload error: %v", err)
     }
@@ -589,7 +589,7 @@ func Test_XXX(t *testing.T) {
 
 	ctx := context.Background()
 	for _, useCase := range useCases {
-		service := afs.New()
+		fs := afs.New()
 		mgr, err := afs.Manager(useCase.location, useCase.options...)
 		if err != nil {
 			log.Fatal(err)
