@@ -16,6 +16,14 @@ func Scheme(URL, defaultSchema string) string {
 	return schema
 }
 
+//IsSchemeEquals returns true if scheme is equals
+func IsSchemeEquals(URL1, URL2 string) bool {
+	scheme1 := Scheme(URL1, "file")
+	scheme2 := Scheme(URL2, "file")
+	return scheme1 == scheme2
+
+}
+
 //SchemeExtensionURL extract scheme extension or empty string
 func SchemeExtensionURL(URL string) string {
 	index := strings.Index(URL, "://")
