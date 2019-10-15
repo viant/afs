@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -31,22 +32,31 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 
 func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOptions *option.Source, destOptions *option.Dest,
 	walker storage.Walker, uploader storage.BatchUploader) (err error) {
-	object, err := s.Object(ctx, sourceURL, *srcOptions...)
-	destOpts := *destOptions
-
+	source, err := s.Object(ctx, sourceURL, *srcOptions...)
+	if err != nil {
+		return errors.Wrapf(err, "source not found: %v", sourceURL)
+	}
+	var modifier option.Modifier
+	option.Assign(*destOptions, &modifier)
 	mappedName := ""
-	if err == nil {
-		if object.IsDir() {
-			err = s.Create(ctx, destURL, object.Mode()|os.ModeDir, object.IsDir(), destOpts...)
-		} else {
-			destURL, mappedName = url.Split(destURL, file.Scheme)
+	if source.IsDir() {
+		err = s.Create(ctx, destURL, source.Mode()|os.ModeDir, source.IsDir(), *destOptions...)
+	} else {
+		destURL, mappedName = url.Split(destURL, file.Scheme)
+
+	}
+
+	if url.IsSchemeEquals(sourceURL, destURL) && modifier == nil {
+		srcManager, err := s.manager(ctx, sourceURL, *srcOptions)
+		if err != nil {
+			return err
+		}
+		if copier, ok := srcManager.(storage.Copier); ok {
+			return copier.Copy(ctx, sourceURL, destURL, *srcOptions...)
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-	upload, closer, err := uploader.Uploader(ctx, destURL, destOpts...)
+	upload, closer, err := uploader.Uploader(ctx, destURL, *destOptions...)
 	if err != nil {
 		return err
 	}
@@ -57,8 +67,6 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 		}
 	}()
 
-	var modifier option.Modifier
-	option.Assign(destOpts, &modifier)
 	err = walker.Walk(ctx, sourceURL, func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (toContinue bool, err error) {
 		if mappedName != "" {
 			info = file.NewInfo(mappedName, info.Size(), info.Mode(), info.ModTime(), info.IsDir())
