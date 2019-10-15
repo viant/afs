@@ -1,3 +1,11 @@
+## October 15 2019 0.5.0
+  * Update copy implementation
+  * Added url.IsSchemeEquals
+
+## October 12 2019 0.4.0
+  * Added FileCopier 
+  * Streamlined internal cloud API
+  
 ## October 9 2019 0.3.1
   * Patched URL for single file list operation
   * Streamlined object function 
