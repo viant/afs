@@ -1,8 +1,8 @@
-## October 15 2019 0.5.0
+## October 15 2019 0.4.0
   * Update copy implementation
   * Added url.IsSchemeEquals
 
-## October 12 2019 0.4.0
+## October 12 2019 0.3.2
   * Added FileCopier 
   * Streamlined internal cloud API
   
