@@ -1,4 +1,4 @@
-## October 15 2019 0.4.0
+## October 15 2019 0.4.1
   * Update copy implementation
   * Added url.IsSchemeEquals
 
