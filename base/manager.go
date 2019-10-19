@@ -58,7 +58,7 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	fileURL := ""
 	for i := 0; i < len(files); i++ {
 		if len(files) == 1 && files[0].Name() == name {
-			fileURL = URLPath
+			fileURL = url.Join(baseURL, URLPath)
 		} else {
 			fileURL = url.Join(baseURL, path.Join(URLPath, files[i].Name()))
 		}
