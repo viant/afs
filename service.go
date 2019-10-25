@@ -199,6 +199,14 @@ func (s *service) CloseAll() error {
 	return err
 }
 
+func (s *service) IsAuthChanged(ctx context.Context, manager storage.Manager, URL string, options []storage.Option) bool {
+	authTracker, ok := manager.(storage.AuthTracker)
+	if !ok {
+		return false
+	}
+	return authTracker.IsAuthChanged(ctx, URL, options)
+}
+
 func (s *service) manager(ctx context.Context, URL string, options []storage.Option) (storage.Manager, error) {
 	scheme := url.Scheme(URL, file.Scheme)
 	noCache := &option.NoCache{}
@@ -206,6 +214,7 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 	if noCache.Source == option.NoCacheBaseURL {
 		return s.newManager(ctx, scheme, options...)
 	}
+
 	key, _ := url.Base(URL, scheme)
 	extURL := url.SchemeExtensionURL(URL)
 	key += extURL
@@ -223,7 +232,11 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 	result, ok := s.managers[key]
 	s.mutex.RUnlock()
 	if ok {
-		return result, nil
+		if !s.IsAuthChanged(ctx, result, URL, options) {
+			return result, nil
+		}
+		_ = result.Close()
+
 	}
 	manager, err := s.newManager(ctx, scheme, options...)
 	s.mutex.Lock()

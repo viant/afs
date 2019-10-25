@@ -17,9 +17,11 @@ func (s *service) Move(ctx context.Context, sourceURL, destURL string, options .
 	destOptions := option.NewDest()
 	option.Assign(options, &sourceOptions, &destOptions)
 	if url.IsSchemeEquals(sourceURL, destURL) {
-		if manager, err := s.manager(ctx, sourceURL, *sourceOptions); err == nil {
-			if mover, ok := manager.(storage.Mover); ok {
-				return mover.Move(ctx, sourceURL, destURL, options...)
+		if sourceManager, err := s.manager(ctx, sourceURL, *sourceOptions); err == nil {
+			if mover, ok := sourceManager.(storage.Mover); ok {
+				if !s.IsAuthChanged(ctx, sourceManager, sourceURL, *destOptions) {
+					return mover.Move(ctx, sourceURL, destURL, *sourceOptions...)
+				}
 			}
 		}
 	}

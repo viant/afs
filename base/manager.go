@@ -20,6 +20,7 @@ type Manager struct {
 	storage.Manager
 	options   []storage.Option
 	scheme    string
+	baseURL   string
 	mutex     *sync.RWMutex
 	storagers map[string]storage.Storager
 	provider  func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error)
@@ -28,7 +29,7 @@ type Manager struct {
 //List lists content for supplied URL
 func (m *Manager) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	if err != nil {
 		return err
 	}
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func (m *Manager) Download(ctx context.Context, object storage.Object, options .
 //DownloadWithURL downloads content
 func (m *Manager) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ func (m *Manager) DownloadWithURL(ctx context.Context, URL string, options ...st
 //Delete deletes locations
 func (m *Manager) Delete(ctx context.Context, URL string, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return err
 	}
@@ -130,7 +131,7 @@ func (m *Manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 	var reader io.Reader
 	options, _ = option.Assign(options, &reader)
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func (m *Manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 //Exists checks if resource exsits
 func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
-	storager, err := m.Storager(ctx, baseURL, options...)
+	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return false, err
 	}
@@ -162,7 +163,7 @@ func (m *Manager) Options(options []storage.Option) []storage.Option {
 }
 
 //Storager returns storager
-func (m *Manager) Storager(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
+func (m *Manager) Storager(ctx context.Context, baseURL string, options []storage.Option) (storage.Storager, error) {
 	m.mutex.RLock()
 	baseURL, _ = url.Base(baseURL, m.scheme)
 	storager, ok := m.storagers[baseURL]
@@ -197,8 +198,34 @@ func (m *Manager) Close() error {
 	return err
 }
 
+func (m *Manager) IsAuthChanged(ctx context.Context, baseURL string, options []storage.Option) bool {
+	changed := m.isAuthChanged(ctx, baseURL, options)
+	return changed
+}
+
+func (m *Manager) isAuthChanged(ctx context.Context, baseURL string, options []storage.Option) bool {
+	storager, err := m.Storager(ctx, baseURL, options)
+	if err != nil {
+		return false
+	}
+	authManager, ok := storager.(storage.StoragerAuthTracker)
+	if !ok {
+		return false
+	}
+	authOptions := authManager.FilterAuthOptions(options)
+	if len(authOptions) == 0 {
+		return false
+	}
+	return authManager.IsAuthChanged(authOptions)
+}
+
 //Scheme returns scheme
 func (m *Manager) Scheme() string {
+	return m.scheme
+}
+
+//Scheme returns scheme
+func (m *Manager) BaseURL() string {
 	return m.scheme
 }
 

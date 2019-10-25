@@ -1,3 +1,6 @@
+## October 15 2019 0.5.0
+  * Added AuthTracker
+
 ## October 15 2019 0.4.1
   * Update copy implementation
   * Added url.IsSchemeEquals

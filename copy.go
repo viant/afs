@@ -43,20 +43,19 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 		err = s.Create(ctx, destURL, source.Mode()|os.ModeDir, source.IsDir(), *destOptions...)
 	} else {
 		destURL, mappedName = url.Split(destURL, file.Scheme)
-
 	}
-
 	if url.IsSchemeEquals(sourceURL, destURL) && modifier == nil {
-		srcManager, err := s.manager(ctx, sourceURL, *srcOptions)
+		sourceManager, err := s.manager(ctx, sourceURL, *srcOptions)
 		if err != nil {
 			return err
 		}
-
-		if copier, ok := srcManager.(storage.Copier); ok {
+		if copier, ok := sourceManager.(storage.Copier); ok {
 			if mappedName != "" {
 				destURL = url.Join(destURL, mappedName)
 			}
-			return copier.Copy(ctx, sourceURL, destURL, *srcOptions...)
+			if !s.IsAuthChanged(ctx, sourceManager, sourceURL, *destOptions) {
+				return copier.Copy(ctx, sourceURL, destURL, *srcOptions...)
+			}
 		}
 	}
 
@@ -111,7 +110,6 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	if uploader == nil {
 		uploader = s
 	}
-
 	destURL = s.updateDestURL(sourceURL, destURL)
 	return s.copy(ctx, sourceURL, destURL, sourceOptions, destOptions, walker, uploader)
 }

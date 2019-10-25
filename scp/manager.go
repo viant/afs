@@ -19,7 +19,7 @@ type manager struct {
 
 func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.Option) (storage.Upload, io.Closer, error) {
 	_, URLPath := url.Base(URL, Scheme)
-	srv, err := m.Storager(ctx, URL, options...)
+	srv, err := m.Storager(ctx, URL, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -33,7 +33,7 @@ func (m *manager) Uploader(ctx context.Context, URL string, options ...storage.O
 func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, Scheme)
 	match, modifier := option.GetWalkOptions(options)
-	srv, err := m.Storager(ctx, baseURL, options...)
+	srv, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return err
 	}
