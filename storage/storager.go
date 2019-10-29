@@ -20,11 +20,12 @@ type Storager interface {
 	Download(ctx context.Context, location string, options ...Option) (io.ReadCloser, error)
 
 	//Upload uploads
-	Upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options ...Option) error
+	Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...Option) error
 
 	//Create create file or directory
-	Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...Option) error
+	Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...Option) error
 
 	//Delete deletes locations
 	Delete(ctx context.Context, location string) error
 }
+

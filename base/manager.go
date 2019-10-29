@@ -1,7 +1,6 @@
 package base
 
 import (
-	"bytes"
 	"context"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
@@ -9,7 +8,6 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -86,15 +84,9 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	if err != nil {
 		return err
 	}
-	var data []byte
-	if bufferReader, ok := reader.(*bytes.Buffer); ok {
-		data = bufferReader.Bytes()
-	} else {
-		if data, err = ioutil.ReadAll(reader); err != nil {
-			return err
-		}
-	}
-	return storager.Upload(ctx, URLPath, mode, data, options...)
+
+
+	return storager.Upload(ctx, URLPath, mode, reader, options...)
 }
 
 //Download downloads content
@@ -135,13 +127,7 @@ func (m *Manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 	if err != nil {
 		return err
 	}
-	data := []byte{}
-	if reader != nil {
-		if data, err = ioutil.ReadAll(reader); err != nil {
-			return err
-		}
-	}
-	return storager.Create(ctx, URLPath, mode, data, isDir)
+	return storager.Create(ctx, URLPath, mode, reader, isDir)
 }
 
 //Exists checks if resource exsits
