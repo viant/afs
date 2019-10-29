@@ -13,6 +13,7 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 - [Usage](#usage)
 - [Matchers](#matchers)
 - [Content modifiers](#content-modifiers)
+- [Streaming data](#streaming-data)
 - [Options](#options)
 - [Storage Implementations](#storage-implementations)
 - [Testing mode](#testing-mode)
@@ -467,6 +468,38 @@ func main() {
 ```
 
 
+### Streaming data
+
+Streaming data allows data reading and uploading in chunks with small memory footprint.
+
+
+```go
+
+    jwtConfig, err := gs.NewJwtConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx := context.Background()
+	fs := afs.New()
+	sourceURL := "gs://myBucket/path/myasset.gz"
+	reader, err := fs.DownloadWithURL(ctx, sourceURL, jwtConfig, option.NewStream(64*1024*1024, 0))
+	if err != nil {
+		log.Fatal(err)
+	}
+    
+	_ = os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+	destURL := "s3://myBucket/path/myasset.gz"
+	err = fs.Upload(ctx, destURL, 0644, reader, &option.Checksum{Skip:true})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+```
+
+
+
 ## Options
 
 
@@ -506,6 +539,14 @@ func main() {
 }
 
 ```
+
+
+* **[option.Checksum](option/checksum.go)** skip computing checksum if Skip is  set, this option allows streaming upload in chunks
+* **[option.Stream](option/stream.go)**: download reader reads data with specified stream PartSize 
+
+
+
+
 
 Check out [storage manager](#storage-managers) for additional options. 
 

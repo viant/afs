@@ -1,3 +1,12 @@
+## October 28 2019 0.6.0
+  * Added Sizer interface
+  * Added Checksum option with Skip flag (upload)
+  * Add Stream option with PartSize (download)
+  * Added base.StreamReader
+  * Signature change (from []byte to io.Reader)
+     - Storager.Upload
+     - Storager.Create
+
 ## October 15 2019 0.5.0
   * Added AuthTracker
 
