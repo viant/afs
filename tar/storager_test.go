@@ -1,6 +1,7 @@
 package tar
 
 import (
+	"bytes"
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
@@ -69,7 +70,7 @@ func TestNewStorager(t *testing.T) {
 			continue
 		}
 
-		err = storager.Upload(ctx, useCase.resource.Name, useCase.resource.Mode, useCase.resource.Data, useCase.options...)
+		err = storager.Upload(ctx, useCase.resource.Name, useCase.resource.Mode, bytes.NewReader(useCase.resource.Data), useCase.options...)
 		assert.Nil(t, err, useCase.description)
 		objects, err = storager.List(ctx, parent)
 		assert.Nil(t, err, useCase.description)

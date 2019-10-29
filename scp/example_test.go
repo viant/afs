@@ -8,6 +8,7 @@ import (
 	"github.com/viant/afs/scp"
 	"io/ioutil"
 	"log"
+	"strings"
 )
 
 //Example_Storager storager usage example (uses files rather then URLs)
@@ -29,7 +30,7 @@ func Example_Storager() {
 	}
 	ctx := context.Background()
 	location := "/tmp/myfile"
-	err = service.Upload(ctx, location, 0644, []byte("somedata"))
+	err = service.Upload(ctx, location, 0644, strings.NewReader("somedata"))
 	if err != nil {
 		log.Fatal(err)
 	}

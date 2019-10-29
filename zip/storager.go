@@ -180,12 +180,12 @@ func (s *storager) Uploader(ctx context.Context, destination string) (storage.Up
 }
 
 //Upload uploads content for supplied destination, if archive does not exists, it creates one
-func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options ...storage.Option) error {
-	return s.Create(ctx, destination, mode, content, false)
+func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+	return s.Create(ctx, destination, mode, reader, false)
 }
 
 //Create creates a file or directory in archive, if archive does not exists, it creates one
-func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
+func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
 	if !s.exists {
 		if err := s.touch(ctx); err != nil {
 			return err
@@ -196,6 +196,12 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 	upload, closer, err := uploader.Uploader(ctx, "")
 	if err != nil {
 		return errors.Wrapf(err, "failed to create: %v in archive: %v", destination, s.URL)
+	}
+	var content []byte
+	if reader != nil {
+		if content, err  = ioutil.ReadAll(reader);err != nil {
+			return err
+		}
 	}
 	err = archive.Rewrite(ctx, s.walker, s.URL, upload, archive.CreateHandler(destination, mode, content, isDir))
 	if err == nil {

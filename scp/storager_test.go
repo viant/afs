@@ -1,6 +1,7 @@
 package scp
 
 import (
+	"bytes"
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
@@ -56,7 +57,7 @@ func TestNewService(t *testing.T) {
 		_, err = srv.List(ctx, dest, 0, 1)
 		assert.NotNil(t, err, useCase.description)
 
-		err = srv.Upload(ctx, dest, useCase.asset.Mode, useCase.asset.Data)
+		err = srv.Upload(ctx, dest, useCase.asset.Mode, bytes.NewReader(useCase.asset.Data))
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

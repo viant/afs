@@ -44,11 +44,11 @@ func ExampleNew() {
 func ExampleNewStorager() {
 	ctx := context.Background()
 	storager := mem.NewStorager("mem://localhost/")
-	err := storager.Upload(ctx, "folder1/asset1", 0644, []byte("some content"))
+	err := storager.Upload(ctx, "folder1/asset1", 0644, strings.NewReader("some content"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = storager.Upload(ctx, "folder1/asset2", 0644, []byte("some content"))
+	err = storager.Upload(ctx, "folder1/asset2", 0644, strings.NewReader("some content"))
 	if err != nil {
 		log.Fatal(err)
 	}

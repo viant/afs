@@ -111,12 +111,12 @@ func (s *storager) Uploader(ctx context.Context, destination string) (storage.Up
 }
 
 //Upload uploads content for supplied destination
-func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options ...storage.Option) error {
-	return s.Create(ctx, destination, mode, content, false)
+func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+	return s.Create(ctx, destination, mode, reader, false)
 }
 
 //Create creates a file or directory
-func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
+func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
 	parent, name := path.Split(destination)
 	if isDir {
 		if session, err := s.NewSession(); err == nil {
@@ -130,6 +130,10 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 		return err
 	}
 	defer func() { _ = closer.Close() }()
+	content, err  := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
 	info := file.NewInfo(name, int64(len(content)), mode, time.Now(), isDir)
 	return upload(ctx, "", info, bytes.NewReader(content))
 }
