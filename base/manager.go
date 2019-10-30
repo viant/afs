@@ -85,7 +85,6 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 		return err
 	}
 
-
 	return storager.Upload(ctx, URLPath, mode, reader, options...)
 }
 
@@ -190,6 +189,11 @@ func (m *Manager) IsAuthChanged(ctx context.Context, baseURL string, options []s
 }
 
 func (m *Manager) isAuthChanged(ctx context.Context, baseURL string, options []storage.Option) bool {
+	auth := option.Auth{}
+	option.Assign(options, &auth)
+	if auth.Force {
+		return true
+	}
 	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return false
