@@ -130,12 +130,45 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 		return err
 	}
 	defer func() { _ = closer.Close() }()
-	content, err  := ioutil.ReadAll(reader)
+	content, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
 	}
 	info := file.NewInfo(name, int64(len(content)), mode, time.Now(), isDir)
 	return upload(ctx, "", info, bytes.NewReader(content))
+}
+
+//FilterAuthOptions filters auth options
+func filterAuthOption(options []storage.Option) (*ssh.ClientConfig, error) {
+	var basicAuth option.BasicAuth
+	var keyAuth KeyAuth
+	var authProvider AuthProvider
+	option.Assign(options, &basicAuth, &keyAuth, &authProvider)
+	if basicAuth == nil && keyAuth == nil && authProvider == nil {
+		return nil, nil
+	}
+	if authProvider == nil {
+		authProvider = NewAuthProvider(keyAuth, basicAuth)
+	}
+	return authProvider.ClientConfig()
+}
+
+//IsAuthChanged return true if auth has changes
+func (s *storager) IsAuthChanged(authOptions []storage.Option) bool {
+	changed := s.isAuthChanged(authOptions)
+	return changed
+}
+
+//IsAuthChanged return true if auth has changes
+func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
+	if len(authOptions) == 0 {
+		return false
+	}
+	sshConfig, _ := filterAuthOption(authOptions)
+	if sshConfig == nil {
+		return false
+	}
+	return sshConfig.User != s.ClientConfig.User
 }
 
 //NewStorager returns a new storager
