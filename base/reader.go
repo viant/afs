@@ -10,12 +10,13 @@ import (
 //RangeHeader represents a range header
 const (
 	//RangeHeader represents a range header
-	RangeHeader  = "Range"
-	RangeHeaderTmpl  = "bytes=%d-%d"
+	RangeHeader     = "Range"
+	RangeHeaderTmpl = "bytes=%d-%d"
 )
+
 type streamReader struct {
 	*option.Stream
-	mux *sync.Mutex
+	mux         *sync.Mutex
 	reader      io.ReadSeeker
 	readSoFar   int
 	chunk       []byte
@@ -49,7 +50,7 @@ func (r *streamReader) byteToCopy(destSize int) int {
 		toRead = remaining
 	}
 
-	if r.readSoFar + toRead > r.Stream.Size {
+	if r.readSoFar+toRead > r.Stream.Size {
 		toRead = r.Stream.Size - r.readSoFar
 	}
 	return toRead
@@ -68,7 +69,7 @@ begin:
 	}
 	if r.chunkOffset == 0 {
 		from, to := r.getRange()
-		if _, err := r.reader.Seek(int64(from), io.SeekStart);err != nil {
+		if _, err := r.reader.Seek(int64(from), io.SeekStart); err != nil {
 			return 0, errors.Wrapf(err, "failed to move to position: %v", from)
 		}
 		expectReadSize := (to - from)
@@ -94,8 +95,6 @@ begin:
 	return readSoFar, nil
 }
 
-
-
 func (r *streamReader) Close() error {
 	return nil
 }
@@ -110,11 +109,10 @@ func (r *streamReader) ReadAt(dest []byte, off int64) (n int, err error) {
 	return r.Read(dest)
 }
 
-
 func NewStreamReader(stream *option.Stream, reedSeeker io.ReadSeeker) io.ReadCloser {
 	return &streamReader{
 		Stream: stream,
-		mux: &sync.Mutex{},
+		mux:    &sync.Mutex{},
 		reader: reedSeeker,
 		chunk:  make([]byte, stream.PartSize),
 	}

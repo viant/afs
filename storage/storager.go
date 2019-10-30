@@ -28,4 +28,3 @@ type Storager interface {
 	//Delete deletes locations
 	Delete(ctx context.Context, location string) error
 }
-

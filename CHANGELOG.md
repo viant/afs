@@ -1,3 +1,7 @@
+## October 30 2019 0.6.1
+  * Implemented StoragerAuthTracker on scp 
+  * Added option.Auth to control auth reusibility
+
 ## October 28 2019 0.6.0
   * Added Sizer interface
   * Added Checksum option with Skip flag (upload)

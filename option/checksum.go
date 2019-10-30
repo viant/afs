@@ -6,6 +6,6 @@ type Checksum struct {
 }
 
 //NewChecksum returns checksum options for supplied skip flag
-func NewChecksum(skip bool) *Checksum{
-	return &Checksum{Skip:skip}
+func NewChecksum(skip bool) *Checksum {
+	return &Checksum{Skip: skip}
 }

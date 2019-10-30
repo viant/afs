@@ -199,7 +199,7 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 	}
 	var content []byte
 	if reader != nil {
-		if content, err  = ioutil.ReadAll(reader);err != nil {
+		if content, err = ioutil.ReadAll(reader); err != nil {
 			return err
 		}
 	}
