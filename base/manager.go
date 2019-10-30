@@ -189,9 +189,8 @@ func (m *Manager) IsAuthChanged(ctx context.Context, baseURL string, options []s
 }
 
 func (m *Manager) isAuthChanged(ctx context.Context, baseURL string, options []storage.Option) bool {
-	auth := option.Auth{}
-	option.Assign(options, &auth)
-	if auth.Force {
+	auth := &option.Auth{}
+	if _, ok := option.Assign(options, &auth); ok && auth.Force {
 		return true
 	}
 	storager, err := m.Storager(ctx, baseURL, options)
