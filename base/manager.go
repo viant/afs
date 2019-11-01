@@ -193,6 +193,10 @@ func (m *Manager) isAuthChanged(ctx context.Context, baseURL string, options []s
 	if _, ok := option.Assign(options, &auth); ok && auth.Force {
 		return true
 	}
+	key := &option.AES256Key{}
+	if _, ok := option.Assign(options, &key);ok {
+		return true
+	}
 	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return false
