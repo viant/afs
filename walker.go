@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -10,6 +11,9 @@ import (
 
 //Walk visits all location recursively within provided sourceURL
 func (s *service) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
+	if URL == "" {
+		return errors.New("URL was empty")
+	}
 	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return err

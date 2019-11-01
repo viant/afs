@@ -44,6 +44,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	} else {
 		destURL, mappedName = url.Split(destURL, file.Scheme)
 	}
+
 	if url.IsSchemeEquals(sourceURL, destURL) && modifier == nil {
 		sourceManager, err := s.manager(ctx, sourceURL, *srcOptions)
 		if err != nil {
