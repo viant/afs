@@ -23,7 +23,6 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	return w.walk(ctx, URL, "", handler, options)
 }
 
-
 func (w *walker) visitResource(ctx context.Context, object storage.Object, URL, parent string, handler storage.OnVisit, options []storage.Option) error {
 	var err error
 	var reader io.ReadCloser
@@ -67,7 +66,7 @@ func (w *walker) walk(ctx context.Context, URL, parent string, handler storage.O
 	}
 	objects, err := w.List(ctx, resourceURL, options...)
 	if err != nil {
-		return errors.Wrapf(err, "failed to %T.List %v", w.Manager,  resourceURL)
+		return errors.Wrapf(err, "failed to %T.List %v", w.Manager, resourceURL)
 	}
 	for i := range objects {
 		if objects[i].IsDir() && url.Equals(resourceURL, objects[i].URL()) {

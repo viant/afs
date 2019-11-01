@@ -1,3 +1,6 @@
+## Nov 1 2019 0.7.0
+  * Renamed option.Checksum to SkipChecksum
+    
 ## October 30 2019 0.6.1
   * Implemented StoragerAuthTracker on scp 
   * Added option.Auth to control auth reusibility

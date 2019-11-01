@@ -1,11 +1,11 @@
 package option
 
-//Checksum represents checksum option
-type Checksum struct {
+//SkipChecksum represents checksum option
+type SkipChecksum struct {
 	Skip bool
 }
 
-//NewChecksum returns checksum options for supplied skip flag
-func NewChecksum(skip bool) *Checksum {
-	return &Checksum{Skip: skip}
+//NewSkipChecksum returns checksum options for supplied skip flag
+func NewSkipChecksum(skip bool) *SkipChecksum {
+	return &SkipChecksum{Skip: skip}
 }
