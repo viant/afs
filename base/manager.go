@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-//Manager represents storager base manager
+//Manager represents Storager base manager
 type Manager struct {
 	storage.Manager
 	options   []storage.Option
@@ -22,6 +22,20 @@ type Manager struct {
 	mutex     *sync.RWMutex
 	storagers map[string]storage.Storager
 	provider  func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error)
+}
+
+//Object retuns an object for supplied URL or error
+func (m *Manager) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
+	baseURL, URLPath := url.Base(URL, m.scheme)
+	storager, err := m.Storager(ctx, baseURL, options)
+	if err != nil {
+		return nil, err
+	}
+	info, err := storager.Get(ctx, URLPath, options...)
+	if err != nil {
+		return nil, err
+	}
+	return object.New(URL, info, nil), nil
 }
 
 //List lists content for supplied URL
@@ -147,7 +161,7 @@ func (m *Manager) Options(options []storage.Option) []storage.Option {
 	return result
 }
 
-//Storager returns storager
+//Storager returns Storager
 func (m *Manager) Storager(ctx context.Context, baseURL string, options []storage.Option) (storage.Storager, error) {
 	m.mutex.RLock()
 	baseURL, _ = url.Base(baseURL, m.scheme)
@@ -158,7 +172,7 @@ func (m *Manager) Storager(ctx context.Context, baseURL string, options []storag
 	}
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	//double check if storager has been added
+	//double check if Storager has been added
 	storager, ok = m.storagers[baseURL]
 	if ok {
 		return storager, nil
@@ -218,7 +232,7 @@ func (m *Manager) BaseURL() string {
 	return m.scheme
 }
 
-//New creates base storager base Manager
+//New creates base Storager base Manager
 func New(manager storage.Manager, scheme string, provider func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error), options []storage.Option) *Manager {
 	return &Manager{
 		Manager:   manager,

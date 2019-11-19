@@ -25,11 +25,9 @@ type Service interface {
 	storage.Deleter
 	storage.Creator
 	storage.Walker
+	storage.Getter
 	//Exists returns true if resource exists
 	Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error)
-
-	//Object returns a Object for supplied url
-	Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error)
 
 	storage.Copier
 	storage.Mover
@@ -101,7 +99,10 @@ func (s *service) Object(ctx context.Context, URL string, options ...storage.Opt
 	if err != nil {
 		return nil, err
 	}
-	return s.object(ctx, manager, URL)
+	if getter, ok := manager.(storage.Getter); ok {
+		return getter.Object(ctx, URL, options...)
+	}
+	return s.object(ctx, manager, URL, options...)
 }
 
 func (s *service) object(ctx context.Context, manager storage.Manager, URL string, options ...storage.Option) (storage.Object, error) {

@@ -1,3 +1,9 @@
+## Nov 1 2019 0.9.0
+  * Added Storager.Get(ctx context.Context, location string, options ...Option) (os.FileInfo, error) interface
+  * Added Getter.Object(ctx context.Context, URL string, options ...Option) (Object, error) interface
+  * Optimize Exists, Object operation (to avoid expensive list operation)
+  * Added base.Storager
+
 ## Nov 1 2019 0.7.0
   * Renamed option.Checksum to SkipChecksum
     

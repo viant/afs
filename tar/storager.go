@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/archive"
 	"github.com/viant/afs/asset"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/option"
@@ -21,6 +22,7 @@ import (
 )
 
 type storager struct {
+	base.Storager
 	//underlying archive URL
 	walker     *walker
 	mode       os.FileMode
@@ -236,7 +238,7 @@ func newStorager(ctx context.Context, baseURL string, mgr storage.Manager) (*sto
 		}
 		mode = object[0].Mode()
 	}
-	return &storager{
+	result := &storager{
 		walker:     newWalker(mgr),
 		exists:     len(object) == 1,
 		closer:     mgr,
@@ -244,7 +246,9 @@ func newStorager(ctx context.Context, baseURL string, mgr storage.Manager) (*sto
 		uploader:   mgr,
 		downloader: mgr,
 		URL:        URL,
-	}, nil
+	}
+	result.Storager.List = result.List
+	return result, nil
 }
 
 //NewStorager create a storage service

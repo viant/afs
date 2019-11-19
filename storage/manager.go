@@ -23,6 +23,12 @@ type Lister interface {
 	List(ctx context.Context, URL string, options ...Option) ([]Object, error)
 }
 
+//Getter represents asset getter
+type Getter interface {
+	//List returns a list of object for supplied url
+	Object(ctx context.Context, URL string, options ...Option) (Object, error)
+}
+
 //Downloader represents a downloader
 type Downloader interface {
 	//Download returns reader for downloaded storage object

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -18,6 +19,7 @@ import (
 )
 
 type storager struct {
+	base.Storager
 	address string
 	*ssh.ClientConfig
 	*ssh.Client
@@ -171,6 +173,18 @@ func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
 	return sshConfig.User != s.ClientConfig.User
 }
 
+func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+	options = append(options, option.NewPage(0, 1))
+	objects, err := s.List(ctx, location, options)
+	if err != nil {
+		return nil, err
+	}
+	if len(objects) == 0 {
+		return nil, errors.Errorf("failed to get object: %v", location)
+	}
+	return objects[0], nil
+}
+
 //NewStorager returns a new storager
 func NewStorager(address string, timeout time.Duration, config *ssh.ClientConfig) (storage.Storager, error) {
 	if !strings.Contains(address, ":") {
@@ -181,5 +195,7 @@ func NewStorager(address string, timeout time.Duration, config *ssh.ClientConfig
 		ClientConfig: config,
 		timeout:      timeout,
 	}
+	result.Storager.List = result.List
+
 	return result, result.connect()
 }

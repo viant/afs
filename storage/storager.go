@@ -16,6 +16,9 @@ type Storager interface {
 	//List lists location assets
 	List(ctx context.Context, location string, options ...Option) ([]os.FileInfo, error)
 
+	//Get returns a file info for supplied location
+	Get(ctx context.Context, location string, options ...Option) (os.FileInfo, error)
+
 	//Download feches content for supplied location
 	Download(ctx context.Context, location string, options ...Option) (io.ReadCloser, error)
 
