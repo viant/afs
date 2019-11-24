@@ -128,7 +128,7 @@ func (m *Manager) Delete(ctx context.Context, URL string, options ...storage.Opt
 	if err != nil {
 		return err
 	}
-	return storager.Delete(ctx, URLPath)
+	return storager.Delete(ctx, URLPath, options...)
 }
 
 //Create creates a resource
@@ -150,7 +150,7 @@ func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Opt
 	if err != nil {
 		return false, err
 	}
-	return storager.Exists(ctx, URLPath)
+	return storager.Exists(ctx, URLPath, options...)
 }
 
 //Options returns base and supplied options

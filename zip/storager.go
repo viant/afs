@@ -34,7 +34,7 @@ type storager struct {
 }
 
 //Exists returns true if resource exists in archive
-func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
+func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	objects, _ := s.List(ctx, location)
 	return len(objects) > 0, nil
 }
@@ -120,7 +120,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 }
 
 //Delete removes specified resource from archive
-func (s *storager) Delete(ctx context.Context, location string) error {
+func (s *storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
 	if !s.exists {
 		return fmt.Errorf("%v: not found", s.URL)
 	}

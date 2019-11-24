@@ -34,7 +34,7 @@ func (s *storager) connect() (err error) {
 }
 
 //Delete removes supplied asset
-func (s *storager) Delete(ctx context.Context, location string) error {
+func (s *storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
 	session, err := s.NewSession()
 	if err == nil {
 		_, err = session.Output(fmt.Sprintf("rm -rf %v", location))
@@ -44,7 +44,7 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 }
 
 //Exists returns true if location exists
-func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
+func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	session, err := newSession(s.Client, modeRead, true, s.timeout)
 	if err != nil {
 		return false, err

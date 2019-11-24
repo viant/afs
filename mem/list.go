@@ -45,7 +45,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 }
 
 //Exists checks if location exists
-func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
+func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	root := s.Root
 	_, err := root.Lookup(location, 0)
 	if err != nil {
