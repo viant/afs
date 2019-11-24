@@ -3,7 +3,6 @@ package afs
 import (
 	"context"
 	"github.com/viant/afs/file"
-	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -26,24 +25,24 @@ func list(ctx context.Context, lister storage.Lister, URL string, recursive bool
 	if err != nil {
 		return err
 	}
+	dirs := make([]storage.Object, 0)
 	for i, object := range objects {
 		if object.IsDir() && recursive {
+			if ! url.Equals(URL, object.URL()) {
+				dirs = append(dirs, objects[i])
+			}
 			continue
 		}
 		*result = append(*result, objects[i])
 	}
+
 	if recursive {
-		dirMatcher := &matcher.Basic{Directory: &recursive}
-		folders, err := lister.List(ctx, URL, dirMatcher.Match)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < len(folders); i++ {
-			if url.Equals(URL, folders[i].URL()) {
+		for i := 0; i < len(dirs); i++ {
+			if url.Equals(URL, dirs[i].URL()) {
 				continue
 			}
-			*result = append(*result, folders[i])
-			if err = list(ctx, lister, folders[i].URL(), recursive, options, result); err != nil {
+			*result = append(*result, dirs[i])
+			if err = list(ctx, lister, dirs[i].URL(), recursive, options, result); err != nil {
 				return err
 			}
 		}
