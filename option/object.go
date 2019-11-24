@@ -1,12 +1,11 @@
 package option
 
-
-//Object represents expect file on Object operation
-type Object struct {
+//ObjectKind represents an option to indicate operation object kind
+type ObjectKind struct {
 	File bool
 }
 
 //NewObject creates a new object
-func NewObject(file bool) *Object {
-	return &Object{File:file}
+func NewObjectKind(file bool) *ObjectKind {
+	return &ObjectKind{File: file}
 }
