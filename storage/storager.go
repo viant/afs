@@ -11,7 +11,7 @@ type Storager interface {
 	io.Closer
 
 	//Exists returns true if location exists
-	Exists(ctx context.Context, location string) (bool, error)
+	Exists(ctx context.Context, location string, options ...Option) (bool, error)
 
 	//List lists location assets
 	List(ctx context.Context, location string, options ...Option) ([]os.FileInfo, error)
@@ -29,5 +29,5 @@ type Storager interface {
 	Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...Option) error
 
 	//Delete deletes locations
-	Delete(ctx context.Context, location string) error
+	Delete(ctx context.Context, location string, options ...Option) error
 }
