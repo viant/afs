@@ -45,6 +45,7 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	if err != nil {
 		return nil, err
 	}
+
 	files, err := storager.List(ctx, URLPath, options...)
 	if err != nil {
 		return nil, err
@@ -54,8 +55,8 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 	if len(objects) == 0 {
 		return objects, nil
 	}
-	_, isDirect := files[0].(storage.Object)
 
+	_, isDirect := files[0].(storage.Object)
 	if isDirect {
 		for i := range files {
 			objects[i] = files[i].(storage.Object)
@@ -70,8 +71,8 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 
 	fileURL := ""
 	for i := 0; i < len(files); i++ {
-		if len(files) == 1 && files[0].Name() == name {
-			fileURL = url.Join(baseURL, URLPath)
+		if i == 0 && files[i].Name() == name && files[i].IsDir() {
+			fileURL = URL
 		} else {
 			fileURL = url.Join(baseURL, path.Join(URLPath, files[i].Name()))
 		}

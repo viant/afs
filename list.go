@@ -30,7 +30,7 @@ func list(ctx context.Context, lister storage.Lister, URL string, recursive bool
 	dirs := make([]storage.Object, 0)
 	for i, object := range objects {
 		if object.IsDir() && recursive {
-			if ! url.Equals(URL, object.URL()) {
+			if !url.Equals(URL, object.URL()) {
 				dirs = append(dirs, objects[i])
 			}
 			continue
