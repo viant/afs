@@ -28,7 +28,9 @@ func (b *Retry) Pause() time.Duration {
 	if b.Multiplier < 1 {
 		b.Multiplier = 2
 	}
-	result := time.Duration(1 + rand.Int63n(int64(b.duration)))
+
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	result := time.Duration(1 + rnd.Int63n(int64(b.duration)))
 	b.duration = time.Duration(float64(b.duration) * b.Multiplier)
 	if b.duration > b.Max {
 		b.duration = b.Max
