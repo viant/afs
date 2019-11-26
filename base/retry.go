@@ -35,3 +35,8 @@ func (b *Retry) Pause() time.Duration {
 	}
 	return result
 }
+
+//NewRetry creates a retry
+func NewRetry() *Retry {
+	return &Retry{}
+}
