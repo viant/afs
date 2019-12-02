@@ -24,7 +24,7 @@ import (
 
 type service struct {
 	scheme   string
-	bucket   string
+	host     string
 	useCache int32
 	baseURL  string
 	cacheURL string
@@ -79,7 +79,7 @@ func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...st
 
 func (s *service) rewriteObject(obj storage.Object) storage.Object {
 	URL := strings.Replace(obj.URL(), mem.Scheme, s.scheme, 1)
-	URL = strings.Replace(URL, url.Localhost, s.bucket, 1)
+	URL = strings.Replace(URL, url.Localhost, s.host, 1)
 	return object.New(URL, obj, obj.Sys())
 }
 
@@ -219,6 +219,7 @@ func New(baseURL string, fs afs.Service) afs.Service {
 	}
 	return &service{
 		baseURL:  baseURL,
+		host:     url.Host(baseURL),
 		cacheURL: url.Join(baseURL, CacheFile),
 		scheme:   scheme,
 		Service:  fs,
