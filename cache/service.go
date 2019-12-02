@@ -42,8 +42,9 @@ func (s *service) Download(ctx context.Context, object storage.Object, options .
 }
 
 func (s *service) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
-	if err := s.reloadIfNeeded(ctx); err != nil {
-		return nil, err
+	if e := s.reloadIfNeeded(ctx); e != nil {
+		fmt.Printf("failed to reload %v", e)
+		atomic.StoreInt32(&s.useCache, 0)
 	}
 	if !s.canUseCache() {
 		return s.Service.Object(ctx, URL, options...)
@@ -62,9 +63,9 @@ func (s *service) Exists(ctx context.Context, URL string, options ...storage.Opt
 }
 
 func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
-	err := s.reloadIfNeeded(ctx)
-	if err != nil {
-		return nil, err
+	if e := s.reloadIfNeeded(ctx); e != nil {
+		fmt.Printf("failed to reload %v", e)
+		atomic.StoreInt32(&s.useCache, 0)
 	}
 	if !s.canUseCache() {
 		return s.Service.DownloadWithURL(ctx, URL, options...)
@@ -92,9 +93,9 @@ func (s *service) rewriteObjects(objects []storage.Object) []storage.Object {
 }
 
 func (s *service) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
-	err := s.reloadIfNeeded(ctx)
-	if err != nil {
-		return nil, err
+	if e := s.reloadIfNeeded(ctx); e != nil {
+		fmt.Printf("failed to reload %v", e)
+		atomic.StoreInt32(&s.useCache, 0)
 	}
 	if !s.canUseCache() {
 		return s.Service.List(ctx, URL, options...)
@@ -131,6 +132,7 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	if s.modified != nil && s.modified.Equal(cacheObject.ModTime()) {
 		return nil
 	}
+
 	reader, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
 	if err != nil {
 		return err
