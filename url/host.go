@@ -11,11 +11,11 @@ const (
 
 //Host extract host from URL
 func Host(URL string) string {
+
 	index := strings.Index(URL, "://")
 	if index == -1 {
 		return Localhost
 	}
-
 	fragment := string(URL[index+3:])
 	index = strings.Index(fragment, "/")
 	if index != -1 {

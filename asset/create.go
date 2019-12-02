@@ -29,6 +29,7 @@ func Create(manager storage.Manager, URL string, resources []*Resource) error {
 		}
 		baseURL, URLPath := url.Base(URL, manager.Scheme())
 		resourceURL := url.Join(baseURL, path.Join(URLPath, asset.Name))
+
 		if err := manager.Create(ctx, resourceURL, asset.Mode, true); err != nil {
 			return err
 		}

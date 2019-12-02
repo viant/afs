@@ -75,7 +75,11 @@ func (f *Folder) folder(name string) (*Folder, error) {
 	defer f.mutex.RUnlock()
 	result, ok := f.folders[name]
 	if !ok {
-		return nil, fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
+		keys := make([]string, 0)
+		for k := range f.folders {
+			keys = append(keys, k)
+		}
+		return nil, fmt.Errorf("%v: no such file or directory, %v%v", url.Join(f.URL(), name), f.Name(), keys)
 	}
 	return result, nil
 }
@@ -106,6 +110,7 @@ func (f *Folder) Folder(URL string, mkdirMode os.FileMode) (*Folder, error) {
 //Lookup lookup path, when mkdirMode is non zero it will create missing folders with supplied mode
 func (f *Folder) Lookup(URL string, mkdirMode os.FileMode) (storage.Object, error) {
 	_, URLPath := url.Base(URL, Scheme)
+
 	if URLPath == "" {
 		return f.Object, nil
 	}

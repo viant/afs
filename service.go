@@ -95,6 +95,7 @@ func (s *service) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 }
 
 func (s *service) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
+	URL = url.Normalize(URL, file.Scheme)
 	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return nil, err

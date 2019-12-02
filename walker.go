@@ -14,6 +14,7 @@ func (s *service) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 	if URL == "" {
 		return errors.New("URL was empty")
 	}
+	URL = url.Normalize(URL, file.Scheme)
 	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return err

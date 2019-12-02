@@ -19,6 +19,7 @@ func (s *storager) Close() error {
 
 //NewStorager create a new in memeory storage service
 func NewStorager(baseURL string) storage.Storager {
+	baseURL, _ = url.Base(baseURL, Scheme)
 	result := &storager{
 		Root:   NewFolder(baseURL, file.DefaultDirOsMode),
 		scheme: url.Scheme(baseURL, Scheme),

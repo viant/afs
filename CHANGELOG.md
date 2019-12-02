@@ -1,3 +1,6 @@
+## Dec 2 2019 0.11.0
+  * Added caching service 
+
 ## Nov 1 2019 0.9.0
   * Added Storager.Get(ctx context.Context, location string, options ...Option) (os.FileInfo, error) interface
   * Added Getter.Object(ctx context.Context, URL string, options ...Option) (Object, error) interface
