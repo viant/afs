@@ -101,7 +101,6 @@ func (s *service) List(ctx context.Context, URL string, options ...storage.Optio
 		return s.Service.List(ctx, URL, options...)
 	}
 	cacheURL := strings.Replace(URL, s.scheme, mem.Scheme, 1)
-
 	if objects, _ := s.Service.List(ctx, cacheURL, options...); len(objects) > 0 {
 		return s.rewriteObjects(objects), nil
 	}
@@ -113,7 +112,7 @@ func (s *service) setNextRun(next time.Time) {
 }
 
 func (s *service) reloadIfNeeded(ctx context.Context) error {
-	if s.next != nil && s.next.Before(time.Now()) {
+	if s.next != nil && s.next.After(time.Now()) {
 		return nil
 	}
 	s.setNextRun(time.Now().Add(time.Second))
