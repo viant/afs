@@ -1,3 +1,6 @@
+## Dec 20 2019 0.12.0
+  * Added option.Proxy 
+
 ## Dec 2 2019 0.11.0
   * Added caching service 
 
