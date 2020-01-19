@@ -1,4 +1,5 @@
-## Jan 19 2019 0.12.2
+## Jan 19 2019 0.14.0
+  * Added url.JoinUNC helper function
   * Added url.IsRelative helper function
   * Add check for nil reader in Copy
       

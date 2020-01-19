@@ -39,3 +39,32 @@ func TestJoin(t *testing.T) {
 	}
 
 }
+
+func TestJoinUNC(t *testing.T) {
+
+	var useCases = []struct {
+		description string
+		baseURL     string
+		elemenets   []string
+		expect      string
+	}{
+		{
+			description: "relative elements",
+			baseURL:     "ftp://localhost/path/subpath",
+			elemenets:   []string{"foo/bar.txt"},
+			expect:      "ftp://localhost/path/subpath/foo/bar.txt",
+		},
+		{
+			description: ".. elements",
+			baseURL:     "ftp://localhost/data/path/subpath",
+			elemenets:   []string{"../../foo/bar.txt"},
+			expect:      "ftp://localhost/data/foo/bar.txt",
+		},
+	}
+
+	for _, useCase := range useCases {
+		actual := JoinUNC(useCase.baseURL, useCase.elemenets...)
+		assert.EqualValues(t, useCase.expect, actual, useCase.description)
+	}
+
+}
