@@ -1,3 +1,6 @@
+## Jan 19 2019 0.12.1
+  * Added url.IsRelative helper function
+  
 ## Dec 20 2019 0.12.0
   * Added option.Proxy 
 
