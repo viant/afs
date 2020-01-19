@@ -1,6 +1,7 @@
-## Jan 19 2019 0.12.1
+## Jan 19 2019 0.12.2
   * Added url.IsRelative helper function
-  
+  * Add check for nil reader in Copy
+      
 ## Dec 20 2019 0.12.0
   * Added option.Proxy 
 
