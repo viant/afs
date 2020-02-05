@@ -1,5 +1,6 @@
-## Feb 5 2020 0.14.1
+## Feb 5 2020 0.14.2
   * Updated destURL composition on move operation
+  * Updated private matcher.Basic filed
 
 ## Jan 19 2020 0.14.0
   * Added url.JoinUNC helper function

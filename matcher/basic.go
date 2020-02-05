@@ -13,7 +13,7 @@ type Basic struct {
 	Suffix    string `json:",omitempty"`
 	Filter    string `json:",omitempty"`
 	Directory *bool  `json:",omitempty"`
-	filter    *regexp.Regexp
+	compiled  *regexp.Regexp
 }
 
 //Match matcher parent and info with matcher rules
@@ -25,12 +25,12 @@ func (r *Basic) Match(parent string, info os.FileInfo) bool {
 			return false
 		}
 	}
-	if r.Filter != "" && r.filter == nil {
-		r.filter, _ = regexp.Compile(r.Filter)
+	if r.Filter != "" && r.compiled == nil {
+		r.compiled, _ = regexp.Compile(r.Filter)
 	}
 	location := path.Join(parent, info.Name())
-	if r.filter != nil {
-		if !r.filter.MatchString(location) {
+	if r.compiled != nil {
+		if !r.compiled.MatchString(location) {
 			return false
 		}
 	}
@@ -56,7 +56,7 @@ func NewBasic(prefix, suffix, filter string, dir *bool) (matcher *Basic, err err
 		Directory: dir,
 	}
 	if filter != "" {
-		matcher.filter, err = regexp.Compile(filter)
+		matcher.compiled, err = regexp.Compile(filter)
 	}
 	return matcher, err
 }
