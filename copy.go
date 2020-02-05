@@ -20,10 +20,13 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 	_, sourceName := path.Split(sourcePath)
 	baseURL, destPath := url.Base(destURL, file.Scheme)
 	_, destName := path.Split(destPath)
-	if destName == sourceName {
+	if destName == sourceName || path.Ext(destName) == path.Ext(sourceName) {
 		return destURL
 	}
 	sourceExt := path.Ext(sourceName)
+	if len(sourceExt) > 5 { //not real extension
+		sourceExt = ""
+	}
 	if sourceExt != "" && !strings.Contains(destName, sourceExt) {
 		destPath = path.Join(destPath, sourceName)
 	}

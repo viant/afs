@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -11,8 +12,10 @@ import (
 func (s *service) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	sourceURL = url.Normalize(sourceURL, file.Scheme)
 	destURL = url.Normalize(destURL, file.Scheme)
-	destURL = s.updateDestURL(sourceURL, destURL)
 
+	fmt.Printf("DDDD1 %v\n", destURL)
+	destURL = s.updateDestURL(sourceURL, destURL)
+	fmt.Printf("DDDD2 %v\n", destURL)
 	sourceOptions := option.NewSource()
 	destOptions := option.NewDest()
 	option.Assign(options, &sourceOptions, &destOptions)
