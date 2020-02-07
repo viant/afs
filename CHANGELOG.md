@@ -1,3 +1,6 @@
+## Feb 7 2020 0.15.0
+  * Added option.PreSign
+  
 ## Feb 5 2020 0.14.2
   * Updated destURL composition on move operation
   * Updated private matcher.Basic filed
