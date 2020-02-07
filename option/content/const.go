@@ -1,6 +1,6 @@
 package content
 
 const (
-	//ContentType represents content meta type
-	ContentType = "Content-Type"
+	//Type represents content meta type
+	Type = "Content-Type"
 )
