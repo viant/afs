@@ -1,5 +1,6 @@
-## Feb 7 2020 0.15.0
+## Feb 7 2020 0.15.1
   * Added option.PreSign
+  * Added option.content.Meta
   
 ## Feb 5 2020 0.14.2
   * Updated destURL composition on move operation
