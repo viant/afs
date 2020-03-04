@@ -1,4 +1,4 @@
-## Match 4 2020 0.15.2
+## Match 4 2020 0.15.3
   * Added memory fs upload locking
   * Added memory fs generation option support
 
