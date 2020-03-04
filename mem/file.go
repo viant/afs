@@ -23,6 +23,7 @@ type File struct {
 	downloadError error
 	uploadError   error
 	readerError   error
+	generation    int64
 }
 
 //NewReader return new Reader

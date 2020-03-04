@@ -1,3 +1,7 @@
+## Match 4 2020 0.15.2
+  * Added memory fs upload locking
+  * Added memory fs generation option support
+
 ## Feb 7 2020 0.15.1
   * Added option.PreSign
   * Added option.content.Meta

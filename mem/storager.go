@@ -5,12 +5,15 @@ import (
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"sync"
 )
 
 type storager struct {
 	base.Storager
 	scheme string
 	Root   *Folder
+	mux sync.Mutex
+
 }
 
 func (s *storager) Close() error {
