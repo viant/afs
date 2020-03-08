@@ -528,9 +528,18 @@ Streaming data allows data reading and uploading in chunks with small memory foo
 	err = fs.Upload(ctx, destURL, 0644, reader, &option.Checksum{Skip:true})
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
+    // or
+    writer = fs.NewWriter(ctx, destURL, 0644, &option.Checksum{Skip:true})
+    _, err = io.Copy(writer, reader)
+    if err != nil {
+        log.Fatal(err)
+    }
+    err = writer.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 ```
 
 
