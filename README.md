@@ -186,7 +186,10 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    writer.Close()
+    err = writer.Close()
+    if err != nil {
+        log.Fatal(err)
+    }
     ok, err := fs.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
     if err != nil {
         log.Fatal(err)
