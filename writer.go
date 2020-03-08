@@ -106,7 +106,7 @@ func (w *writer) setError(err error) {
 	if err == nil {
 		return
 	}
-	w.mutex.RLock()
+	w.mutex.Lock()
 	w.err = err
-	w.mutex.RUnlock()
+	w.mutex.Unlock()
 }
