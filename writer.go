@@ -1,0 +1,117 @@
+package afs
+
+import (
+	"context"
+	"github.com/viant/afs/storage"
+	"io"
+	"os"
+	"sync"
+)
+
+//NewWriter creates an upload writer
+func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser {
+	return &writer{
+		ctx:         ctx,
+		url:         URL,
+		mode:        mode,
+		options:     options,
+		uploader:    s,
+		opened:      false,
+		doneChannel: make(chan bool),
+		err:         nil,
+	}
+}
+
+// A writer writes an object to destination
+type writer struct {
+	ctx         context.Context
+	url         string
+	mode        os.FileMode
+	options     []storage.Option
+	uploader    storage.Uploader
+	mutex       sync.RWMutex
+	opened      bool
+	writer      *io.PipeWriter
+	doneChannel chan bool
+	err         error
+}
+
+func (w *writer) open() error {
+	pipeReader, pipeWriter := io.Pipe()
+	w.writer = pipeWriter
+	w.opened = true
+	go w.monitorCancel()
+	go func() {
+		defer close(w.doneChannel)
+		if err := w.uploader.Upload(w.ctx, w.url, w.mode, pipeReader, w.options...); err != nil {
+			w.mutex.Lock()
+			w.err = err
+			w.mutex.Unlock()
+			pipeReader.CloseWithError(err)
+			return
+		}
+	}()
+	return nil
+}
+
+// Write appends to pipe writer
+func (w *writer) Write(p []byte) (n int, err error) {
+	if err := w.error(); err != nil {
+		return 0, err
+	}
+	if !w.opened {
+		if err := w.open(); err != nil {
+			return 0, err
+		}
+	}
+	n, err = w.writer.Write(p)
+	if err != nil {
+		w.setError(err)
+		if err == context.Canceled || err == context.DeadlineExceeded {
+			return n, err
+		}
+	}
+	return n, err
+}
+
+// Close completes the write operation and flushes any buffered data.
+func (w *writer) Close() error {
+	if !w.opened {
+		if err := w.open(); err != nil {
+			return err
+		}
+	}
+	// Closing either the read or write causes the entire pipe to close.
+	if err := w.writer.Close(); err != nil {
+		return err
+	}
+	<-w.doneChannel
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	return w.err
+}
+
+func (w *writer) monitorCancel() {
+	select {
+	case <-w.ctx.Done():
+		w.setError(w.ctx.Err())
+		w.mutex.Unlock()
+	case <-w.doneChannel:
+	}
+}
+
+func (w *writer) error() error {
+	w.mutex.RLock()
+	result := w.err
+	w.mutex.RUnlock()
+	return result
+}
+
+func (w *writer) setError(err error) {
+	if err == nil {
+		return
+	}
+	w.mutex.RLock()
+	w.err = err
+	w.mutex.RUnlock()
+}

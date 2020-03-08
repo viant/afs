@@ -64,6 +64,8 @@ Uploader(ctx context.Context, URL string, options ...Option) (Upload, io.Closer,
 Copy(ctx context.Context, sourceURL, destURL string, options ...Option) error
 
 Move(ctx context.Context, sourceURL, destURL string, options ...Option) error
+
+NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
 ```
 
 
@@ -164,6 +166,36 @@ func main() {
     _ = fs.Delete(ctx, "scp://127.0.0.1:22/folder/asset.txt")
 }
 ```
+* **Uploading Content With Writer**
+
+```go
+func main() {
+	
+    fs := afs.New()
+    ctx := context.Background()
+    keyAuth, err := scp.LocalhostKeyAuth("")
+    if err != nil {
+        log.Fatal(err)
+    }
+    err  = fs.Init(ctx, "scp://127.0.0.1:22/", keyAuth)
+    if err != nil {
+        log.Fatal(err)
+    }	
+    writer = fs.NewWriter(ctx, "scp://127.0.0.1:22/folder/asset.txt", 0644)
+    _, err := writer.Write([]byte("test me")))
+    if err != nil {
+        log.Fatal(err)
+    }
+    writer.Close()
+    ok, err := fs.Exists(ctx, "scp://127.0.0.1:22/folder/asset.txt")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("has file: %v\n", ok)
+    _ = fs.Delete(ctx, "scp://127.0.0.1:22/folder/asset.txt")
+}
+```
+
 
 
 * **Data Copy**

@@ -35,6 +35,9 @@ type Service interface {
 	//Initialises manager for baseURL with storage options (i.e. auth)
 	Init(ctx context.Context, baseURL string, options ...storage.Option) error
 
+	//NewWriter creates an upload writer
+	NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
+
 	//Closes all active managers
 	CloseAll() error
 	//Closes matched active manager

@@ -1,3 +1,6 @@
+## Match 7 2020 0.16.0
+  * Added NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
+  
 ## Match 4 2020 0.15.3
   * Added memory fs upload locking
   * Added memory fs generation option support
