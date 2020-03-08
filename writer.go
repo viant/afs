@@ -44,9 +44,7 @@ func (w *writer) open() error {
 	go func() {
 		defer close(w.doneChannel)
 		if err := w.uploader.Upload(w.ctx, w.url, w.mode, pipeReader, w.options...); err != nil {
-			w.mutex.Lock()
-			w.err = err
-			w.mutex.Unlock()
+			w.setError(err)
 			pipeReader.CloseWithError(err)
 			return
 		}
@@ -86,8 +84,6 @@ func (w *writer) Close() error {
 		return err
 	}
 	<-w.doneChannel
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
 	return w.err
 }
 
@@ -95,7 +91,6 @@ func (w *writer) monitorCancel() {
 	select {
 	case <-w.ctx.Done():
 		w.setError(w.ctx.Err())
-		w.mutex.Unlock()
 	case <-w.doneChannel:
 	}
 }
