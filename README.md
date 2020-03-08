@@ -110,7 +110,7 @@ func main() {
 
 ## Usage
 
-* **Downloading location content**
+##### Downloading location content
 
 ```go
 func main() {
@@ -139,7 +139,7 @@ func main() {
 }
 ```
 
-* **Uploading Content**
+##### Uploading Content
 
 ```go
 func main() {
@@ -166,7 +166,7 @@ func main() {
     _ = fs.Delete(ctx, "scp://127.0.0.1:22/folder/asset.txt")
 }
 ```
-* **Uploading Content With Writer**
+##### Uploading Content With Writer
 
 ```go
 func main() {
@@ -198,7 +198,7 @@ func main() {
 
 
 
-* **Data Copy**
+##### Data Copy
 
 ```go
 func main() {
@@ -216,7 +216,7 @@ func main() {
 }
 ```
 
-* **Archiving content**
+##### Archiving content
 
 ```go
 
@@ -240,7 +240,7 @@ func main() {
 ```
 
 
-* **Archive Walker**
+##### Archive Walker
 
 Walker can be created for tar or zip archive.
 
@@ -257,7 +257,7 @@ func main() {
 ```
 
 
-* **Archive Uploader**
+##### Archive Uploader
 
 Uploader can be created for tar or zip archive.
 
@@ -275,7 +275,7 @@ func main() {
 ```
 
 
-* **Data Move**
+##### Data Move
 
 ```go
 func main() {
@@ -293,7 +293,7 @@ func main() {
 }	
 ```
 
-* **Batch Upload**
+##### Batch Upload
 
 ```go
 func main() {
