@@ -35,6 +35,7 @@ func (s *service) updateDestURL(sourceURL, destURL string) string {
 
 func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOptions *option.Source, destOptions *option.Dest,
 	walker storage.Walker, uploader storage.BatchUploader) (err error) {
+
 	source, err := s.Object(ctx, sourceURL, *srcOptions...)
 	if err != nil {
 		return errors.Wrapf(err, "source not found: %v", sourceURL)
