@@ -25,6 +25,10 @@ type Folder struct {
 func (f *Folder) Objects() []storage.Object {
 	var result = make([]storage.Object, 0)
 	result = append(result, f.Object)
+
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
 	for i := range f.folders {
 		result = append(result, f.folders[i].Object)
 	}
@@ -39,6 +43,8 @@ func (f *Folder) putFolder(object storage.Object) error {
 	if err := object.Unwrap(&folder); err != nil {
 		return err
 	}
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	if _, ok := f.files[folder.Name()]; ok {
 		return fmt.Errorf("%v is file", object.URL())
 	}
@@ -51,6 +57,8 @@ func (f *Folder) putFile(object storage.Object) error {
 	if err := object.Unwrap(&objFile); err != nil {
 		return err
 	}
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	if _, ok := f.folders[objFile.Name()]; ok {
 		return fmt.Errorf("%v is directory", object.URL())
 	}

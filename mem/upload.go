@@ -21,6 +21,7 @@ var preconditionErrorMessage  = fmt.Sprintf("precondition failed: %v ", http.Sta
 func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+
 	parent, err := s.parent(location, file.DefaultDirOsMode)
 	generation := &option.Generation{}
 	_, ok := option.Assign(options, &generation)
