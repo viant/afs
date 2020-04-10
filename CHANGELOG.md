@@ -1,4 +1,4 @@
-## Match 8 2020 0.17.0
+## April 10 2020 0.17.0
   * Added option.Region (for cloud storage)
   * Added option.ServerSideEncryption
   
