@@ -1,3 +1,7 @@
+## Match 8 2020 0.17.0
+  * Added option.Region (for cloud storage)
+  * Added option.ServerSideEncryption
+  
 ## Match 7 2020 0.16.0
   * Added NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
   
