@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
-	"github.com/viant/toolbox/storage"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+const (
+	 DefaultFileMode os.FileMode = 0755
+)
+
 
 //NewInfo returns new info from SCP response
 func NewInfo(createResponse string, modified *time.Time) (os.FileInfo, error) {
@@ -64,7 +68,7 @@ func InfoToTimestampCmd(info os.FileInfo) string {
 func InfoToCreateCmd(info os.FileInfo) string {
 	mode := info.Mode()
 	if mode >= 01000 { //symbolic linkg
-		mode = storage.DefaultFileMode
+		mode = DefaultFileMode
 	}
 	locationType := "C"
 	size := info.Size()

@@ -3,7 +3,6 @@ package matcher
 import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"github.com/viant/toolbox"
 	"io/ioutil"
 	"os"
 	"path"
@@ -33,7 +32,7 @@ func (i *Ignore) Load(location string) error {
 		return err
 	}
 	i.Rules = make([]string, 0)
-	for _, item := range strings.Split(toolbox.AsString(content), "\n") {
+	for _, item := range strings.Split(string(content), "\n") {
 		if strings.HasPrefix(item, "#") {
 			continue
 		}
