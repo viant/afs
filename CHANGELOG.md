@@ -1,3 +1,8 @@
+## July 7 2020 0.18.0
+  * Added service.Open method
+  * Added service.OpenURL 
+  * Both Open use original Download function (for backward compatibility it may stay like this for a while,  however ideally Download method should return []byte)
+
 ## April 10 2020 0.17.0
   * Added option.Region (for cloud storage)
   * Added option.ServerSideEncryption

@@ -40,7 +40,11 @@ Walk(ctx context.Context, URL string, handler OnVisit, options ...Option) error
 
 Download(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
 
-DownloadWithURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
+Open(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
+
+OpenURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
+
+OpenhURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 
 Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...Option) error
 
@@ -86,12 +90,12 @@ func main() {
         if err != nil {
            log.Fatal(err)
         }
-        reader1, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
+        reader1, err := fs.OpenURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
         if err != nil {
                log.Fatal(err)
         }
         ...
-        reader2, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
+        reader2, err := fs.OpenURL(ctx, "scp://host1:22/myfolder/asset.txt", keyAuth)
     }
     
     {
@@ -102,7 +106,7 @@ func main() {
             log.Fatal(err)
         }
         defer fs.Destroy("scp://host1:22/")
-        reader, err := fs.DownloadWithURL(ctx, "scp://host1:22/myfolder/asset.txt")
+        reader, err := fs.OpenURL(ctx, "scp://host1:22/myfolder/asset.txt")
      }
 }
 
@@ -126,7 +130,7 @@ func main() {
         if object.IsDir() {
             continue
         }
-        reader, err := fs.Download(ctx, object)
+        reader, err := fs.Open(ctx, object)
         if err != nil {
             log.Fatal(err)
         }
@@ -487,7 +491,7 @@ func modifyContent(info os.FileInfo, reader io.ReadCloser) (closer io.ReadCloser
 func main() {
 
     fs := afs.New()
-    reader ,err := fs.DownloadWithURL(context.Background(), "s3://mybucket/meta.info", modifyContent)
+    reader ,err := fs.OpenURL(context.Background(), "s3://mybucket/meta.info", modifyContent)
     if err != nil {
         log.Fatal(err)	
     }
@@ -518,7 +522,7 @@ Streaming data allows data reading and uploading in chunks with small memory foo
 	ctx := context.Background()
 	fs := afs.New()
 	sourceURL := "gs://myBucket/path/myasset.gz"
-	reader, err := fs.DownloadWithURL(ctx, sourceURL, jwtConfig, option.NewStream(64*1024*1024, 0))
+	reader, err := fs.OpenURL(ctx, sourceURL, jwtConfig, option.NewStream(64*1024*1024, 0))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -634,7 +638,7 @@ func mian() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	_, err = fs.OpenURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}

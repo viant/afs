@@ -57,7 +57,7 @@ func TestNewService(t *testing.T) {
 			assert.EqualValues(t, useCase.asset.Name, files[0].Name())
 		}
 
-		reader, err := service.DownloadWithURL(ctx, dest)
+		reader, err := service.OpenURL(ctx, dest)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
@@ -77,7 +77,7 @@ func TestNewService(t *testing.T) {
 
 }
 
-func TestService_DownloadWithURL(t *testing.T) {
+func TestService_OpenURL(t *testing.T) {
 	baseDir := os.TempDir()
 	ctx := context.Background()
 	fileManager := file.New()
@@ -123,7 +123,7 @@ func TestService_DownloadWithURL(t *testing.T) {
 		}
 		for _, resource := range useCase.assets {
 			URL := path.Join(useCase.baseLocation, resource.Name)
-			reader, err := service.DownloadWithURL(ctx, URL, useCase.modifier)
+			reader, err := service.OpenURL(ctx, URL, useCase.modifier)
 			if !assert.Nil(t, err, useCase.description+" "+resource.Name) {
 				continue
 			}

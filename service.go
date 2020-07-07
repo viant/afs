@@ -29,6 +29,12 @@ type Service interface {
 	//Exists returns true if resource exists
 	Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error)
 
+	//Open open reader for supplied object and options
+	Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error)
+
+	//Open open reader for supplied URL and options
+	OpenURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error)
+
 	storage.Copier
 	storage.Mover
 
@@ -140,6 +146,14 @@ func (s *service) exists(ctx context.Context, manager storage.Manager, URL strin
 		return false, nil
 	}
 	return len(objects) > 0, nil
+}
+
+func (s *service) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
+	return s.Download(ctx, object, options...)
+}
+
+func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error) {
+	return s.DownloadWithURL(ctx, URL, options...)
 }
 
 func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error) {
