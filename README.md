@@ -44,7 +44,7 @@ Open(ctx context.Context, object Object, options ...Option) (io.ReadCloser, erro
 
 OpenURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 
-OpenhURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
+DownloadWithURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 
 Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...Option) error
 
