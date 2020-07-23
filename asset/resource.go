@@ -2,6 +2,7 @@ package asset
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
@@ -80,6 +81,18 @@ func NewLink(name, link string, mode os.FileMode) *Resource {
 	return New(name, mode|os.ModeSymlink, false, link, nil)
 }
 
+
+//NewGzFile create a gz file resource
+func NewGzFile(name string, data []byte, mode os.FileMode) *Resource {
+	buffer := new(bytes.Buffer)
+	gzWriter := gzip.NewWriter(buffer)
+	io.Copy(gzWriter, bytes.NewReader(data))
+	gzWriter.Flush()
+	gzWriter.Close()
+	return New(name, mode, false, "", buffer.Bytes())
+}
+
+
 //New creates an asset
 func New(name string, mode os.FileMode, dir bool, link string, data []byte) *Resource {
 	if mode == 0 {
@@ -93,3 +106,5 @@ func New(name string, mode os.FileMode, dir bool, link string, data []byte) *Res
 		Link: link,
 	}
 }
+
+

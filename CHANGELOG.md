@@ -1,3 +1,6 @@
+## July 21 2020 0.18.1
+  * Added asset.NewGzFile testing utility
+
 ## July 7 2020 0.18.0
   * Added service.Open method
   * Added service.OpenURL 
