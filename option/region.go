@@ -1,6 +1,5 @@
 package option
 
-
 //Region represents cloud region/location option
 type Region struct {
 	Name string
@@ -10,4 +9,3 @@ type Region struct {
 func NewRegion(name string) *Region {
 	return &Region{Name: name}
 }
-

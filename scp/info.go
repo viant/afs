@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	 DefaultFileMode os.FileMode = 0755
+	DefaultFileMode os.FileMode = 0755
 )
-
 
 //NewInfo returns new info from SCP response
 func NewInfo(createResponse string, modified *time.Time) (os.FileInfo, error) {

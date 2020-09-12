@@ -16,12 +16,12 @@ func NewWriter(_ context.Context, URL string, mode os.FileMode, options ...stora
 	_, err := os.Stat(location)
 	exists := err == nil
 	flag := os.O_WRONLY
-	if ! exists  {
+	if !exists {
 		flag |= os.O_CREATE
 	}
 	if flagOpt > 0 {
 		flag |= int(flagOpt)
-	} else  {//by default append  is file exists
+	} else { //by default append  is file exists
 		if exists {
 			flag |= os.O_APPEND
 		}

@@ -19,7 +19,6 @@ type walker struct {
 	URL  string
 }
 
-
 func (w *walker) open(ctx context.Context, URL string, options ...storage.Option) (io.ReaderAt, int, error) {
 	if len(w.data) > 0 && URL == w.URL {
 		return bytes.NewReader(w.data), len(w.data), nil
@@ -43,7 +42,7 @@ func (w *walker) open(ctx context.Context, URL string, options ...storage.Option
 	return bytes.NewReader(w.data), len(w.data), nil
 }
 
-func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option)  error {
+func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
 	readerAt, size, err := w.open(ctx, URL, options...)
 	if err != nil {

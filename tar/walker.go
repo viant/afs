@@ -103,7 +103,7 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 		case tar.TypeDir:
 			shallContinue, err = handler(ctx, URL, relative, info, nil)
 		case tar.TypeReg:
-			shallContinue, err = visitRegularHeader(ctx, reader,  handler, URL, relative, info)
+			shallContinue, err = visitRegularHeader(ctx, reader, handler, URL, relative, info)
 		case tar.TypeSymlink:
 			linkPath := path.Clean(path.Join(relative, header.Linkname))
 			linkReader, err := w.open(ctx, URL, options...)
@@ -111,7 +111,7 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 				return err
 			}
 			if ioReader, err = w.fetch(tar.NewReader(linkReader), linkPath, cache); err == nil {
-				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader,  handler, URL, relative, info)
+				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader, handler, URL, relative, info)
 			}
 			linkReader.Close()
 		default:
@@ -135,7 +135,7 @@ func getFileMode(header *tar.Header) int64 {
 	return mode
 }
 
-func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string, reader io.Reader,  handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string, reader io.Reader, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
 	relative, name := path.Split(header.Name)
 	link := object.NewLink(header.Linkname, url.Join(URL, linkPath), nil)
 	info = file.NewInfo(name, header.Size, os.FileMode(info.Mode()), header.ModTime, header.Typeflag == tar.TypeDir, link)
@@ -146,7 +146,7 @@ func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string
 	return true, nil
 }
 
-func visitRegularHeader(ctx context.Context, reader io.Reader,  handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+func visitRegularHeader(ctx context.Context, reader io.Reader, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
 	shallContinue, err := handler(ctx, URL, relative, info, reader)
 	if err != nil || !shallContinue {
 		return shallContinue, err

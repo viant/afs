@@ -12,8 +12,7 @@ type storager struct {
 	base.Storager
 	scheme string
 	Root   *Folder
-	mux sync.Mutex
-
+	mux    sync.Mutex
 }
 
 func (s *storager) Close() error {

@@ -6,6 +6,6 @@ type ServerSideEncryption struct {
 }
 
 //NewServerSideEncryption creates a server side encryption
-func NewServerSideEncryption(alg string) *ServerSideEncryption{
-	return &ServerSideEncryption{Algorithm:alg}
+func NewServerSideEncryption(alg string) *ServerSideEncryption {
+	return &ServerSideEncryption{Algorithm: alg}
 }
