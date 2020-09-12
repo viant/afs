@@ -45,7 +45,7 @@ OpenURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, erro
 
 Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...Option) error
 
-Create(ctx context.Context, URL string, mode os.FileMode, isContainer bool, options ...Option) error
+Create(ctx context.Context, URL string, mode os.FileMode, isDir bool, options ...Option) error
 
 Delete(ctx context.Context, URL string, options ...Option) error
 ``` 
