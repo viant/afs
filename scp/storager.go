@@ -93,8 +93,8 @@ func (s *storager) walk(ctx context.Context, location string, skipBaseLocation b
 	return session.download(ctx, skipBaseLocation, location, handler)
 }
 
-//Download fetches content for supplied location
-func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+//Open fetches content for supplied location
+func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	result := new(bytes.Buffer)
 	err := s.Walk(ctx, location, func(relative string, info os.FileInfo, reader io.Reader) (b bool, e error) {
 		_, err := io.Copy(result, reader)

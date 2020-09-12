@@ -19,8 +19,8 @@ type Storager interface {
 	//Get returns a file info for supplied location
 	Get(ctx context.Context, location string, options ...Option) (os.FileInfo, error)
 
-	//Download feches content for supplied location
-	Download(ctx context.Context, location string, options ...Option) (io.ReadCloser, error)
+	//Open returns a reader closer for supplied resources
+	Open(ctx context.Context, location string, options ...Option) (io.ReadCloser, error)
 
 	//Upload uploads
 	Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...Option) error

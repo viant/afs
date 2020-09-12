@@ -30,7 +30,7 @@ func ExampleService_List() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := fs.Download(ctx, object)
+		reader, err := fs.Open(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -143,7 +143,7 @@ func Example_UploadError() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	_, err = fs.OpenURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatalf("expect download error: %v", err)
 	}
@@ -157,7 +157,7 @@ func Example_ReaderError() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := fs.DownloadWithURL(ctx, "gs://myBucket/folder/asset.txt")
+	reader, err := fs.OpenURL(ctx, "gs://myBucket/folder/asset.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

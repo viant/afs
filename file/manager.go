@@ -17,12 +17,12 @@ func (s *manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	return Upload(ctx, URL, mode, reader, options...)
 }
 
-func (s *manager) Download(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
-	return Download(ctx, object, options...)
+func (s *manager) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
+	return Open(ctx, object, options...)
 }
 
-func (s *manager) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
-	return DownloadWithURL(ctx, URL, options...)
+func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
+	return OpenURL(ctx, URL, options...)
 }
 
 func (s *manager) Delete(ctx context.Context, URL string, options ...storage.Option) error {
@@ -35,6 +35,10 @@ func (s *manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 
 func (s *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	return Move(ctx, sourceURL, destURL, options...)
+}
+
+func (s *manager) NewWriter(_ context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error) {
+	return NewWriter(nil, URL, mode, options...)
 }
 
 func (s *manager) Close() error {

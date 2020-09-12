@@ -1,5 +1,16 @@
+## September 2020 1.0.0
+  * Added WriterProvider interface
+  * Changed NewWriter signature (breaking change)
+  * Changed Download signature (breaking change, use Open instead)
+  * Changed DownloadWithURL signature (breaking change, use OpenURL instead)
+  * Renamed Storager.Download to Storage.Open  (breaking change)
+  * Renamed storage.Downloader to storage.Opener  (breaking change)
+  * Optimized zip/tar walk streaming
+  * Added file.NewWriter
+    
 ## July 21 2020 0.18.1
   * Added asset.NewGzFile testing utility
+
 
 ## July 7 2020 0.18.0
   * Added service.Open method

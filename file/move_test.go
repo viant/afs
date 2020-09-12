@@ -69,7 +69,7 @@ func TestMove(t *testing.T) {
 			continue
 		}
 
-		reader, err := DownloadWithURL(ctx, useCase.dest)
+		reader, err := OpenURL(ctx, useCase.dest)
 		if assert.Nil(t, err) {
 			continue
 		}

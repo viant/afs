@@ -38,13 +38,10 @@ List(ctx context.Context, URL string, options ...Option) ([]Object, error)
 
 Walk(ctx context.Context, URL string, handler OnVisit, options ...Option) error
 
-Download(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
-
 Open(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
 
 OpenURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 
-DownloadWithURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 
 Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...Option) error
 
@@ -69,12 +66,17 @@ Copy(ctx context.Context, sourceURL, destURL string, options ...Option) error
 
 Move(ctx context.Context, sourceURL, destURL string, options ...Option) error
 
-NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
+NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error)
+
+DownloadWithURL(ctx context.Context, URL string, options ...Option) ([]byte, error)
+
+Download(ctx context.Context, object Object, options ...Option) ([]byte, error)
+
 ```
 
 
 URL scheme is used to identify storage system, or alternatively relative/absolute path can be used for local file storage.
-By default all operations using the same baseURL share the same corresponding storage manager instance.
+By default, all operations using the same baseURL share the same corresponding storage manager instance.
 For example, instead supplying SCP auth details for all operations, auth option can be used only once.
 
 ```go

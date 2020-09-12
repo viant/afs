@@ -30,7 +30,7 @@ type storager struct {
 	exists     bool
 	closer     io.Closer
 	uploader   storage.Uploader
-	downloader storage.Downloader
+	downloader storage.Opener
 }
 
 //Exists returns true if resource exists in archive
@@ -95,8 +95,8 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 	})
 }
 
-//Download fetches content for supplied location
-func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+//Open fetches content for supplied location
+func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	if !s.exists {
 		return nil, fmt.Errorf("%v: not found", s.URL)
 	}

@@ -48,7 +48,7 @@ func TestManager_Download(t *testing.T) {
 
 	for _, useCase := range useCases {
 		manager := newManager()
-		reader, err := manager.DownloadWithURL(ctx, useCase.URL)
+		reader, err := manager.OpenURL(ctx, useCase.URL)
 		if useCase.hasError {
 			assert.NotNil(t, err, useCase.description)
 			continue

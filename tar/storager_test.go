@@ -79,7 +79,7 @@ func TestNewStorager(t *testing.T) {
 		ok, _ = storager.Exists(ctx, useCase.resource.Name)
 		assert.True(t, ok, useCase.description)
 
-		reader, err := storager.Download(ctx, useCase.resource.Name)
+		reader, err := storager.Open(ctx, useCase.resource.Name)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

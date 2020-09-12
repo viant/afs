@@ -2,7 +2,6 @@ package afs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/mem"
@@ -10,6 +9,7 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -19,7 +19,7 @@ import (
 //Service represents storage storage
 type Service interface {
 	storage.Lister
-	storage.Downloader
+	storage.Opener
 	storage.Uploader
 	storage.BatchUploader
 	storage.Deleter
@@ -42,7 +42,7 @@ type Service interface {
 	Init(ctx context.Context, baseURL string, options ...storage.Option) error
 
 	//NewWriter creates an upload writer
-	NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser
+	NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error)
 
 	//Closes all active managers
 	CloseAll() error
@@ -64,25 +64,6 @@ func (s *service) Upload(ctx context.Context, URL string, mode os.FileMode, read
 		return err
 	}
 	return manager.Upload(ctx, URL, mode, reader, options...)
-}
-
-func (s *service) Download(ctx context.Context, object storage.Object, options ...storage.Option) (reader io.ReadCloser, err error) {
-	if object == nil {
-		return nil, errors.New("object was empty")
-	}
-	var modifier option.Modifier
-	option.Assign(options, &modifier)
-	manager, err := s.manager(ctx, object.URL(), options)
-	if err != nil {
-		return nil, err
-	}
-
-	reader, err = manager.Download(ctx, object, options...)
-	if modifier == nil || err != nil {
-		return reader, err
-	}
-	_, reader, err = modifier(object, reader)
-	return reader, err
 }
 
 func (s *service) Delete(ctx context.Context, URL string, options ...storage.Option) error {
@@ -149,14 +130,10 @@ func (s *service) exists(ctx context.Context, manager storage.Manager, URL strin
 }
 
 func (s *service) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
-	return s.Download(ctx, object, options...)
+	return s.OpenURL(ctx, object.URL(), options...)
 }
 
 func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error) {
-	return s.DownloadWithURL(ctx, URL, options...)
-}
-
-func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error) {
 	URL = url.Normalize(URL, file.Scheme)
 	var modifier option.Modifier
 	option.Assign(options, &modifier)
@@ -164,7 +141,7 @@ func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...st
 	if err != nil {
 		return nil, err
 	}
-	reader, err = manager.DownloadWithURL(ctx, URL, options...)
+	reader, err = manager.OpenURL(ctx, URL, options...)
 	if modifier == nil || err != nil {
 		return reader, err
 	}
@@ -173,6 +150,24 @@ func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...st
 	info := file.NewInfo(name, 0, file.DefaultFileOsMode, time.Now(), false)
 	_, reader, err = modifier(info, reader)
 	return reader, err
+}
+
+func (s *service) Download(ctx context.Context, object storage.Object, options ...storage.Option) ([]byte, error) {
+	reader, err := s.Open(ctx, object, options...)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	return ioutil.ReadAll(reader)
+}
+
+func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) ([]byte, error) {
+	reader, err := s.OpenURL(ctx, URL, options...)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	return ioutil.ReadAll(reader)
 }
 
 func (s *service) newManager(ctx context.Context, scheme string, options ...storage.Option) (storage.Manager, error) {

@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 			assert.EqualValues(t, useCase.asset.Name, files[0].Name())
 		}
 
-		reader, err := manager.DownloadWithURL(ctx, dest)
+		reader, err := manager.OpenURL(ctx, dest)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

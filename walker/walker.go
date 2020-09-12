@@ -28,7 +28,7 @@ func (w *walker) visitResource(ctx context.Context, object storage.Object, URL, 
 	var reader io.ReadCloser
 
 	if !object.IsDir() {
-		if reader, err = w.Download(ctx, object, options...); err != nil {
+		if reader, err = w.Open(ctx, object, options...); err != nil {
 			return err
 		}
 		defer func() { _ = reader.Close() }()

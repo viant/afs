@@ -69,7 +69,7 @@ func TestNewFaker(t *testing.T) {
 		err := service.Upload(ctx, useCase.URL, useCase.mode, strings.NewReader(useCase.data), useCase.options...)
 		var reader io.ReadCloser
 		if err == nil {
-			reader, err = service.DownloadWithURL(ctx, useCase.URL)
+			reader, err = service.OpenURL(ctx, useCase.URL)
 		}
 
 		switch useCase.errorType {
