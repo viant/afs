@@ -72,7 +72,7 @@ func TestNewService(t *testing.T) {
 			assert.EqualValues(t, useCase.asset.Name, files[0].Name())
 		}
 
-		reader, err := srv.Download(ctx, dest)
+		reader, err := srv.Open(ctx, dest)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

@@ -102,19 +102,19 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	return storager.Upload(ctx, URLPath, mode, reader, options...)
 }
 
-//Download downloads content
-func (m *Manager) Download(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
-	return m.DownloadWithURL(ctx, object.URL(), options...)
+//Open downloads content
+func (m *Manager) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
+	return m.OpenURL(ctx, object.URL(), options...)
 }
 
-//DownloadWithURL downloads content
-func (m *Manager) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
+//OpenURL downloads content
+func (m *Manager) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
 	if err != nil {
 		return nil, err
 	}
-	reader, err := storager.Download(ctx, URLPath, options...)
+	reader, err := storager.Open(ctx, URLPath, options...)
 	if err != nil {
 		return nil, err
 	}

@@ -66,7 +66,7 @@ func TestManager_Copy(t *testing.T) {
 			continue
 		}
 		assert.EqualValues(t, 1, len(list), useCase.description)
-		reader, err := storager.Download(ctx, list[0])
+		reader, err := storager.Open(ctx, list[0])
 		if !assert.Nil(t, err) {
 			continue
 		}

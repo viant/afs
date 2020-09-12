@@ -9,7 +9,14 @@ import (
 )
 
 //NewWriter creates an upload writer
-func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) io.WriteCloser {
+func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error) {
+	manager, err := s.manager(ctx, URL, options)
+	if err != nil {
+		return nil, err
+	}
+	if provider, ok := manager.(storage.WriterProvider); ok {
+		return provider.NewWriter(ctx, URL, mode, options...)
+	}
 	return &writer{
 		ctx:         ctx,
 		url:         URL,
@@ -19,7 +26,7 @@ func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, o
 		opened:      false,
 		doneChannel: make(chan bool),
 		err:         nil,
-	}
+	}, nil
 }
 
 // A writer writes an object to destination

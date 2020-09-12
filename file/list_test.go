@@ -74,7 +74,7 @@ func TestManager_List(t *testing.T) {
 		for _, object := range objects {
 			content := ""
 			if !object.IsDir() {
-				reader, err := manager.Download(ctx, object)
+				reader, err := manager.Open(ctx, object)
 				assert.Nil(t, err)
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					content = string(data)

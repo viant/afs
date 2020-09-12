@@ -37,8 +37,8 @@ func (s *service) canUseCache() bool {
 	return atomic.LoadInt32(&s.useCache) == 1
 }
 
-func (s *service) Download(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
-	return s.DownloadWithURL(ctx, object.URL(), options...)
+func (s *service) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
+	return s.OpenURL(ctx, object.URL(), options...)
 }
 
 func (s *service) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
@@ -62,20 +62,20 @@ func (s *service) Exists(ctx context.Context, URL string, options ...storage.Opt
 	return obj != nil, nil
 }
 
-func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
+func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	if e := s.reloadIfNeeded(ctx); e != nil {
 		fmt.Printf("failed to reload %v", e)
 		atomic.StoreInt32(&s.useCache, 0)
 	}
 	if !s.canUseCache() {
-		return s.Service.DownloadWithURL(ctx, URL, options...)
+		return s.Service.OpenURL(ctx, URL, options...)
 	}
 	cacheURL := strings.Replace(URL, s.scheme, mem.Scheme, 1)
-	reader, err := s.Service.DownloadWithURL(ctx, cacheURL, options...)
+	reader, err := s.Service.OpenURL(ctx, cacheURL, options...)
 	if err == nil {
 		return reader, err
 	}
-	return s.Service.DownloadWithURL(ctx, URL, options...)
+	return s.Service.OpenURL(ctx, URL, options...)
 }
 
 func (s *service) rewriteObject(obj storage.Object) storage.Object {
@@ -132,7 +132,7 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 		return nil
 	}
 
-	reader, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
+	reader, err := s.Service.OpenURL(ctx, s.cacheURL)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (s *service) build(ctx context.Context) error {
 		if obj.IsDir() || obj.Name() == CacheFile {
 			continue
 		}
-		reader, err := s.Service.DownloadWithURL(ctx, obj.URL())
+		reader, err := s.Service.OpenURL(ctx, obj.URL())
 		if err != nil {
 			return err
 		}

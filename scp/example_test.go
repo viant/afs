@@ -34,7 +34,7 @@ func Example_Storager() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.Download(ctx, location)
+	reader, err := service.Open(ctx, location)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func Example_Service() {
 	}
 	service := afs.New()
 	ctx := context.Background()
-	reader, err := service.DownloadWithURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
+	reader, err := service.OpenURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func Example_LocalhostKeyAuth() {
 	auth := option.NewBasicAuth("myuser", "nypass")
 	service := afs.New()
 	ctx := context.Background()
-	reader, err := service.DownloadWithURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
+	reader, err := service.OpenURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func Example_BasicAuth() {
 	}
 	service := afs.New()
 	ctx := context.Background()
-	reader, err := service.DownloadWithURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
+	reader, err := service.OpenURL(ctx, "scp://127.0.0.1:22/etc/hosts", auth, option.NewTimeout(2000))
 	if err != nil {
 		log.Fatal(err)
 	}

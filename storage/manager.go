@@ -9,7 +9,7 @@ import (
 //Manager represents storage manager
 type Manager interface {
 	Lister
-	Downloader
+	Opener
 	Uploader
 	Deleter
 	Creator
@@ -29,13 +29,13 @@ type Getter interface {
 	Object(ctx context.Context, URL string, options ...Option) (Object, error)
 }
 
-//Downloader represents a downloader
-type Downloader interface {
-	//Download returns reader for downloaded storage object
-	Download(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
+//Opener represents a downloader
+type Opener interface {
+	//Open returns reader for downloaded storage object
+	Open(ctx context.Context, object Object, options ...Option) (io.ReadCloser, error)
 
-	//Download returns reader for downloaded storage object
-	DownloadWithURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
+	//Open returns reader for downloaded storage object
+	OpenURL(ctx context.Context, URL string, options ...Option) (io.ReadCloser, error)
 }
 
 //Deleter represents a deleter

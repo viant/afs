@@ -49,7 +49,7 @@ func TestManager_Run(t *testing.T) {
 	for _, useCase := range useCases {
 		manager := newManager()
 		response := &http.Response{}
-		reader, err := manager.DownloadWithURL(ctx, useCase.URL, response)
+		reader, err := manager.OpenURL(ctx, useCase.URL, response)
 		if useCase.hasError {
 			assert.NotNil(t, err, useCase.description)
 			continue

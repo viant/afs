@@ -47,7 +47,7 @@ func TestStorager_Upload(t *testing.T) {
 			assert.NotNil(t, err, useCase.description)
 			continue
 		}
-		if ! assert.Nil(t, err, useCase.description) {
+		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 
@@ -57,7 +57,7 @@ func TestStorager_Upload(t *testing.T) {
 			assert.NotNil(t, err, useCase.description)
 			continue
 		}
-		if ! assert.Nil(t, err, useCase.description) {
+		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/object"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
@@ -16,26 +17,33 @@ import (
 )
 
 type walker struct {
-	storage.Downloader
+	storage.Opener
 	data []byte
 	URL  string
 }
 
-func (w *walker) load(ctx context.Context, URL string, options ...storage.Option) ([]byte, error) {
+func (w *walker) open(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	if len(w.data) > 0 && URL == w.URL {
-		return w.data, nil
+		return ioutil.NopCloser(bytes.NewReader(w.data)), nil
 	}
-	rawReader, err := w.DownloadWithURL(ctx, URL, options...)
+	rawReader, err := w.OpenURL(ctx, URL, options...)
 	if err != nil {
 		return nil, err
 	}
+
+	size := option.Size(0)
+	option.Assign(options, &size)
+	if size > 0 {
+		return rawReader, nil
+	}
+	defer rawReader.Close()
 	data, err := ioutil.ReadAll(rawReader)
 	if err != nil {
 		return nil, err
 	}
 	w.URL = URL
 	w.data = data
-	return w.data, nil
+	return ioutil.NopCloser(bytes.NewReader(w.data)), nil
 }
 
 func (w *walker) fetch(reader *tar.Reader, location string, cache map[string][]byte) (io.Reader, error) {
@@ -73,14 +81,14 @@ func (w *walker) buildCache(reader *tar.Reader, cache map[string][]byte) {
 
 func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
-	data, err := w.load(ctx, URL, options...)
+	readerCloser, err := w.open(ctx, URL, options...)
 	if err != nil {
 		return err
 	}
+	defer readerCloser.Close()
 	var shallContinue bool
 	var ioReader io.Reader
-	reader := tar.NewReader(bytes.NewReader(data))
-	buffer := new(bytes.Buffer)
+	reader := tar.NewReader(readerCloser)
 	//cache is only used if sym link are used
 	var cache = make(map[string][]byte)
 	for {
@@ -95,12 +103,17 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 		case tar.TypeDir:
 			shallContinue, err = handler(ctx, URL, relative, info, nil)
 		case tar.TypeReg:
-			shallContinue, err = visitRegularHeader(ctx, reader, buffer, handler, URL, relative, info)
+			shallContinue, err = visitRegularHeader(ctx, reader, handler, URL, relative, info)
 		case tar.TypeSymlink:
 			linkPath := path.Clean(path.Join(relative, header.Linkname))
-			if ioReader, err = w.fetch(tar.NewReader(bytes.NewReader(data)), linkPath, cache); err == nil {
-				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader, buffer, handler, URL, relative, info)
+			linkReader, err := w.open(ctx, URL, options...)
+			if err != nil {
+				return err
 			}
+			if ioReader, err = w.fetch(tar.NewReader(linkReader), linkPath, cache); err == nil {
+				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader, handler, URL, relative, info)
+			}
+			linkReader.Close()
 		default:
 			return fmt.Errorf("unknown header type: %v", header.Typeflag)
 		}
@@ -122,41 +135,31 @@ func getFileMode(header *tar.Header) int64 {
 	return mode
 }
 
-func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string, reader io.Reader, buffer *bytes.Buffer, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+func visitSymlinkHeader(ctx context.Context, header *tar.Header, linkPath string, reader io.Reader, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
 	relative, name := path.Split(header.Name)
 	link := object.NewLink(header.Linkname, url.Join(URL, linkPath), nil)
 	info = file.NewInfo(name, header.Size, os.FileMode(info.Mode()), header.ModTime, header.Typeflag == tar.TypeDir, link)
-	_, err := io.Copy(buffer, reader)
-	if err != nil {
-		return false, err
-	}
-	shallContinue, err := handler(ctx, URL, relative, info, buffer)
+	shallContinue, err := handler(ctx, URL, relative, info, reader)
 	if err != nil || !shallContinue {
 		return shallContinue, err
 	}
-	buffer.Reset()
 	return true, nil
 }
 
-func visitRegularHeader(ctx context.Context, reader io.Reader, buffer *bytes.Buffer, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
-	_, err := io.Copy(buffer, reader)
-	if err != nil {
-		return false, err
-	}
-	shallContinue, err := handler(ctx, URL, relative, info, buffer)
+func visitRegularHeader(ctx context.Context, reader io.Reader, handler storage.OnVisit, URL string, relative string, info os.FileInfo) (bool, error) {
+	shallContinue, err := handler(ctx, URL, relative, info, reader)
 	if err != nil || !shallContinue {
 		return shallContinue, err
 	}
-	buffer.Reset()
 	return true, nil
 }
 
 //newWalker returns a walker
-func newWalker(download storage.Downloader) *walker {
-	return &walker{Downloader: download}
+func newWalker(opener storage.Opener) *walker {
+	return &walker{Opener: opener}
 }
 
 //NewWalker returns a walker
-func NewWalker(download storage.Downloader) storage.Walker {
+func NewWalker(download storage.Opener) storage.Walker {
 	return newWalker(download)
 }

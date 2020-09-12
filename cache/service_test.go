@@ -78,7 +78,7 @@ func TestService_Cache(t *testing.T) {
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
-			reader, err := service.Download(ctx, object)
+			reader, err := service.Open(ctx, object)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}

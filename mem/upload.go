@@ -14,8 +14,7 @@ import (
 	"time"
 )
 
-
-var preconditionErrorMessage  = fmt.Sprintf("precondition failed: %v ", http.StatusPreconditionFailed)
+var preconditionErrorMessage = fmt.Sprintf("precondition failed: %v ", http.StatusPreconditionFailed)
 
 //Upload writes fakeReader TestContent to supplied URL path.
 func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
@@ -25,7 +24,7 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	parent, err := s.parent(location, file.DefaultDirOsMode)
 	generation := &option.Generation{}
 	_, ok := option.Assign(options, &generation)
-	if ! ok {
+	if !ok {
 		generation = nil
 	}
 	parent, err = s.parent(location, file.DefaultDirOsMode)
@@ -42,7 +41,6 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	option.Assign(options, &modTime)
 	memFile := NewFile(location, mode, data, modTime)
 
-
 	if prev, ok := parent.files[memFile.Name()]; ok {
 		memFile.generation = prev.generation
 	}
@@ -52,13 +50,12 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 			if generation.Generation != memFile.generation {
 				return errors.Errorf(preconditionErrorMessage+" expected: %v, but had: %v", generation.Generation, memFile.generation)
 			}
-		}  else {
+		} else {
 			if generation.Generation == memFile.generation {
 				return errors.Errorf(preconditionErrorMessage+" unexpected: %v", generation.Generation)
 			}
 		}
 	}
-
 
 	memFile.generation++
 	return parent.Put(memFile.Object)

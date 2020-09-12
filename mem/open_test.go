@@ -78,7 +78,7 @@ func TestDownload(t *testing.T) {
 
 		assert.Equal(t, 1, len(objects), useCase.description)
 
-		reader, err := manager.Download(ctx, objects[0], useCase.downloadOptions...)
+		reader, err := manager.Open(ctx, objects[0], useCase.downloadOptions...)
 		if useCase.downloadError {
 			assert.NotNil(t, err, useCase.description)
 			continue
