@@ -29,11 +29,11 @@ type Service interface {
 	//Exists returns true if resource exists
 	Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error)
 
-	//Open open reader for supplied object and options
-	Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error)
+	//Download download bytes
+	Download(ctx context.Context, object storage.Object, options ...storage.Option) ([]byte, error)
 
-	//Open open reader for supplied URL and options
-	OpenURL(ctx context.Context, URL string, options ...storage.Option) (reader io.ReadCloser, err error)
+	//DownloadWithURL download bytes for URL
+	DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) ([]byte, error)
 
 	storage.Copier
 	storage.Mover
