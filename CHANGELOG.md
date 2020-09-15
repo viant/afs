@@ -1,4 +1,4 @@
-## September 2020 1.0.0
+## September 12 2020 1.0.0
   * Added WriterProvider interface
   * Changed NewWriter signature (breaking change)
   * Changed Download signature (breaking change, use Open instead)
