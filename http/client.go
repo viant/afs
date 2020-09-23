@@ -12,6 +12,8 @@ type ClientProvider func(baseURL string, options ...storage.Option) (*http.Clien
 
 func (s *manager) getClient(baseURL string, options ...storage.Option) (*http.Client, error) {
 	baseURL, _ = url.Base(baseURL, Scheme)
+	s.mux.Lock()
+	s.mux.Unlock()
 	client, ok := s.baseURLClients[baseURL]
 	if ok {
 		return client, nil

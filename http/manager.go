@@ -3,10 +3,12 @@ package http
 import (
 	"github.com/viant/afs/storage"
 	"net/http"
+	"sync"
 )
 
 type manager struct {
 	client         *http.Client
+	mux sync.Mutex
 	baseURLClients map[string]*http.Client
 	options        []storage.Option
 }
