@@ -19,9 +19,10 @@ var preconditionErrorMessage = fmt.Sprintf("precondition failed: %v ", http.Stat
 //Upload writes fakeReader TestContent to supplied URL path.
 func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	s.mux.Lock()
-	defer s.mux.Unlock()
-
 	parent, err := s.parent(location, file.DefaultDirOsMode)
+	s.mux.Unlock()
+
+
 	generation := &option.Generation{}
 	_, ok := option.Assign(options, &generation)
 	if !ok {
@@ -40,11 +41,11 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	modTime := time.Now()
 	option.Assign(options, &modTime)
 	memFile := NewFile(location, mode, data, modTime)
-
+	parent.mutex.Lock()
 	if prev, ok := parent.files[memFile.Name()]; ok {
 		memFile.generation = prev.generation
 	}
-
+	parent.mutex.Unlock()
 	if generation != nil {
 		if generation.WhenMatch {
 			if generation.Generation != memFile.generation {
