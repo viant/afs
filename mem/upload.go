@@ -22,7 +22,6 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	parent, err := s.parent(location, file.DefaultDirOsMode)
 	s.mux.Unlock()
 
-
 	generation := &option.Generation{}
 	_, ok := option.Assign(options, &generation)
 	if !ok {

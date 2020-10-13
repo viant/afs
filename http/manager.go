@@ -8,7 +8,7 @@ import (
 
 type manager struct {
 	client         *http.Client
-	mux sync.Mutex
+	mux            sync.Mutex
 	baseURLClients map[string]*http.Client
 	options        []storage.Option
 }

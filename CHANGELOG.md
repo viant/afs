@@ -1,3 +1,7 @@
+## October 13th 2020 1.0.6
+  * Modified pipeline writer to upload non-zero length write
+  * Patched mem fs deadlock
+  
 ## September 2020 1.0.0
   * Added WriterProvider interface
   * Changed NewWriter signature (breaking change)

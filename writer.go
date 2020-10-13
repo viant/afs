@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 )
 
 //NewWriter creates an upload writer
@@ -41,6 +42,7 @@ type writer struct {
 	writer      *io.PipeWriter
 	doneChannel chan bool
 	err         error
+	written     int64
 }
 
 func (w *writer) open() error {
@@ -70,6 +72,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 		}
 	}
 	n, err = w.writer.Write(p)
+	atomic.AddInt64(&w.written, int64(n))
 	if err != nil {
 		w.setError(err)
 		if err == context.Canceled || err == context.DeadlineExceeded {
@@ -81,6 +84,11 @@ func (w *writer) Write(p []byte) (n int, err error) {
 
 // Close completes the write operation and flushes any buffered data.
 func (w *writer) Close() error {
+	//nothing was written quit
+	if atomic.LoadInt64(&w.written) == 0 {
+		defer close(w.doneChannel)
+		return nil
+	}
 	if !w.opened {
 		if err := w.open(); err != nil {
 			return err
