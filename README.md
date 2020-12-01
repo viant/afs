@@ -466,7 +466,6 @@ func main() {
 package main
 
 import (
-	"bytes"
 	"context"
 	"log"
 	"github.com/viant/afs"
@@ -661,6 +660,50 @@ func mian() {
 ```
 
 
+##### Code generation for static or in memory go file
+
+
+Generate with mem storage
+
+```
+package main
+
+import (
+    "log"
+    "github.com/viant/afs/parrot
+)
+
+func mian() {
+  ctx := context.Background()
+  err := parrot.GenerateWithMem(ctx, "pathToBinaryAsset", "gen.go", false)
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+
+```
+
+Generate static data files
+
+```
+package main
+
+import (
+    "log"
+    "github.com/viant/afs/parrot
+)
+
+func mian() {
+  ctx := context.Background()
+  err := parrot.Generate(ctx, "pathToBinaryAsset", "data/", false)
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+
+```
+
+
 ## Test setup utilities
 
 Package [asset](asset) defines basic utilities to quickly manage asset related unit tests.
@@ -713,6 +756,9 @@ func Test_XXX(t *testing.T) {
 }
 
 ```
+
+
+
 
 ## GoCover
 

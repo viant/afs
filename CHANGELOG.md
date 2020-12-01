@@ -1,3 +1,6 @@
+## December 1st 2020 1.1.0
+  * Added parrot package to generate static content to go files mapping
+
 ## October 13th 2020 1.0.6
   * Modified pipeline writer to upload non-zero length write
   * Patched mem fs deadlock
