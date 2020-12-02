@@ -32,8 +32,6 @@ func Generate(ctx context.Context, src, dest string, useASCII bool, opts ...stor
 			name = strings.ToLower(ext[1:])
 		}
 		destURL := url.Join(dest, path.Join(parent, container, name+".go"))
-		fmt.Printf("DDD: %v\n", destURL)
-
 		payload := fmt.Sprintf(`package %v
 //%v content from %v
 var %v = %v`, container, strings.ToUpper(name), source, strings.ToUpper(name), data.AsBytesLiteral(useASCII))
