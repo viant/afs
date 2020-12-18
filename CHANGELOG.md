@@ -1,3 +1,6 @@
+## December 18th 2020 1.2.1
+  * Added auto directory creation for file.Open
+
 ## December 16th 2020 1.2.0
   * Added asset Modify test utility
   
