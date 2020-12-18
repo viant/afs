@@ -7,6 +7,7 @@ import (
 	"github.com/viant/afs/url"
 	"io"
 	"os"
+	"path"
 )
 
 func NewWriter(_ context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error) {
@@ -25,6 +26,10 @@ func NewWriter(_ context.Context, URL string, mode os.FileMode, options ...stora
 		if exists {
 			flag |= os.O_APPEND
 		}
+	}
+	if ! exists {
+		parent, _ := path.Split(location)
+		EnsureParentPathExists(parent, DefaultDirOsMode)
 	}
 	return os.OpenFile(location, flag, mode)
 }
