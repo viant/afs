@@ -49,3 +49,9 @@ type Creator interface {
 	//CreateBucket creates a bucket
 	Create(ctx context.Context, URL string, mode os.FileMode, isDir bool, options ...Option) error
 }
+
+//ErrorCoder represents error coder
+type ErrorCoder interface {
+	//ErrorCode returns an error code
+	ErrorCode(err error) int
+}

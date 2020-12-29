@@ -38,8 +38,15 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 		}
 		return result, nil
 	}
+
 	if !match(location, object) {
 		return []os.FileInfo{}, nil
+	}
+	generation := &option.Generation{}
+	if _, ok := option.Assign(options, &generation); ok {
+		if file, ok := object.(*File); ok {
+			generation.Generation = file.generation
+		}
 	}
 	return []os.FileInfo{object}, nil
 }
@@ -47,9 +54,15 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 //Exists checks if location exists
 func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	root := s.Root
-	_, err := root.Lookup(location, 0)
+	object, err := root.Lookup(location, 0)
 	if err != nil {
 		return false, nil
+	}
+	generation := &option.Generation{}
+	if _, ok := option.Assign(options, &generation); ok {
+		if file, ok := object.(*File); ok {
+			generation.Generation = file.generation
+		}
 	}
 	return true, nil
 

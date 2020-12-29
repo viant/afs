@@ -1,3 +1,6 @@
+## December 28th 2020 1.3.0
+   * Add ErrorCoder
+   
 ## December 18th 2020 1.2.1
   * Added auto directory creation for file.Open
 

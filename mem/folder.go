@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	noSuchFileOrDirectoryErrorMessage = "no such file or directory"
+)
+
 //Folder represents memory folder
 type Folder struct {
 	storage.Object
@@ -72,7 +76,7 @@ func (f *Folder) file(name string) (*File, error) {
 	defer f.mutex.RUnlock()
 	result, ok := f.files[name]
 	if !ok {
-		return nil, fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
+		return nil, fmt.Errorf("%v: "+noSuchFileOrDirectoryErrorMessage, url.Join(f.URL(), name))
 	}
 	return result, nil
 }
@@ -87,7 +91,7 @@ func (f *Folder) folder(name string) (*Folder, error) {
 		for k := range f.folders {
 			keys = append(keys, k)
 		}
-		return nil, fmt.Errorf("%v: no such file or directory, %v%v", url.Join(f.URL(), name), f.Name(), keys)
+		return nil, fmt.Errorf("%v: "+noSuchFileOrDirectoryErrorMessage+", %v%v", url.Join(f.URL(), name), f.Name(), keys)
 	}
 	return result, nil
 }

@@ -56,7 +56,6 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 			}
 		}
 	}
-
 	memFile.generation++
 	return parent.Put(memFile.Object)
 }

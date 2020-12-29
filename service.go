@@ -48,6 +48,9 @@ type Service interface {
 	CloseAll() error
 	//Closes matched active manager
 	Close(baseURL string) error
+
+	//ErrorCode returns an error code or zero
+	ErrorCode(scheme string, err error) int
 }
 
 //Service implementation
@@ -259,6 +262,21 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 		s.managers[key] = manager
 	}
 	return manager, err
+}
+
+//ErrorCode return error code
+func (s *service) ErrorCode(scheme string, err error) int {
+	if err == nil {
+		return 0
+	}
+	manager, e := s.newManager(context.Background(), scheme)
+	if e != nil {
+		return 0
+	}
+	if coder, ok := manager.(storage.ErrorCoder); ok {
+		return coder.ErrorCode(err)
+	}
+	return 0
 }
 
 func newService(faker bool) *service {

@@ -31,6 +31,12 @@ func TestJoin(t *testing.T) {
 			elemenets:   []string{},
 			expect:      "ftp://localhost",
 		},
+		{
+			description: "relative path",
+			baseURL:     "/tmp",
+			elemenets:   []string{"foo", "data.bar"},
+			expect:      "/tmp/foo/data.bar",
+		},
 	}
 
 	for _, useCase := range useCases {

@@ -6,7 +6,9 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
+	"net/http"
 	"os"
+	"strings"
 )
 
 type manager struct {
@@ -15,6 +17,20 @@ type manager struct {
 
 func (m *manager) provider(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	return NewStorager(baseURL), nil
+}
+
+func (m *manager) ErrorCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	if strings.Contains(err.Error(), preconditionErrorMessage) {
+		return http.StatusPreconditionFailed
+	}
+	if strings.Contains(err.Error(), noSuchFileOrDirectoryErrorMessage) {
+		return http.StatusNotFound
+	}
+
+	return 0
 }
 
 func (m *manager) setErrors(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options []storage.Option) error {

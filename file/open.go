@@ -17,7 +17,7 @@ func Open(ctx context.Context, object storage.Object, options ...storage.Option)
 func OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	filePath := Path(URL)
 	parent, _ := path.Split(filePath)
-	if err := EnsureParentPathExists(parent, DefaultDirOsMode);err != nil {
+	if err := EnsureParentPathExists(parent, DefaultDirOsMode); err != nil {
 		return nil, err
 	}
 	return os.Open(filePath)

@@ -27,7 +27,7 @@ func NewWriter(_ context.Context, URL string, mode os.FileMode, options ...stora
 			flag |= os.O_APPEND
 		}
 	}
-	if ! exists {
+	if !exists {
 		parent, _ := path.Split(location)
 		EnsureParentPathExists(parent, DefaultDirOsMode)
 	}

@@ -8,8 +8,11 @@ import (
 func Join(baseURL string, elements ...string) string {
 	if strings.HasSuffix(baseURL, "://") {
 		baseURL += Localhost
-	} else {
-		baseURL = strings.Trim(baseURL, "/")
+	} else if strings.HasSuffix(baseURL, "/") {
+		index := strings.LastIndex(baseURL, "/")
+		if index != -1 {
+			baseURL = baseURL[:index]
+		}
 	}
 	if len(elements) == 0 {
 		return baseURL
@@ -25,8 +28,11 @@ func Join(baseURL string, elements ...string) string {
 func JoinUNC(baseURL string, fragments ...string) string {
 	if strings.HasSuffix(baseURL, "://") {
 		baseURL += Localhost
-	} else {
-		baseURL = strings.Trim(baseURL, "/")
+	} else if strings.HasSuffix(baseURL, "/") {
+		index := strings.LastIndex(baseURL, "/")
+		if index != -1 {
+			baseURL = baseURL[:index]
+		}
 	}
 	if len(fragments) == 0 {
 		return baseURL
