@@ -20,6 +20,7 @@ const (
 //Counter represents a sync counter
 type Counter struct {
 	URL   string
+	Data interface{} `json:",omitempty"`
 	Count int
 	fs    afs.Service
 }
