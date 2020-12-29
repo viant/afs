@@ -9,9 +9,9 @@ import (
 )
 
 func TestRegExpr_Match(t *testing.T) {
-
 	var useCases = []struct {
 		description string
+		exclusion string
 		prefix      string
 		suffix      string
 		filter      string
@@ -70,10 +70,23 @@ func TestRegExpr_Match(t *testing.T) {
 			location:    "/aa-export/v/prod/export/aa/20191005_000000000000.txt.gz",
 			expect:      true,
 		},
+		{
+			description: "exclusion  - match ",
+			exclusion:      ".+/data/performance/\\d+/\\d+/\\d+.+",
+			location:    "/aa-export/v/prod/data/performance/2020/12/12/aa/dd/20191005_000000000000.txt.gz",
+			expect:      false,
+		},
+		{
+			description: "exclusion  - no match ",
+			exclusion:      ".+/data/performance/\\d+/\\d+/\\d+.+",
+			location:    "/aa-export/v/prod/data/performance/adb/12/12/aa/dd/20191005_000000000000.txt.gz",
+			expect:      true,
+		},
 	}
 
 	for _, useCase := range useCases {
 		matcher, err := NewBasic(useCase.prefix, useCase.suffix, useCase.filter, nil)
+		matcher.Exclusion = useCase.exclusion
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

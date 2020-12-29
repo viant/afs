@@ -9,11 +9,14 @@ import (
 
 //Basic represents prefix, suffix or regexp matcher
 type Basic struct {
-	Prefix    string `json:",omitempty"`
-	Suffix    string `json:",omitempty"`
+	Prefix   string   `json:",omitempty"`
+	Suffix   string   `json:",omitempty"`
 	Filter    string `json:",omitempty"`
-	Directory *bool  `json:",omitempty"`
-	compiled  *regexp.Regexp
+	Exclusion string `json:",omitempty"`
+
+	Directory        *bool `json:",omitempty"`
+	compiledFilter   *regexp.Regexp
+	comiledExclusion *regexp.Regexp
 }
 
 //Match matcher parent and info with matcher rules
@@ -25,12 +28,12 @@ func (r *Basic) Match(parent string, info os.FileInfo) bool {
 			return false
 		}
 	}
-	if r.Filter != "" && r.compiled == nil {
-		r.compiled, _ = regexp.Compile(r.Filter)
+	if r.Filter != "" && r.compiledFilter == nil {
+		r.compiledFilter, _ = regexp.Compile(r.Filter)
 	}
 	location := path.Join(parent, info.Name())
-	if r.compiled != nil {
-		if !r.compiled.MatchString(location) {
+	if r.compiledFilter != nil {
+		if !r.compiledFilter.MatchString(location) {
 			return false
 		}
 	}
@@ -41,6 +44,14 @@ func (r *Basic) Match(parent string, info os.FileInfo) bool {
 	}
 	if r.Suffix != "" {
 		if !strings.HasSuffix(location, r.Suffix) {
+			return false
+		}
+	}
+	if r.Exclusion != "" && r.comiledExclusion == nil {
+		r.comiledExclusion, _ = regexp.Compile(r.Exclusion)
+	}
+	if r.comiledExclusion != nil {
+		if r.comiledExclusion.MatchString(location) {
 			return false
 		}
 	}
@@ -56,7 +67,7 @@ func NewBasic(prefix, suffix, filter string, dir *bool) (matcher *Basic, err err
 		Directory: dir,
 	}
 	if filter != "" {
-		matcher.compiled, err = regexp.Compile(filter)
+		matcher.compiledFilter, err = regexp.Compile(filter)
 	}
 	return matcher, err
 }

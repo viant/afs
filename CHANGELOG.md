@@ -1,3 +1,6 @@
+## December 29th 2020 1.4.1
+   * Added Exclusion to matcher.Basic
+   
 ## December 28th 2020 1.4.0
    * Add ErrorCoder
    * Added sync.Counter

@@ -358,6 +358,21 @@ func main() {
 }
 ```
 
+Exclusion
+
+```go
+func main() {
+	
+    matcher := matcher.Basic{Exclusion:".+/data/perf/\\d+/.+"}
+    fs := afs.New()
+    ctx := context.Background()
+    err := fs.Copy(ctx, "/tmp/data", "s3://mybucket/data/", matcher.Match)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
 **[Filepath matcher](matcher/filepath.go)**
 
 OS style filepath match, with the following terms:
