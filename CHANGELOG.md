@@ -1,3 +1,6 @@
+## December 30th 2020 1.6.0
+   * Added sync.Counter.Delete
+
 ## December 29th 2020 1.5.0
    * Added Exclusion to matcher.Basic
    

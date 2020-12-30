@@ -58,7 +58,6 @@ func (g *Counter) update(ctx context.Context, delta int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	if !ok {
 		g.Count = delta
 		data, jErr := json.Marshal(g)
@@ -76,7 +75,6 @@ func (g *Counter) update(ctx context.Context, delta int) (int, error) {
 	}
 
 	data, err := g.fs.DownloadWithURL(ctx, g.URL, &generation)
-
 	if err != nil {
 		return 0, err
 	}
@@ -89,6 +87,17 @@ func (g *Counter) update(ctx context.Context, delta int) (int, error) {
 	err = g.fs.Upload(ctx, g.URL, file.DefaultFileOsMode, bytes.NewReader(data), &generation)
 	return g.Count, err
 }
+
+//Delete deletes counter
+func (g *Counter) Delete(ctx context.Context)  error {
+	generation := &option.Generation{Generation:0, WhenMatch: true}
+	ok,  _ := g.fs.Exists(ctx, g.URL, generation)
+	if ! ok {
+		return nil
+	}
+	return g.fs.Delete(ctx, g.URL, generation)
+}
+
 
 //NewCounter creates a fs based counter
 func NewCounter(URL string, fs afs.Service) *Counter {
