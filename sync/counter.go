@@ -20,7 +20,7 @@ const (
 //Counter represents a sync counter
 type Counter struct {
 	URL   string
-	Data interface{} `json:",omitempty"`
+	Data  interface{} `json:",omitempty"`
 	Count int
 	fs    afs.Service
 }
@@ -89,15 +89,14 @@ func (g *Counter) update(ctx context.Context, delta int) (int, error) {
 }
 
 //Delete deletes counter
-func (g *Counter) Delete(ctx context.Context)  error {
-	generation := &option.Generation{Generation:0, WhenMatch: true}
-	ok,  _ := g.fs.Exists(ctx, g.URL, generation)
-	if ! ok {
+func (g *Counter) Delete(ctx context.Context) error {
+	generation := &option.Generation{Generation: 0, WhenMatch: true}
+	ok, _ := g.fs.Exists(ctx, g.URL, generation)
+	if !ok {
 		return nil
 	}
 	return g.fs.Delete(ctx, g.URL, generation)
 }
-
 
 //NewCounter creates a fs based counter
 func NewCounter(URL string, fs afs.Service) *Counter {

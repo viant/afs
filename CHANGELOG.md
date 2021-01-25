@@ -1,3 +1,7 @@
+## Jan 25th 2021 1.7.0
+   * Added option.Empty to control empty content transfer with pipeline wirter
+     See corresponding change in ver 1.0.6
+
 ## December 30th 2020 1.6.0
    * Added sync.Counter.Delete
 

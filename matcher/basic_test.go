@@ -11,7 +11,7 @@ import (
 func TestRegExpr_Match(t *testing.T) {
 	var useCases = []struct {
 		description string
-		exclusion string
+		exclusion   string
 		prefix      string
 		suffix      string
 		filter      string
@@ -72,13 +72,13 @@ func TestRegExpr_Match(t *testing.T) {
 		},
 		{
 			description: "exclusion  - match ",
-			exclusion:      ".+/data/performance/\\d+/\\d+/\\d+.+",
+			exclusion:   ".+/data/performance/\\d+/\\d+/\\d+.+",
 			location:    "/aa-export/v/prod/data/performance/2020/12/12/aa/dd/20191005_000000000000.txt.gz",
 			expect:      false,
 		},
 		{
 			description: "exclusion  - no match ",
-			exclusion:      ".+/data/performance/\\d+/\\d+/\\d+.+",
+			exclusion:   ".+/data/performance/\\d+/\\d+/\\d+.+",
 			location:    "/aa-export/v/prod/data/performance/adb/12/12/aa/dd/20191005_000000000000.txt.gz",
 			expect:      true,
 		},

@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
 	"os"
@@ -11,6 +12,9 @@ import (
 
 //NewWriter creates an upload writer
 func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error) {
+	empty := &option.Empty{}
+	option.Assign(options, &empty)
+
 	manager, err := s.manager(ctx, URL, options)
 	if err != nil {
 		return nil, err
@@ -21,6 +25,7 @@ func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, o
 	return &writer{
 		ctx:         ctx,
 		url:         URL,
+		allowEmpty:  empty.Allowed,
 		mode:        mode,
 		options:     options,
 		uploader:    s,
@@ -39,6 +44,7 @@ type writer struct {
 	uploader    storage.Uploader
 	mutex       sync.RWMutex
 	opened      bool
+	allowEmpty  bool
 	writer      *io.PipeWriter
 	doneChannel chan bool
 	err         error
@@ -85,7 +91,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 // Close completes the write operation and flushes any buffered data.
 func (w *writer) Close() error {
 	//nothing was written quit
-	if atomic.LoadInt64(&w.written) == 0 {
+	if atomic.LoadInt64(&w.written) == 0 && !w.allowEmpty {
 		defer close(w.doneChannel)
 		return nil
 	}

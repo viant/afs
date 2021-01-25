@@ -38,7 +38,7 @@ func TestCounter_Increment(t *testing.T) {
 			if useCase.Data != nil {
 				assert.EqualValues(t, useCase.Data, counter.Data, useCase.description)
 			}
-			counter.Data = struct {}{}
+			counter.Data = struct{}{}
 			assert.EqualValues(t, i+1, count)
 		}
 		for i := 10; i >= 0; i-- {

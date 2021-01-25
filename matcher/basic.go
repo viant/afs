@@ -9,8 +9,8 @@ import (
 
 //Basic represents prefix, suffix or regexp matcher
 type Basic struct {
-	Prefix   string   `json:",omitempty"`
-	Suffix   string   `json:",omitempty"`
+	Prefix    string `json:",omitempty"`
+	Suffix    string `json:",omitempty"`
 	Filter    string `json:",omitempty"`
 	Exclusion string `json:",omitempty"`
 
