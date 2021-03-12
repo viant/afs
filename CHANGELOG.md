@@ -1,4 +1,4 @@
-## Jan 25th 2021 187.0
+## March 12th 2021 1.8.0
    * Added embed fs
     
 ## Jan 25th 2021 1.7.0
