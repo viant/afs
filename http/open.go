@@ -23,8 +23,8 @@ func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Op
 	if err != nil {
 		return nil, err
 	}
-	if IsStatusOK(response) {
+	if response.Body != nil {
 		return response.Body, nil
-	}
+	} 
 	return nil, fmt.Errorf("invalid status code: %v", response.StatusCode)
 }
