@@ -1,3 +1,6 @@
+## Jan 25th 2021 187.0
+   * Added embed fs
+    
 ## Jan 25th 2021 1.7.0
    * Added option.Empty to control empty content transfer with pipeline wirter
      See corresponding change in ver 1.0.6

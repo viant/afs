@@ -1,6 +1,7 @@
 package afs
 
 import (
+	"github.com/viant/afs/embed"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/mem"
@@ -13,6 +14,7 @@ import (
 func init() {
 	registry := GetRegistry()
 	registry.Register(file.Scheme, file.Provider)
+	registry.Register(embed.Scheme, embed.Provider)
 	registry.Register(mem.Scheme, mem.Provider)
 	registry.Register(http.Scheme, http.Provider)
 	registry.Register(http.SecureScheme, http.Provider)
