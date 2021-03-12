@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
 	"net/http"
@@ -23,8 +24,11 @@ func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Op
 	if err != nil {
 		return nil, err
 	}
+	var status  = &option.Status{}
+	option.Assign(options, &status)
+	status.Code = response.StatusCode
 	if response.Body != nil {
 		return response.Body, nil
-	} 
+	}
 	return nil, fmt.Errorf("invalid status code: %v", response.StatusCode)
 }
