@@ -4,17 +4,15 @@ import (
 	"context"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"io"
 	"net/http"
 )
 
 func (s *manager) run(ctx context.Context, URL string, request *http.Request, options ...storage.Option) (*http.Response, error) {
 	var clientProvider ClientProvider
-	var reader io.Reader
 	var basicAuthProvider option.BasicAuth
 	resp := &http.Response{}
 	header := http.Header{}
-	option.Assign(options, &clientProvider, &basicAuthProvider, &header, &reader, &resp)
+	option.Assign(options, &clientProvider, &basicAuthProvider, &header,  &resp)
 	s.setHeader(request, header)
 	s.authWithBasicCred(request, basicAuthProvider)
 	client, err := s.getClient(URL, options...)
