@@ -20,7 +20,9 @@ func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Op
 	if _, ok := option.Assign(options, &method); !ok {
 		method = http.MethodGet
 	}
-	request, err := http.NewRequest(string(method), URL, nil)
+	var reader io.Reader
+	option.Assign(options, &reader)
+	request, err := http.NewRequest(string(method), URL, reader)
 	if err != nil {
 		return nil, err
 	}
