@@ -16,7 +16,11 @@ func (s *manager) Open(ctx context.Context, object storage.Object, options ...st
 
 //Open downloads asset for supplied object
 func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
-	request, err := http.NewRequest(http.MethodGet, URL, nil)
+	var method option.HTTPMethod
+	if _, ok := option.Assign(options, &method); !ok {
+		method = http.MethodGet
+	}
+	request, err := http.NewRequest(string(method), URL, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -1,3 +1,6 @@
+## March 12th 2021 1.9.0
+* Added option.HTTPMethod for http scheme
+
 ## March 12th 2021 1.8.0
    * Added embed fs
     
