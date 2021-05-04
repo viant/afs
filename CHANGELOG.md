@@ -1,4 +1,7 @@
-## March 12th 2021 1.9.0
+## May 4th 2021 1.10.0
+ * Changed embed.Scheme integration (use import _ github.com/viant/afs/embed instead)
+
+## April 12th 2021 1.9.0
 * Added option.HTTPMethod for http scheme
 
 ## March 12th 2021 1.8.0
