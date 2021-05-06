@@ -1,3 +1,6 @@
+## May 4th 2021 1.12.0
+ * Patched walk/recursive list
+
 ## May 4th 2021 1.11.0
  * Changed embed.Scheme integration (use import _ github.com/viant/afs/embed instead)
 

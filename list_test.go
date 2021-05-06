@@ -36,6 +36,19 @@ func TestService_List(t *testing.T) {
 				asset.NewFile("foo2.txt", []byte("abc"), 0644),
 			},
 		},
+		{
+			description:  "multi resource walk",
+			baseLocation: "file://localhost/" + path.Join(baseDir, "service_walk"),
+			assets: []*asset.Resource{
+				asset.NewFile("foo1.txt", []byte("abc"), 0644),
+				asset.NewDir("r/s1/s1", file.DefaultDirOsMode),
+				asset.NewFile("r/s1/s1/bar1.txt", []byte("xyz"), 0644),
+				asset.NewDir("r/s1/s2", file.DefaultDirOsMode),
+				asset.NewFile("r/s1/s2/bar1.txt", []byte("xyz"), 0644),
+				asset.NewFile("r/s1/bar2.txt", []byte("xyz"), 0644),
+				asset.NewFile("r/foo2.txt", []byte("abc"), 0644),
+			},
+		},
 	}
 
 	for _, useCase := range useCases {

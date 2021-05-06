@@ -49,7 +49,7 @@ func list(ctx context.Context, lister storage.Lister, URL string, recursive bool
 			}
 		}
 		for i := 0; i < len(dirs); i++ {
-			if url.Equals(URL, dirs[i].URL()) {
+			if i == 0 && url.Equals(URL, dirs[i].URL()) {
 				continue
 			}
 			*result = append(*result, dirs[i])

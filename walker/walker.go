@@ -13,13 +13,14 @@ type walker struct {
 	storage.Manager
 	counter      uint32
 	locationName string
+	parent string
 }
 
 //Walk traverses URL and calls handler on all file or folder
 func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	w.counter = 0
 	_, URLPath := url.Base(URL, w.Manager.Scheme())
-	_, w.locationName = path.Split(URLPath)
+	w.parent, w.locationName = path.Split(URLPath)
 	return w.walk(ctx, URL, "", handler, options)
 }
 
@@ -33,7 +34,7 @@ func (w *walker) visitResource(ctx context.Context, object storage.Object, URL, 
 		}
 		defer func() { _ = reader.Close() }()
 	}
-	if w.counter == 0 && object.IsDir() && w.locationName == object.Name() {
+	if w.counter == 0 && object.IsDir() && url.Equals(url.Join(w.parent, w.locationName), object.URL()) {
 		//skip base location
 		return nil
 	}
