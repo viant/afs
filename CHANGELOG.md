@@ -1,3 +1,6 @@
+## August 6th 2021 1.12.0
+ * Added option.Grant
+
 ## May 4th 2021 1.12.0
  * Patched walk/recursive list
 
