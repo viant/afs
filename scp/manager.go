@@ -8,6 +8,7 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"os"
@@ -61,6 +62,11 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	options = m.Options(options)
 	timeout := option.Timeout{}
 	var basicAuth option.BasicAuth
+	clientConfig := &ssh.ClientConfig{}
+	if _, ok := option.Assign(options, &clientConfig, &timeout); ok {
+		host := url.Host(baseURL)
+		return NewStorager(host, timeout.Duration, clientConfig)
+	}
 	var keyAuth KeyAuth
 	var authProvider AuthProvider
 	option.Assign(options, &basicAuth, &keyAuth, &authProvider, &timeout)

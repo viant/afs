@@ -63,7 +63,6 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	match, page := option.GetListOptions(options)
 	var result = make([]os.FileInfo, 0)
 	err := s.walk(ctx, location, false, func(relative string, info os.FileInfo, reader io.Reader) (shaleContinue bool, err error) {
-
 		if !match(relative, info) {
 			return true, nil
 		}
@@ -185,7 +184,7 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 	return objects[0], nil
 }
 
-//NewStorager returns a new storager
+//NewStorager returns a storager
 func NewStorager(address string, timeout time.Duration, config *ssh.ClientConfig) (storage.Storager, error) {
 	if !strings.Contains(address, ":") {
 		address += fmt.Sprintf(":%d", DefaultPort)

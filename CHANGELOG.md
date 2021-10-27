@@ -1,6 +1,6 @@
 ## Oct 27th 2021 1.16.0
  * Added cookie support fo http/s fs
-
+ * Added *ssh.ClientConfig option
 ## August 6th 2021 1.14.0
  * Added option.Grant
 
