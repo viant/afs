@@ -18,6 +18,16 @@ func (s *manager) setHeader(request *http.Request, header http.Header) {
 	}
 }
 
+
+func (s *manager) setCookies(cookies []*http.Cookie, request *http.Request) {
+	if len(cookies) > 0 {
+		for _, cookie := range cookies {
+			request.AddCookie(cookie)
+		}
+	}
+}
+
+
 var timeLayouts = []string{"Mon, 02 Jan 2006 15:04:05 GMT", time.RFC850, time.ANSIC}
 
 //HeaderTime returns time for header key
