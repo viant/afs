@@ -23,13 +23,14 @@ import (
 )
 
 type service struct {
-	scheme   string
-	host     string
-	useCache int32
-	baseURL  string
-	cacheURL string
-	next     *time.Time
-	modified *time.Time
+	cacheName string
+	scheme    string
+	host      string
+	useCache  int32
+	baseURL   string
+	cacheURL  string
+	next      *time.Time
+	modified  *time.Time
 	afs.Service
 }
 
@@ -161,7 +162,7 @@ func (s *service) build(ctx context.Context) error {
 	}
 	var items = make([]*Entry, 0)
 	for _, obj := range objects {
-		if obj.IsDir() || obj.Name() == CacheFile {
+		if obj.IsDir() || obj.Name() == s.cacheName {
 			continue
 		}
 		reader, err := s.Service.OpenURL(ctx, obj.URL())
@@ -214,15 +215,20 @@ func isPreConditionError(err error) bool {
 
 //New create a cache service for supplied base URL
 func New(baseURL string, fs afs.Service) afs.Service {
+	return NewNamedCache(baseURL, fs, CacheFile)
+}
+
+func NewNamedCache(baseURL string, fs afs.Service, name string) afs.Service {
 	scheme := url.Scheme(baseURL, file.Scheme)
 	if path.Ext(baseURL) != "" {
 		baseURL, _ = url.Split(baseURL, scheme)
 	}
 	return &service{
-		baseURL:  baseURL,
-		host:     url.Host(baseURL),
-		cacheURL: url.Join(baseURL, CacheFile),
-		scheme:   scheme,
-		Service:  fs,
+		cacheName: name,
+		baseURL:   baseURL,
+		host:      url.Host(baseURL),
+		cacheURL:  url.Join(baseURL, name),
+		scheme:    scheme,
+		Service:   fs,
 	}
 }
