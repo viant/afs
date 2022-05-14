@@ -2,10 +2,13 @@ package url
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
+	"strings"
 	"testing"
 )
 
 func TestPath(t *testing.T) {
+	tempDir := os.TempDir()
 
 	var useCases = []struct {
 		description string
@@ -42,6 +45,11 @@ func TestPath(t *testing.T) {
 			description: "relative path",
 			URL:         "abc/too.bar",
 			expect:      "abc/too.bar",
+		},
+		{
+			description: "tmp folder path",
+			URL:         tempDir,
+			expect:      strings.ReplaceAll(tempDir, `\`, `/`),
 		},
 	}
 

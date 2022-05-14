@@ -8,11 +8,14 @@ import (
 	"github.com/viant/afs/storage"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 //EnsureParentPathExists create parent path if needed
 func EnsureParentPathExists(filename string, fileMode os.FileMode) error {
+	filename = normalize(filename)
 	stat, err := os.Stat(filename)
 	if err == nil {
 		if stat.Mode() != fileMode {
@@ -20,7 +23,10 @@ func EnsureParentPathExists(filename string, fileMode os.FileMode) error {
 		}
 		return err
 	}
-	parent, _ := path.Split(filename)
+	parent, _ := filepath.Split(filename)
+	if runtime.GOOS == "windows" && strings.Count(parent, `\`) == 1 {
+		return nil
+	}
 	return os.MkdirAll(parent, fileMode)
 }
 
