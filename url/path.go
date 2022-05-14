@@ -1,6 +1,7 @@
 package url
 
 import (
+	"runtime"
 	"strings"
 )
 
@@ -11,8 +12,12 @@ func Path(URL string) string {
 		return "/"
 	}
 
-	if index := strings.Index(URL, "://"); index != -1 {
-		location = string(URL[index+3:])
+	if runtime.GOOS == "windows" {
+		location = strings.ReplaceAll(location, "\\", "/")
+	}
+
+	if index := strings.Index(location, "://"); index != -1 {
+		location = string(location[index+3:])
 		index := strings.Index(location, "/")
 		if index == -1 {
 			return ""
