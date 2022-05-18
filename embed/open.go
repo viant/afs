@@ -15,7 +15,7 @@ import (
 func (s *manager) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	filePath := file.Path(URL)
 	filePath = strings.Trim(filePath, "/")
-	var efs embed.FS
+	var efs *embed.FS
 	if _, ok := option.Assign(options, &efs); ok {
 		return efs.Open(filePath)
 	}
