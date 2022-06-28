@@ -42,6 +42,9 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	}
 	var modifier option.Modifier
 	option.Assign(*destOptions, &modifier)
+	if modifier == nil {
+		option.Assign(*srcOptions, &modifier)
+	}
 	mappedName := ""
 	if source.IsDir() {
 		err = s.Create(ctx, destURL, source.Mode()|os.ModeDir, source.IsDir(), *destOptions...)
