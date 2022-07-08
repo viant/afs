@@ -116,7 +116,7 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	if s.next != nil && s.next.After(time.Now()) {
 		return nil
 	}
-	s.setNextRun(time.Now().Add(time.Second))
+	s.setNextRun(time.Now().Add(3 * time.Second))
 	cacheObject, _ := s.Service.Object(ctx, s.cacheURL)
 	if cacheObject == nil {
 		if e := s.build(ctx); e != nil {
@@ -132,7 +132,6 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	if s.modified != nil && s.modified.Equal(cacheObject.ModTime()) {
 		return nil
 	}
-
 	reader, err := s.Service.OpenURL(ctx, s.cacheURL)
 	if err != nil {
 		return err
