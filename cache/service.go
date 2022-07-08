@@ -129,8 +129,11 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 		}
 	}
 	atomic.CompareAndSwapInt32(&s.useCache, 0, 1)
-	if s.modified != nil && s.modified.Equal(cacheObject.ModTime()) {
-		return nil
+	if s.modified != nil {
+		elapsed := cacheObject.ModTime().Sub(*s.modified)
+		if elapsed <= time.Second {
+			return nil
+		}
 	}
 	reader, err := s.Service.OpenURL(ctx, s.cacheURL)
 	if err != nil {
