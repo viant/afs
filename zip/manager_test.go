@@ -5,13 +5,23 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 	"path"
 	"runtime"
 	"testing"
 )
 
-func TestNew(t *testing.T) {
+type useCaseFn func(s afs.Service, ctx context.Context, url string) ([]storage.Object, error)
 
+func TestNew(t *testing.T) {
+	testCases(t, func(service afs.Service, ctx context.Context, url string) ([]storage.Object, error) {
+			return service.List(ctx, url)
+	})
+}
+
+
+func testCases(t *testing.T, callList useCaseFn) {
 	_, filename, _, _ := runtime.Caller(0)
 	baseDir, _ := path.Split(filename)
 	ctx := context.Background()
@@ -42,7 +52,7 @@ func TestNew(t *testing.T) {
 
 	for _, useCase := range useCases {
 		service := afs.New()
-		objects, err := service.List(ctx, useCase.URL)
+		objects, err := callList(service, ctx, useCase.URL)
 		assert.Nil(t, err, useCase.description)
 		assert.EqualValues(t, len(useCase.expect), len(objects))
 		for _, obj := range objects {
@@ -50,4 +60,10 @@ func TestNew(t *testing.T) {
 		}
 
 	}
+}
+
+func TestNoCache(t *testing.T) {
+	testCases(t, func(service afs.Service, ctx context.Context, url string) ([]storage.Object, error) {
+			return service.List(ctx, url, &option.NoCache{Source: option.NoCacheBaseURL})
+	})
 }

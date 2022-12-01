@@ -226,15 +226,7 @@ func (s *service) IsAuthChanged(ctx context.Context, manager storage.Manager, UR
 
 func (s *service) manager(ctx context.Context, URL string, options []storage.Option) (storage.Manager, error) {
 	scheme := url.Scheme(URL, file.Scheme)
-	noCache := &option.NoCache{}
-	options, _ = option.Assign(options, &noCache)
-	if noCache.Source == option.NoCacheBaseURL {
-		return s.newManager(ctx, scheme, options...)
-	}
-
-	key, _ := url.Base(URL, scheme)
 	extURL := url.SchemeExtensionURL(URL)
-	key += extURL
 
 	if extURL != "" {
 		if extScheme := url.Scheme(extURL, file.Scheme); extScheme != scheme {
@@ -245,6 +237,16 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 			options = append(options, extManager)
 		}
 	}
+
+	noCache := &option.NoCache{}
+	options, _ = option.Assign(options, &noCache)
+	if noCache.Source == option.NoCacheBaseURL {
+		return s.newManager(ctx, scheme, options...)
+	}
+
+	key, _ := url.Base(URL, scheme)
+	key += extURL
+
 	s.mutex.RLock()
 	result, ok := s.managers[key]
 	s.mutex.RUnlock()
