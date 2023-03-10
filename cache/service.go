@@ -12,6 +12,7 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"hash/fnv"
 	"io"
 	"io/ioutil"
 	"log"
@@ -31,6 +32,7 @@ type service struct {
 	cacheURL  string
 	next      *time.Time
 	modified  *time.Time
+	checksum  int
 	afs.Service
 }
 
@@ -135,15 +137,12 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 			return nil
 		}
 	}
-	reader, err := s.Service.OpenURL(ctx, s.cacheURL)
+	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = reader.Close()
-	}()
 	cache := &Cache{}
-	if err = json.NewDecoder(reader).Decode(cache); err != nil {
+	if err = json.Unmarshal(data, cache); err != nil {
 		return err
 	}
 	for _, item := range cache.Items {
@@ -154,6 +153,9 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	}
 	modTime := cacheObject.ModTime()
 	s.modified = &modTime
+	hash := fnv.New64()
+	hash.Write(data)
+	s.checksum = int(hash.Sum64())
 	return err
 }
 

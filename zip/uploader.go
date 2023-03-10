@@ -40,6 +40,9 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 		}
 		header.Method = zip.Deflate
 		header.Name = filename
+		if info.IsDir() {
+			header.Name += "/"
+		}
 		writer, err := writer.CreateHeader(header)
 		if reader != nil {
 			_, err = io.Copy(writer, reader)
