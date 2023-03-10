@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 )
 
 type uploader struct {
@@ -40,7 +41,7 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 		}
 		header.Method = zip.Deflate
 		header.Name = filename
-		if info.IsDir() {
+		if info.IsDir() && !strings.HasSuffix(filename, "/") {
 			header.Name += "/"
 		}
 		writer, err := writer.CreateHeader(header)
