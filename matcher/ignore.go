@@ -23,6 +23,7 @@ Each line is one of the following:
 */
 type Ignore struct {
 	Rules []string
+	Ext   map[string]bool
 }
 
 //Load loads matcher rules from location
@@ -49,6 +50,26 @@ func (i *Ignore) Load(location string) error {
 func (i *Ignore) Match(parent string, info os.FileInfo) bool {
 	return !i.shouldSkip(parent, info)
 
+}
+
+func (i *Ignore) init() {
+	var rules = i.Rules
+	i.Ext = make(map[string]bool)
+	if len(rules) == 0 {
+		return
+	}
+	var updated = make([]string, 0)
+	for k, rule := range rules {
+		if strings.HasPrefix(rule, "*.") {
+			i.Ext[rule[1:]] = true
+			continue
+		} else if strings.HasPrefix(rule, ".") {
+			i.Ext[rules[k]] = true
+			continue
+		}
+		updated = append(updated, rules[k])
+	}
+	i.Rules = updated
 }
 
 func (i *Ignore) shouldSkipFolderExpression(expr, location string) bool {
@@ -113,11 +134,21 @@ func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
 	if strings.HasPrefix(location, "/") {
 		location = string(location[1:])
 	}
+	if len(i.Ext) > 0 {
+		ext := path.Ext(info.Name())
+		if i.Ext[ext] {
+			return true
+		}
+	}
+
+	if len(i.Rules) == 0 {
+		return false
+	}
+
 	for _, expr := range i.Rules {
 		if info.Name() == expr {
 			return true
 		} else if strings.Contains(expr, "/") {
-
 			if i.shouldSkipFolderExpression(expr, location) {
 				return true
 			}
@@ -131,7 +162,7 @@ func (i *Ignore) shouldSkip(parent string, info os.FileInfo) bool {
 	return false
 }
 
-//NewIgnore creates a new ignore
+//NewIgnore creates a new exclusion rule
 func NewIgnore(options ...storage.Option) (*Ignore, error) {
 	location := &option.Location{}
 	ignore := &Ignore{
@@ -141,5 +172,6 @@ func NewIgnore(options ...storage.Option) (*Ignore, error) {
 	if location.Path != "" {
 		return ignore, ignore.Load(location.Path)
 	}
+	ignore.init()
 	return ignore, nil
 }

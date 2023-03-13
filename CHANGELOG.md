@@ -1,6 +1,10 @@
+## Match 11 2023 1.20.0
+* Added cache file exclusion support
+* Added cache name option
+
 ## Match 11 2023 1.19.0
  * Update modifier option with parent (breaking change)
-
+    
 ## Oct 27th 2021 1.16.0
  * Added cookie support fo http/s fs
  * Added *ssh.ClientConfig option

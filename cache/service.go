@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/viant/afs"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/mem"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
@@ -17,6 +18,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"sync/atomic"
@@ -32,6 +34,8 @@ type service struct {
 	cacheURL  string
 	next      *time.Time
 	modified  *time.Time
+	exclusion *matcher.Ignore
+	at        time.Time
 	checksum  int
 	afs.Service
 }
@@ -41,10 +45,16 @@ func (s *service) canUseCache() bool {
 }
 
 func (s *service) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
+	if s.isExcluded(object.URL(), object) {
+		return s.Service.Open(ctx, object, options...)
+	}
 	return s.OpenURL(ctx, object.URL(), options...)
 }
 
 func (s *service) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
+	if s.isExcluded(URL, nil) {
+		return s.Service.Object(ctx, URL, options...)
+	}
 	if e := s.reloadIfNeeded(ctx); e != nil {
 		fmt.Printf("failed to reload %v", e)
 		atomic.StoreInt32(&s.useCache, 0)
@@ -61,8 +71,29 @@ func (s *service) Object(ctx context.Context, URL string, options ...storage.Opt
 }
 
 func (s *service) Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error) {
+	if s.isExcluded(URL, nil) {
+		return s.Service.Exists(ctx, URL, options...)
+	}
 	obj, _ := s.Object(ctx, URL, options...)
 	return obj != nil, nil
+}
+
+func (s *service) isExcluded(URL string, info os.FileInfo) bool {
+	if s.exclusion == nil {
+		return false
+	}
+	candidateURL := URL
+	if index := strings.Index(s.baseURL, candidateURL); index != -1 {
+		candidateURL = candidateURL[index+len(s.baseURL):]
+	}
+	parent, name := path.Split(candidateURL)
+	if info == nil { //default info
+		info = file.NewInfo(name, 1, file.DefaultFileOsMode, s.at, false)
+	}
+	if !s.exclusion.Match(parent, info) {
+		return true
+	}
+	return false
 }
 
 func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
@@ -102,6 +133,9 @@ func (s *service) List(ctx context.Context, URL string, options ...storage.Optio
 	}
 	if !s.canUseCache() {
 		return s.Service.List(ctx, URL, options...)
+	}
+	if s.exclusion != nil {
+		options = append(options, s.exclusion)
 	}
 	cacheURL := strings.Replace(URL, s.scheme, mem.Scheme, 1)
 	if objects, _ := s.Service.List(ctx, cacheURL, options...); len(objects) > 0 {
@@ -160,7 +194,12 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 }
 
 func (s *service) build(ctx context.Context) error {
-	objects, err := s.Service.List(ctx, s.baseURL, option.NewRecursive(true))
+	var opts []storage.Option
+	opts = append(opts, option.NewRecursive(true))
+	if s.exclusion != nil {
+		opts = append(opts, s.exclusion)
+	}
+	objects, err := s.Service.List(ctx, s.baseURL, opts...)
 	if err != nil {
 		return err
 	}
@@ -218,21 +257,29 @@ func isPreConditionError(err error) bool {
 }
 
 //New create a cache service for supplied base URL
-func New(baseURL string, fs afs.Service) afs.Service {
-	return NewNamedCache(baseURL, fs, CacheFile)
-}
-
-func NewNamedCache(baseURL string, fs afs.Service, name string) afs.Service {
+func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
+	var cacheName = &option.CacheName{}
+	option.Assign(opts, &cacheName)
+	if cacheName.Name == "" {
+		cacheName.Name = CacheFile
+	}
 	scheme := url.Scheme(baseURL, file.Scheme)
 	if path.Ext(baseURL) != "" {
 		baseURL, _ = url.Split(baseURL, scheme)
 	}
-	return &service{
-		cacheName: name,
+	ret := &service{
+		at:        time.Now(),
+		cacheName: cacheName.Name,
 		baseURL:   baseURL,
 		host:      url.Host(baseURL),
-		cacheURL:  url.Join(baseURL, name),
+		cacheURL:  url.Join(baseURL, cacheName.Name),
 		scheme:    scheme,
 		Service:   fs,
 	}
+
+	var ignore = &matcher.Ignore{}
+	if _, ok := option.Assign(opts, &ignore); ok {
+		ret.exclusion = ignore
+	}
+	return ret
 }

@@ -23,6 +23,7 @@ func TestIgnore_Match(t *testing.T) {
 		"e2e/**",
 		"deploy/**",
 		"manager/**",
+		"*.so",
 	}
 
 	var useCases = []struct {
@@ -198,9 +199,21 @@ func TestIgnore_Match(t *testing.T) {
 			location:    "e2e/vvv/app_cf.yaml",
 			expect:      false,
 		},
+		{
+			ignoreList:  ignoreList,
+			description: "should not match ext",
+			location:    "plugin.so",
+			expect:      false,
+		},
+		{
+			ignoreList:  ignoreList,
+			description: "should match ext",
+			location:    "plugin.so1",
+			expect:      true,
+		},
 	}
 
-	for _, useCase := range useCases {
+	for _, useCase := range useCases[len(useCases)-1:] {
 		matcher, err := NewIgnore(useCase.ignoreList)
 		assert.Nil(t, err, useCase.description)
 		parent, name := path.Split(useCase.location)
