@@ -100,7 +100,7 @@ func TestService_OpenURL(t *testing.T) {
 				"foo1.txt": "test run by " + os.Getenv("USER"),
 				"foo2.txt": "test run by $os.User",
 			},
-			modifier: func(info os.FileInfo, reader io.ReadCloser) (inf os.FileInfo, closer io.ReadCloser, e error) {
+			modifier: func(parent string, info os.FileInfo, reader io.ReadCloser) (inf os.FileInfo, closer io.ReadCloser, e error) {
 				if info.Name() == "foo1.txt" {
 					data, err := ioutil.ReadAll(reader)
 					if err != nil {

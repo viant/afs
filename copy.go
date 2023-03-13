@@ -43,9 +43,10 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 	var modifier option.Modifier
 	option.Assign(*destOptions, &modifier)
 	if modifier == nil {
-		option.Assign(*srcOptions, &modifier)
+		if remaining, ok := option.Assign(*srcOptions, &modifier); ok {
+			*srcOptions = remaining
+		}
 	}
-
 	mappedName := ""
 	if source.IsDir() {
 		err = s.Create(ctx, destURL, source.Mode()|os.ModeDir, source.IsDir(), *destOptions...)
@@ -84,7 +85,7 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			info = file.NewInfo(mappedName, info.Size(), info.Mode(), info.ModTime(), info.IsDir())
 		}
 		if modifier != nil && reader != nil {
-			info, reader, err = modifier(info, ioutil.NopCloser(reader))
+			info, reader, err = modifier(parent, info, ioutil.NopCloser(reader))
 			if err != nil {
 				return false, err
 			}

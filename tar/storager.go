@@ -86,7 +86,7 @@ func (s *storager) Walk(ctx context.Context, location string, handler func(paren
 			return true, nil
 		}
 		if modifier != nil {
-			info, reader, err = modifier(info, ioutil.NopCloser(reader))
+			info, reader, err = modifier(parent, info, ioutil.NopCloser(reader))
 			if err != nil {
 				return false, err
 			}

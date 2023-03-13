@@ -3,6 +3,7 @@ package tar
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"github.com/viant/afs/file"
@@ -14,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 type walker struct {
@@ -82,6 +84,13 @@ func (w *walker) buildCache(reader *tar.Reader, cache map[string][]byte) {
 func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, options ...storage.Option) error {
 	URL = url.Normalize(URL, file.Scheme)
 	readerCloser, err := w.open(ctx, URL, options...)
+	if strings.HasSuffix(URL, ".gz") {
+		if readerCloser, err = w.uncompressIfNeeded(readerCloser); err != nil {
+			return err
+		}
+
+	}
+
 	if err != nil {
 		return err
 	}
@@ -122,6 +131,21 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 		}
 	}
 	return nil
+}
+
+func (w *walker) uncompressIfNeeded(readerCloser io.ReadCloser) (io.ReadCloser, error) {
+	data, err := ioutil.ReadAll(readerCloser)
+	if err != nil {
+		return nil, err
+	}
+	_ = readerCloser.Close()
+	gzReader, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return ioutil.NopCloser(bytes.NewReader(data)), nil
+	}
+	_ = gzReader.Close()
+	data, err = ioutil.ReadAll(gzReader)
+	return ioutil.NopCloser(bytes.NewReader(data)), nil
 }
 
 func getFileMode(header *tar.Header) int64 {

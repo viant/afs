@@ -45,7 +45,7 @@ func (m *manager) Walk(ctx context.Context, URL string, handler storage.OnVisit,
 			return true, nil
 		}
 		if modifier != nil {
-			info, reader, err = modifier(info, ioutil.NopCloser(reader))
+			info, reader, err = modifier(parent, info, ioutil.NopCloser(reader))
 			if err != nil {
 				return false, err
 			}

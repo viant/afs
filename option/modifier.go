@@ -6,4 +6,4 @@ import (
 )
 
 //Modifier option to modify content,
-type Modifier func(info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error)
+type Modifier func(parent string, info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error)

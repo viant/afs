@@ -151,7 +151,7 @@ func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Op
 	_, URLPath := url.Base(URL, file.Scheme)
 	_, name := path.Split(URLPath)
 	info := file.NewInfo(name, 0, file.DefaultFileOsMode, time.Now(), false)
-	_, reader, err = modifier(info, reader)
+	_, reader, err = modifier("", info, reader)
 	return reader, err
 }
 
