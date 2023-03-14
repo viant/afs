@@ -11,7 +11,7 @@ import (
 
 //Replace return modification handler with the specified replacements map
 func Replace(replacements map[string]string) option.Modifier {
-	return func(info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error) {
+	return func(_ string, info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error) {
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return nil, nil, err
