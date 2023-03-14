@@ -13,7 +13,6 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"hash/fnv"
 	"io"
 	"io/ioutil"
 	"log"
@@ -37,6 +36,7 @@ type service struct {
 	exclusion *matcher.Ignore
 	at        time.Time
 	checksum  int
+	refresh   *option.RefreshInterval
 	afs.Service
 }
 
@@ -152,7 +152,7 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	if s.next != nil && s.next.After(time.Now()) {
 		return nil
 	}
-	s.setNextRun(time.Now().Add(3 * time.Second))
+	s.setNextRun(time.Now().Add(s.refresh.Duration()))
 	cacheObject, _ := s.Service.Object(ctx, s.cacheURL)
 	if cacheObject == nil {
 		if e := s.build(ctx); e != nil {
@@ -171,6 +171,7 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 			return nil
 		}
 	}
+
 	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
 	if err != nil {
 		return err
@@ -187,9 +188,6 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	}
 	modTime := cacheObject.ModTime()
 	s.modified = &modTime
-	hash := fnv.New64()
-	hash.Write(data)
-	s.checksum = int(hash.Sum64())
 	return err
 }
 
@@ -263,6 +261,7 @@ func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
 	if cacheName.Name == "" {
 		cacheName.Name = CacheFile
 	}
+
 	scheme := url.Scheme(baseURL, file.Scheme)
 	if path.Ext(baseURL) != "" {
 		baseURL, _ = url.Split(baseURL, scheme)
@@ -275,11 +274,16 @@ func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
 		cacheURL:  url.Join(baseURL, cacheName.Name),
 		scheme:    scheme,
 		Service:   fs,
+		refresh:   &option.RefreshInterval{},
 	}
 
 	var ignore = &matcher.Ignore{}
 	if _, ok := option.Assign(opts, &ignore); ok {
 		ret.exclusion = ignore
+	}
+	option.Assign(opts, &ret.refresh)
+	if ret.refresh.IntervalMs == 0 {
+		ret.refresh.IntervalMs = 3000
 	}
 	return ret
 }
