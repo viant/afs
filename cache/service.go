@@ -38,6 +38,7 @@ type service struct {
 	checksum  int
 	refresh   *option.RefreshInterval
 	afs.Service
+	logger *option.Logger
 }
 
 func (s *service) canUseCache() bool {
@@ -152,6 +153,10 @@ func (s *service) reloadIfNeeded(ctx context.Context) error {
 	if s.next != nil && s.next.After(time.Now()) {
 		return nil
 	}
+	started := time.Now()
+	defer func() {
+		s.logger.Logf("rebuild cache %v after %s\n", s.cacheURL, time.Since(started))
+	}()
 	s.setNextRun(time.Now().Add(s.refresh.Duration()))
 	cacheObject, _ := s.Service.Object(ctx, s.cacheURL)
 	if cacheObject == nil {
@@ -257,7 +262,8 @@ func isPreConditionError(err error) bool {
 //New create a cache service for supplied base URL
 func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
 	var cacheName = &option.CacheName{}
-	option.Assign(opts, &cacheName)
+	logger := &option.Logger{}
+	option.Assign(opts, &cacheName, &logger)
 	if cacheName.Name == "" {
 		cacheName.Name = CacheFile
 	}
@@ -275,6 +281,7 @@ func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
 		scheme:    scheme,
 		Service:   fs,
 		refresh:   &option.RefreshInterval{},
+		logger:    logger,
 	}
 
 	var ignore = &matcher.Ignore{}
