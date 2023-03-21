@@ -170,14 +170,19 @@ func (s *service) reloadCache(ctx context.Context) error {
 		if err = s.uploadCache(ctx, cache, cacheObject); err != nil {
 			return err
 		}
+		s.syncCache(ctx, cache)
+		return nil
 	}
-	if cache == nil {
-		data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
-		if err = json.Unmarshal(data, cache); err != nil {
-			return err
-		}
+	if s.modified != nil && cacheObject != nil && s.modified.Equal(cacheObject.ModTime()) {
+		return nil
+	}
+	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
+	if err = json.Unmarshal(data, cache); err != nil {
+		return err
 	}
 	s.syncCache(ctx, cache)
+	mod := cacheObject.ModTime()
+	s.modified = &mod
 	return err
 }
 
@@ -249,10 +254,7 @@ func (s *service) build(ctx context.Context) (*Cache, error) {
 }
 
 func (s *service) shallRebuildCache(cacheObject storage.Object) bool {
-	if s.modified == nil || cacheObject == nil {
-		return true
-	}
-	return s.modified.Equal(cacheObject.ModTime())
+	return cacheObject == nil //if there is not cache reload
 }
 
 func (s *service) uploadCache(ctx context.Context, cache *Cache, prev storage.Object) error {
