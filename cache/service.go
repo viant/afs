@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -56,10 +57,7 @@ func (s *service) Object(ctx context.Context, URL string, options ...storage.Opt
 	if s.isExcluded(URL, nil) {
 		return s.Service.Object(ctx, URL, options...)
 	}
-	if e := s.reloadIfNeeded(ctx); e != nil {
-		fmt.Printf("failed to reload %v", e)
-		atomic.StoreInt32(&s.useCache, 0)
-	}
+	s.reloadIfNeeded(ctx)
 	if !s.canUseCache() {
 		return s.Service.Object(ctx, URL, options...)
 	}
@@ -79,11 +77,10 @@ func (s *service) Exists(ctx context.Context, URL string, options ...storage.Opt
 	return obj != nil, nil
 }
 
-func (s *service) isExcluded(URL string, info os.FileInfo) bool {
+func (s *service) isExcluded(candidateURL string, info os.FileInfo) bool {
 	if s.exclusion == nil {
 		return false
 	}
-	candidateURL := URL
 	if index := strings.Index(s.baseURL, candidateURL); index != -1 {
 		candidateURL = candidateURL[index+len(s.baseURL):]
 	}
@@ -98,10 +95,7 @@ func (s *service) isExcluded(URL string, info os.FileInfo) bool {
 }
 
 func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
-	if e := s.reloadIfNeeded(ctx); e != nil {
-		fmt.Printf("failed to reload %v", e)
-		atomic.StoreInt32(&s.useCache, 0)
-	}
+	s.reloadIfNeeded(ctx)
 	if !s.canUseCache() {
 		return s.Service.OpenURL(ctx, URL, options...)
 	}
@@ -128,10 +122,7 @@ func (s *service) rewriteObjects(objects []storage.Object) []storage.Object {
 }
 
 func (s *service) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
-	if e := s.reloadIfNeeded(ctx); e != nil {
-		fmt.Printf("failed to reload %v", e)
-		atomic.StoreInt32(&s.useCache, 0)
-	}
+	s.reloadIfNeeded(ctx)
 	if !s.canUseCache() {
 		return s.Service.List(ctx, URL, options...)
 	}
@@ -149,54 +140,58 @@ func (s *service) setNextRun(next time.Time) {
 	s.next = &next
 }
 
-func (s *service) reloadIfNeeded(ctx context.Context) error {
+func (s *service) reloadIfNeeded(ctx context.Context) {
 	if s.next != nil && s.next.After(time.Now()) {
-		return nil
+		return
 	}
 	started := time.Now()
 	defer func() {
 		s.logger.Logf("rebuild cache %v after %s\n", s.cacheURL, time.Since(started))
 	}()
 	s.setNextRun(time.Now().Add(s.refresh.Duration()))
-	cacheObject, _ := s.Service.Object(ctx, s.cacheURL)
-	if cacheObject == nil {
-		if e := s.build(ctx); e != nil {
-			log.Printf("failed to build cache: %v %v", s.cacheURL, e)
-		}
-		cacheObject, _ = s.Service.Object(ctx, s.cacheURL)
-		if cacheObject == nil {
-			atomic.StoreInt32(&s.useCache, 0)
-			return nil
-		}
-	}
-	atomic.CompareAndSwapInt32(&s.useCache, 0, 1)
-	if s.modified != nil {
-		elapsed := cacheObject.ModTime().Sub(*s.modified)
-		if elapsed <= time.Second {
-			return nil
-		}
+	err := s.reloadCache(ctx)
+	if err != nil {
+		fmt.Printf("failed to reload cache: %v", err)
+		atomic.StoreInt32(&s.useCache, 0)
+	} else {
+		atomic.CompareAndSwapInt32(&s.useCache, 0, 1)
 	}
 
-	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
-	if err != nil {
-		return err
+}
+
+func (s *service) reloadCache(ctx context.Context) error {
+	cacheObject, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true))
+	var cache *Cache
+	var err error
+	if s.shallRebuildCache(cacheObject) {
+		if cache, err = s.build(ctx); err != nil {
+			log.Printf("failed to build cache: %v %v", s.cacheURL, err)
+		}
+		if err = s.uploadCache(ctx, cache, cacheObject); err != nil {
+			return err
+		}
 	}
-	cache := &Cache{}
-	if err = json.Unmarshal(data, cache); err != nil {
-		return err
+	if cache == nil {
+		data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
+		if err = json.Unmarshal(data, cache); err != nil {
+			return err
+		}
 	}
+	s.syncCache(ctx, cache)
+	return err
+}
+
+func (s *service) syncCache(ctx context.Context, cache *Cache) {
+	var err error
 	for _, item := range cache.Items {
 		URL := strings.Replace(item.URL, s.scheme, mem.Scheme, 1)
 		if err = s.Service.Upload(ctx, URL, file.DefaultFileOsMode, bytes.NewReader(item.Data), item.ModTime); err != nil {
 			break
 		}
 	}
-	modTime := cacheObject.ModTime()
-	s.modified = &modTime
-	return err
 }
 
-func (s *service) build(ctx context.Context) error {
+func (s *service) build(ctx context.Context) (*Cache, error) {
 	var opts []storage.Option
 	opts = append(opts, option.NewRecursive(true))
 	if s.exclusion != nil {
@@ -204,45 +199,78 @@ func (s *service) build(ctx context.Context) error {
 	}
 	objects, err := s.Service.List(ctx, s.baseURL, opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
 	var items = make([]*Entry, 0)
-	for _, obj := range objects {
+	entries := NewEntries(&items)
+	wg := sync.WaitGroup{}
+	for i, obj := range objects {
 		if obj.IsDir() || obj.Name() == s.cacheName {
 			continue
 		}
-		reader, err := s.Service.OpenURL(ctx, obj.URL())
-		if err != nil {
-			return err
-		}
-		data, err := ioutil.ReadAll(reader)
-		_ = reader.Close()
-		if err != nil {
-			return err
-		}
-		items = append(items, &Entry{
-			URL:     obj.URL(),
-			Data:    data,
-			Size:    obj.Size(),
-			ModTime: obj.ModTime(),
-		})
+		wg.Add(1)
+		go func(object storage.Object) {
+			defer wg.Done()
+			reader, oErr := s.Service.OpenURL(ctx, object.URL())
+			if err != nil {
+				err = oErr
+				return
+			}
+			data, oErr := ioutil.ReadAll(reader)
+			_ = reader.Close()
+			if oErr != nil {
+				err = oErr
+				return
+			}
+			entries.Append(&Entry{
+				URL:     object.URL(),
+				Data:    data,
+				Size:    object.Size(),
+				ModTime: object.ModTime(),
+			})
+
+		}(objects[i])
+
 	}
-	entries := &Cache{
+	wg.Wait()
+	cacheEntries := &Cache{
 		Items: items,
 	}
-	JSON, err := json.Marshal(entries)
+	JSON, err := json.Marshal(cacheEntries)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	if exists, _ := s.Service.Exists(ctx, s.cacheURL); exists {
-		return nil
-	}
-	err = s.Service.Upload(ctx, s.cacheURL, file.DefaultFileOsMode, bytes.NewReader(JSON), option.NewGeneration(true, 0))
+	err = s.Service.Upload(ctx, s.cacheURL, file.DefaultFileOsMode, bytes.NewReader(JSON))
 	if isRateError(err) || isPreConditionError(err) { //ignore rate or generation errors
 		err = nil
 	}
-	return err
+	return cacheEntries, err
+}
+
+func (s *service) shallRebuildCache(cacheObject storage.Object) bool {
+	if s.modified == nil || cacheObject == nil {
+		return true
+	}
+	return s.modified.Equal(cacheObject.ModTime())
+}
+
+func (s *service) uploadCache(ctx context.Context, cache *Cache, prev storage.Object) error {
+	cacheObject, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true))
+	if cacheObject == nil || (prev != nil && cacheObject.ModTime().Equal(prev.ModTime())) {
+		data, err := json.Marshal(cache)
+		if err != nil {
+			return err
+		}
+		if err = s.Service.Upload(ctx, s.cacheURL, file.DefaultFileOsMode, bytes.NewReader(data)); err != nil {
+			return err
+		}
+		if latest, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true)); latest != nil {
+			mod := latest.ModTime()
+			s.modified = &mod
+		}
+	}
+	return nil
 }
 
 func isRateError(err error) bool {

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-//Split split URL with the last URI element and its parent path
+//Split splits URL with the last URI element and its parent path
 func Split(URL, defaultScheme string) (string, string) {
 	baseURL, URLPath := Base(URL, defaultScheme)
 	if strings.HasSuffix(URLPath, "/") {
