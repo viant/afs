@@ -18,7 +18,7 @@ func (c *Cache) Init() {
 	}
 }
 
-//WithCacheName creates cache name option
-func WithCacheName(name, compression string) *Cache {
+//WithCache creates cache name option
+func WithCache(name, compression string) *Cache {
 	return &Cache{Name: name, Compression: compression}
 }
