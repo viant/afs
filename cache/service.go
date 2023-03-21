@@ -14,13 +14,11 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -167,6 +165,7 @@ func (s *service) reloadCache(ctx context.Context) error {
 		if cache, err = s.build(ctx); err != nil {
 			log.Printf("failed to build cache: %v %v", s.cacheURL, err)
 		}
+		cache.URL = s.cacheURL
 		if err = s.uploadCache(ctx, cache, cacheObject); err != nil {
 			return err
 		}
@@ -176,14 +175,26 @@ func (s *service) reloadCache(ctx context.Context) error {
 	if s.modified != nil && cacheObject != nil && s.modified.Equal(cacheObject.ModTime()) {
 		return nil
 	}
-	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
-	if err = json.Unmarshal(data, cache); err != nil {
+	cache, err = s.loadCache(ctx)
+	if err != nil {
 		return err
 	}
 	s.syncCache(ctx, cache)
 	mod := cacheObject.ModTime()
 	s.modified = &mod
 	return err
+}
+
+func (s *service) loadCache(ctx context.Context) (*Cache, error) {
+	data, err := s.Service.DownloadWithURL(ctx, s.cacheURL)
+	cache := &Cache{}
+	if strings.HasSuffix(s.cacheURL, ".gz") {
+		data, _ = uncompressWithGzip(data)
+	}
+	if err = json.Unmarshal(data, cache); err != nil {
+		return nil, err
+	}
+	return cache, nil
 }
 
 func (s *service) syncCache(ctx context.Context, cache *Cache) {
@@ -195,60 +206,17 @@ func (s *service) syncCache(ctx context.Context, cache *Cache) {
 		}
 	}
 }
-
 func (s *service) build(ctx context.Context) (*Cache, error) {
 	var opts []storage.Option
-	opts = append(opts, option.NewRecursive(true))
 	if s.exclusion != nil {
 		opts = append(opts, s.exclusion)
 	}
-	objects, err := s.Service.List(ctx, s.baseURL, opts...)
+	cacheEntries, err := build(ctx, s.baseURL, s.cacheName, s.Service, opts)
 	if err != nil {
 		return nil, err
 	}
-
-	var items = make([]*Entry, 0)
-	entries := NewEntries(&items)
-	wg := sync.WaitGroup{}
-	for i, obj := range objects {
-		if obj.IsDir() || obj.Name() == s.cacheName {
-			continue
-		}
-		wg.Add(1)
-		go func(object storage.Object) {
-			defer wg.Done()
-			reader, oErr := s.Service.OpenURL(ctx, object.URL())
-			if err != nil {
-				err = oErr
-				return
-			}
-			data, oErr := ioutil.ReadAll(reader)
-			_ = reader.Close()
-			if oErr != nil {
-				err = oErr
-				return
-			}
-			entries.Append(&Entry{
-				URL:     object.URL(),
-				Data:    data,
-				Size:    object.Size(),
-				ModTime: object.ModTime(),
-			})
-
-		}(objects[i])
-
-	}
-	wg.Wait()
-	cacheEntries := &Cache{
-		Items: items,
-	}
-	JSON, err := json.Marshal(cacheEntries)
-	if err != nil {
+	if err = uploadCacheFile(ctx, cacheEntries, s.cacheURL, s); err != nil {
 		return nil, err
-	}
-	err = s.Service.Upload(ctx, s.cacheURL, file.DefaultFileOsMode, bytes.NewReader(JSON))
-	if isRateError(err) || isPreConditionError(err) { //ignore rate or generation errors
-		err = nil
 	}
 	return cacheEntries, err
 }
@@ -260,14 +228,10 @@ func (s *service) shallRebuildCache(cacheObject storage.Object) bool {
 func (s *service) uploadCache(ctx context.Context, cache *Cache, prev storage.Object) error {
 	cacheObject, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true))
 	if cacheObject == nil || (prev != nil && cacheObject.ModTime().Equal(prev.ModTime())) {
-		data, err := json.Marshal(cache)
-		if err != nil {
+		if err := uploadCacheFile(ctx, cache, s.cacheURL, s.Service); err != nil {
 			return err
 		}
-		if err = s.Service.Upload(ctx, s.cacheURL, file.DefaultFileOsMode, bytes.NewReader(data)); err != nil {
-			return err
-		}
-		if latest, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true)); latest != nil {
+		if latest, _ := s.Service.Object(ctx, cache.URL, option.NewObjectKind(true)); latest != nil {
 			mod := latest.ModTime()
 			s.modified = &mod
 		}
@@ -291,12 +255,13 @@ func isPreConditionError(err error) bool {
 
 //New create a cache service for supplied base URL
 func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
-	var cacheName = &option.CacheName{}
 	logger := &option.Logger{}
-	option.Assign(opts, &cacheName, &logger)
-	if cacheName.Name == "" {
-		cacheName.Name = CacheFile
+	var cacheOption = &option.Cache{}
+	option.Assign(opts, &cacheOption, &logger)
+	if cacheOption.Name == "" {
+		cacheOption.Name = CacheFile
 	}
+	cacheOption.Init()
 
 	scheme := url.Scheme(baseURL, file.Scheme)
 	if path.Ext(baseURL) != "" {
@@ -304,10 +269,10 @@ func New(baseURL string, fs afs.Service, opts ...storage.Option) afs.Service {
 	}
 	ret := &service{
 		at:        time.Now(),
-		cacheName: cacheName.Name,
+		cacheName: cacheOption.Name,
 		baseURL:   baseURL,
 		host:      url.Host(baseURL),
-		cacheURL:  url.Join(baseURL, cacheName.Name),
+		cacheURL:  url.Join(baseURL, cacheOption.Name),
 		scheme:    scheme,
 		Service:   fs,
 		refresh:   &option.RefreshInterval{},
