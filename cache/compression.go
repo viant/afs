@@ -15,7 +15,8 @@ func compressWithGzip(data []byte) ([]byte, error) {
 	if err := writer.Flush(); err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), writer.Close()
+	err := writer.Close()
+	return buf.Bytes(), err
 }
 
 func uncompressWithGzip(data []byte) ([]byte, error) {
