@@ -142,10 +142,6 @@ func (s *service) reloadIfNeeded(ctx context.Context) {
 	if s.next != nil && s.next.After(time.Now()) {
 		return
 	}
-	started := time.Now()
-	defer func() {
-		s.logger.Logf("rebuild cache %v after %s\n", s.cacheURL, time.Since(started))
-	}()
 	s.setNextRun(time.Now().Add(s.refresh.Duration()))
 	err := s.reloadCache(ctx)
 	if err != nil {
@@ -162,6 +158,10 @@ func (s *service) reloadCache(ctx context.Context) error {
 	var cache *Cache
 	var err error
 	if s.shallRebuildCache(cacheObject) {
+		started := time.Now()
+		defer func() {
+			s.logger.Logf("built cache %v after %s\n", s.cacheURL, time.Since(started))
+		}()
 		if cache, err = s.build(ctx); err != nil {
 			log.Printf("failed to build cache: %v %v", s.cacheURL, err)
 		}
@@ -175,6 +175,10 @@ func (s *service) reloadCache(ctx context.Context) error {
 	if s.modified != nil && cacheObject != nil && s.modified.Equal(cacheObject.ModTime()) {
 		return nil
 	}
+	started := time.Now()
+	defer func() {
+		s.logger.Logf("loaded cache %v after %s\n", s.cacheURL, time.Since(started))
+	}()
 	cache, err = s.loadCache(ctx)
 	if err != nil {
 		return err
