@@ -7,7 +7,6 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"path"
 	"strings"
 )
 
@@ -19,7 +18,7 @@ func Package(ctx context.Context, sourceURL string, rewriteBaseURL string, optio
 		cacheOption.Name = CacheFile
 	}
 	cacheOption.Init()
-	cacheURL := path.Join(rewriteBaseURL, cacheOption.Name)
+	cacheURL := url.Join(sourceURL, cacheOption.Name)
 	fs := afs.New()
 	cache, err := build(ctx, sourceURL, cacheOption.Name, fs, options...)
 	if err != nil || len(cache.Items) == 0 {
