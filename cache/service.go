@@ -211,7 +211,7 @@ func (s *service) build(ctx context.Context) (*Cache, error) {
 	if s.exclusion != nil {
 		opts = append(opts, s.exclusion)
 	}
-	cacheEntries, err := build(ctx, s.baseURL, s.cacheName, s.Service, opts)
+	cacheEntries, err := build(ctx, s.baseURL, s.cacheName, s.Service, opts...)
 	if err != nil {
 		return nil, err
 	}
