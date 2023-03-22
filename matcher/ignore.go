@@ -175,3 +175,12 @@ func NewIgnore(options ...storage.Option) (*Ignore, error) {
 	ignore.init()
 	return ignore, nil
 }
+
+//WithExtExclusion returns an ignore with ext exclusion
+func WithExtExclusion(ext ...string) *Ignore {
+	ret := &Ignore{Ext: map[string]bool{}}
+	for _, e := range ext {
+		ret.Ext[e] = true
+	}
+	return ret
+}
