@@ -177,7 +177,10 @@ func (s *service) reloadCache(ctx context.Context) error {
 	}
 
 	started := time.Now()
-	prevMod := *s.modified
+	var prevMod time.Time
+	if s.modified != nil {
+		prevMod = *s.modified
+	}
 	defer func() {
 		s.logger.Logf("loaded cache %v after %s prev:%v: curr:%v\n", s.cacheURL, time.Since(started), prevMod, cacheObject.ModTime())
 	}()
