@@ -47,14 +47,15 @@ func (s *service) copy(ctx context.Context, sourceURL, destURL string, srcOption
 			*srcOptions = remaining
 		}
 	}
+	_, isInternalWalker := walker.(*service)
 	mappedName := ""
-	if source.IsDir() {
+	if source.IsDir() || !isInternalWalker {
 		err = s.Create(ctx, destURL, source.Mode()|os.ModeDir, source.IsDir(), *destOptions...)
 	} else {
 		destURL, mappedName = url.Split(destURL, file.Scheme)
 	}
 
-	if url.IsSchemeEquals(sourceURL, destURL) && modifier == nil {
+	if url.IsSchemeEquals(sourceURL, destURL) && modifier == nil && isInternalWalker {
 		sourceManager, err := s.manager(ctx, sourceURL, *srcOptions)
 		if err != nil {
 			return err
@@ -120,6 +121,9 @@ func (s *service) Copy(ctx context.Context, sourceURL, destURL string, options .
 	if uploader == nil {
 		uploader = s
 	}
-	destURL = s.updateDestURL(sourceURL, destURL)
+	_, isInteralWalker := walker.(*service)
+	if isInteralWalker {
+		destURL = s.updateDestURL(sourceURL, destURL)
+	}
 	return s.copy(ctx, sourceURL, destURL, sourceOptions, destOptions, walker, uploader)
 }
