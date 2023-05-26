@@ -93,15 +93,19 @@ func (s *service) isExcluded(candidateURL string, info os.FileInfo) bool {
 }
 
 func (s *service) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
+
 	s.reloadIfNeeded(ctx)
 	if !s.canUseCache() {
 		return s.Service.OpenURL(ctx, URL, options...)
 	}
 	cacheURL := strings.Replace(URL, s.scheme, mem.Scheme, 1)
+
 	reader, err := s.Service.OpenURL(ctx, cacheURL, options...)
+	fmt.Printf("loaded from cache: %v, %v\n", err, cacheURL)
 	if err == nil {
 		return reader, err
 	}
+	fmt.Printf("fallback to: %v, %v\n", err, URL)
 	return s.Service.OpenURL(ctx, URL, options...)
 }
 
@@ -164,6 +168,9 @@ func (s *service) reloadIfNeeded(ctx context.Context) {
 
 func (s *service) reloadCache(ctx context.Context) error {
 	cacheObject, _ := s.Service.Object(ctx, s.cacheURL, option.NewObjectKind(true))
+	if cacheObject != nil {
+		fmt.Printf("checking cache :%v %v\n", cacheObject.URL(), cacheObject.ModTime())
+	}
 	var cache *Cache
 	var err error
 	if s.shallRebuildCache(cacheObject) {
@@ -193,13 +200,17 @@ func (s *service) reloadCache(ctx context.Context) error {
 	defer func() {
 		s.logger.Logf("loaded cache %v after %s prev:%v: curr:%v\n", s.cacheURL, time.Since(started), prevMod, cacheObject.ModTime())
 	}()
+	startTime := time.Now()
 	cache, err = s.loadCache(ctx)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("loaded cache after: %s\n", time.Now().Sub(startTime))
 	s.syncCache(ctx, cache)
 	mod := cacheObject.ModTime()
 	s.modified = &mod
+	fmt.Printf("sync cache after: %s\n", time.Now().Sub(startTime))
+
 	return err
 }
 
@@ -225,6 +236,7 @@ func (s *service) syncCache(ctx context.Context, cache *Cache) {
 	}
 }
 func (s *service) build(ctx context.Context) (*Cache, error) {
+	fmt.Printf("rebuilding cache\n")
 	var opts []storage.Option
 	if s.exclusion != nil {
 		opts = append(opts, s.exclusion)
