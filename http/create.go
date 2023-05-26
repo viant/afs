@@ -22,7 +22,7 @@ func (s *manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 	if err != nil {
 		return err
 	}
-	defer s.closeResponse(response)
+	s.closeResponse(response)
 	if IsStatusOK(response) {
 		return nil
 	}

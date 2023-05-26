@@ -18,6 +18,7 @@ func (s *manager) Exists(ctx context.Context, URL string, options ...storage.Opt
 		if err != nil {
 			return false, err
 		}
+		s.closeResponse(response)
 		if IsStatusOK(response) {
 			return true, nil
 		}
