@@ -138,6 +138,15 @@ func (s *service) setNextRun(next time.Time) {
 	s.next = &next
 }
 
+func (s *service) DownloadWithURL(ctx context.Context, URL string, options ...storage.Option) ([]byte, error) {
+	reader, err := s.OpenURL(ctx, URL, options...)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	data, err := io.ReadAll(reader)
+	return data, err
+}
 func (s *service) reloadIfNeeded(ctx context.Context) {
 	if s.next != nil && s.next.After(time.Now()) {
 		return
