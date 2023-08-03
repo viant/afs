@@ -106,7 +106,7 @@ func (r *streamReader) ReadAt(dest []byte, off int64) (n int, err error) {
 	if _, err = r.reader.Seek(off, io.SeekStart); err != nil {
 		return n, err
 	}
-	return r.Read(dest)
+	return r.reader.Read(dest)
 }
 
 func NewStreamReader(stream *option.Stream, reedSeeker io.ReadSeeker) io.ReadCloser {
