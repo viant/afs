@@ -100,12 +100,22 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	reader := tar.NewReader(readerCloser)
 	//cache is only used if sym link are used
 	var cache = make(map[string][]byte)
+
+	oldRelative := map[string]bool{}
 	for {
 		header, err := reader.Next()
 		if err == io.EOF || header == nil {
 			break
 		}
 		relative, name := path.Split(header.Name)
+		if _, ok := oldRelative[relative]; header.Typeflag != tar.TypeDir && !ok {
+			info := file.NewInfo("", 0, file.DefaultDirOsMode, header.ModTime, true)
+			_, err = handler(ctx, URL, relative, info, nil)
+			if err != nil {
+				return err
+			}
+		}
+		oldRelative[relative] = true
 		mode := getFileMode(header)
 		info := file.NewInfo(name, header.Size, os.FileMode(mode), header.ModTime, header.Typeflag == tar.TypeDir)
 		switch header.Typeflag {
@@ -178,12 +188,12 @@ func visitRegularHeader(ctx context.Context, reader io.Reader, handler storage.O
 	return true, nil
 }
 
-//newWalker returns a walker
+// newWalker returns a walker
 func newWalker(opener storage.Opener) *walker {
 	return &walker{Opener: opener}
 }
 
-//NewWalker returns a walker
+// NewWalker returns a walker
 func NewWalker(download storage.Opener) storage.Walker {
 	return newWalker(download)
 }
