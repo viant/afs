@@ -13,7 +13,6 @@ import (
 func init() {
 	registry := GetRegistry()
 	registry.Register(file.Scheme, file.Provider)
-//	registry.Register(embed.Scheme, embed.Provider)
 	registry.Register(mem.Scheme, mem.Provider)
 	registry.Register(http.Scheme, http.Provider)
 	registry.Register(http.SecureScheme, http.Provider)
