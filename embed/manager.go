@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
 	"os"
@@ -26,40 +25,48 @@ func (s *manager) Open(ctx context.Context, object storage.Object, options ...st
 	return s.OpenURL(ctx, object.URL(), options...)
 }
 
-//Delete unsupported
+// Delete unsupported
 func (s *manager) Delete(ctx context.Context, URL string, options ...storage.Option) error {
 	return fmt.Errorf("unsupproted Delete operation for %v", URL)
 }
 
-//Create unsupported
+// Create unsupported
 func (s *manager) Create(ctx context.Context, URL string, mode os.FileMode, isDir bool, options ...storage.Option) error {
 	return fmt.Errorf("unsupproted Create operation for %v", URL)
 }
 
-//Close closes mananger
+// Close closes mananger
 func (s *manager) Close() error {
 	return nil
 }
 
-//Scheme returns schmea
+// Scheme returns schmea
 func (s *manager) Scheme() string {
 	return Scheme
 }
 
 func newManager(options ...storage.Option) *manager {
-	fs := embed.FS{}
-	var err error = nil
-	_, ok := option.Assign(options, &fs)
-	if !ok {
+	var fs *embed.FS
+
+	for _, option := range options {
+		switch v := option.(type) {
+		case *embed.FS:
+			fs = v
+		case embed.FS:
+			fs = &v
+		}
+	}
+	var err error
+	if fs == nil {
 		err = fmt.Errorf("expcted %T", fs)
 	}
 	return &manager{
-		fs:  &fs,
+		fs:  fs,
 		err: err,
 	}
 }
 
-//New creates HTTP manager
+// New creates HTTP manager
 func New(options ...storage.Option) storage.Manager {
 	return newManager(options...)
 }
