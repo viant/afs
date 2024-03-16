@@ -4,15 +4,14 @@ import (
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 )
 
-//Replace return modification handler with the specified replacements map
+// Replace return modification handler with the specified replacements map
 func Replace(replacements map[string]string) option.Modifier {
 	return func(_ string, info os.FileInfo, reader io.ReadCloser) (os.FileInfo, io.ReadCloser, error) {
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -24,6 +23,6 @@ func Replace(replacements map[string]string) option.Modifier {
 			}
 		}
 		info = file.AdjustInfoSize(info, len(text))
-		return info, ioutil.NopCloser(strings.NewReader(text)), nil
+		return info, io.NopCloser(strings.NewReader(text)), nil
 	}
 }
