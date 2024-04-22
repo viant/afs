@@ -10,10 +10,11 @@ import (
 	"io"
 	"os"
 	"path"
+	"reflect"
 	"sync"
 )
 
-//Manager represents Storager base manager
+// Manager represents Storager base manager
 type Manager struct {
 	storage.Manager
 	options   []storage.Option
@@ -24,7 +25,7 @@ type Manager struct {
 	provider  func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error)
 }
 
-//Object retuns an object for supplied URL or error
+// Object retuns an object for supplied URL or error
 func (m *Manager) Object(ctx context.Context, URL string, options ...storage.Option) (storage.Object, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
@@ -38,7 +39,7 @@ func (m *Manager) Object(ctx context.Context, URL string, options ...storage.Opt
 	return object.New(URL, info, nil), nil
 }
 
-//List lists content for supplied URL
+// List lists content for supplied URL
 func (m *Manager) List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
@@ -87,7 +88,7 @@ func (m *Manager) ensureParentExists(ctx context.Context, URL string) error {
 	return m.Create(ctx, parentURL, file.DefaultDirOsMode, true)
 }
 
-//Upload uploads content
+// Upload uploads content
 func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	err := m.ensureParentExists(ctx, URL)
@@ -102,12 +103,12 @@ func (m *Manager) Upload(ctx context.Context, URL string, mode os.FileMode, read
 	return storager.Upload(ctx, URLPath, mode, reader, options...)
 }
 
-//Open downloads content
+// Open downloads content
 func (m *Manager) Open(ctx context.Context, object storage.Object, options ...storage.Option) (io.ReadCloser, error) {
 	return m.OpenURL(ctx, object.URL(), options...)
 }
 
-//OpenURL downloads content
+// OpenURL downloads content
 func (m *Manager) OpenURL(ctx context.Context, URL string, options ...storage.Option) (io.ReadCloser, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
@@ -121,7 +122,7 @@ func (m *Manager) OpenURL(ctx context.Context, URL string, options ...storage.Op
 	return reader, nil
 }
 
-//Delete deletes locations
+// Delete deletes locations
 func (m *Manager) Delete(ctx context.Context, URL string, options ...storage.Option) error {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
@@ -131,7 +132,7 @@ func (m *Manager) Delete(ctx context.Context, URL string, options ...storage.Opt
 	return storager.Delete(ctx, URLPath, options...)
 }
 
-//Create creates a resource
+// Create creates a resource
 func (m *Manager) Create(ctx context.Context, URL string, mode os.FileMode, isDir bool, options ...storage.Option) error {
 	var reader io.Reader
 	options, _ = option.Assign(options, &reader)
@@ -143,7 +144,7 @@ func (m *Manager) Create(ctx context.Context, URL string, mode os.FileMode, isDi
 	return storager.Create(ctx, URLPath, mode, reader, isDir)
 }
 
-//Exists checks if resource exsits
+// Exists checks if resource exsits
 func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Option) (bool, error) {
 	baseURL, URLPath := url.Base(URL, m.scheme)
 	storager, err := m.Storager(ctx, baseURL, options)
@@ -153,15 +154,26 @@ func (m *Manager) Exists(ctx context.Context, URL string, options ...storage.Opt
 	return storager.Exists(ctx, URLPath, options...)
 }
 
-//Options returns base and supplied options
+// Options returns base and supplied options
 func (m *Manager) Options(options []storage.Option) []storage.Option {
-	result := make([]storage.Option, 0)
-	result = append(result, m.options...)
-	result = append(result, options...)
+	result := append([]storage.Option{}, options...)
+	unique := make(map[reflect.Type]bool)
+	for _, option := range options {
+		key := reflect.TypeOf(option)
+		unique[key] = true
+	}
+
+	for _, option := range m.options {
+		key := reflect.TypeOf(option)
+		if _, found := unique[key]; !found {
+			result = append(result, option)
+			unique[key] = true
+		}
+	}
 	return result
 }
 
-//Storager returns Storager
+// Storager returns Storager
 func (m *Manager) Storager(ctx context.Context, baseURL string, options []storage.Option) (storage.Storager, error) {
 	m.mutex.RLock()
 	baseURL, _ = url.Base(baseURL, m.scheme)
@@ -186,7 +198,7 @@ func (m *Manager) Storager(ctx context.Context, baseURL string, options []storag
 	return storager, nil
 }
 
-//Close closes storagers
+// Close closes storagers
 func (m *Manager) Close() error {
 	var err error
 	for _, storager := range m.storagers {
@@ -222,17 +234,17 @@ func (m *Manager) isAuthChanged(ctx context.Context, baseURL string, options []s
 	return authManager.IsAuthChanged(authOptions)
 }
 
-//Scheme returns scheme
+// Scheme returns scheme
 func (m *Manager) Scheme() string {
 	return m.scheme
 }
 
-//Scheme returns scheme
+// Scheme returns scheme
 func (m *Manager) BaseURL() string {
 	return m.scheme
 }
 
-//New creates base Storager base Manager
+// New creates base Storager base Manager
 func New(manager storage.Manager, scheme string, provider func(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error), options []storage.Option) *Manager {
 	return &Manager{
 		Manager:   manager,
