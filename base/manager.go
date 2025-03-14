@@ -2,16 +2,17 @@ package base
 
 import (
 	"context"
-	"github.com/viant/afs/file"
-	"github.com/viant/afs/object"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
-	"github.com/viant/afs/url"
 	"io"
 	"os"
 	"path"
 	"reflect"
 	"sync"
+
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/object"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
+	"github.com/viant/afs/url"
 )
 
 // Manager represents Storager base manager
@@ -67,8 +68,10 @@ func (m *Manager) List(ctx context.Context, URL string, options ...storage.Optio
 
 	_, name := path.Split(URLPath)
 	if files[0].Name() == "" {
+		// To verify: this seems to be a special handler for embedded URLs
 		files[0] = file.NewInfo(name, files[0].Size(), files[0].Mode(), files[0].ModTime(), files[0].IsDir())
 	}
+	
 	fileURL := ""
 	for i := 0; i < len(files); i++ {
 		if i == 0 && files[i].Name() == name {
