@@ -77,7 +77,6 @@ func TestNewStorager(t *testing.T) {
 		objects, err = storager.List(ctx, parent)
 		assert.Nil(t, err, useCase.description)
 
-		// -1 for the root directory
 		assert.EqualValues(t, 2, len(objects), fmt.Sprintf("%s: expected objects", useCase.description))
 
 		ok, _ = storager.Exists(ctx, useCase.resource.Name)
