@@ -107,12 +107,33 @@ func (r *Holder) sortFiles() {
 	r.needSorting = false
 	aSlice := r.refSlicePtr.Elem()
 	sort.Slice(aSlice.Interface(), func(i, j int) bool {
+		// grab struct values
 		prev := r.Slice.ValueAt(xunsafe.AsPointer(r.slicePtr), i)
 		next := r.Slice.ValueAt(xunsafe.AsPointer(r.slicePtr), j)
 		prevName := fileNameField.String(xunsafe.AsPointer(prev))
 		nextName := fileNameField.String(xunsafe.AsPointer(next))
+
+		trim := func(s string) string { return strings.TrimSuffix(s, "/") }
+
+		// depth == number of “/” after trimming a trailing “/”
+		prevDepth := strings.Count(trim(prevName), "/")
+		nextDepth := strings.Count(trim(nextName), "/")
+
+		prevIsDir := strings.HasSuffix(prevName, "/")
+		nextIsDir := strings.HasSuffix(nextName, "/")
+
+		//  shallower (root-level) path wins
+		if prevDepth != nextDepth {
+			return prevDepth < nextDepth
+		}
+		//  at same depth, directory wins over file
+		if prevIsDir != nextIsDir {
+			return prevIsDir
+		}
+		//  finally, lexicographic order
 		return prevName < nextName
 	})
+
 }
 
 func (r *Holder) newFile(name string, data string) interface{} {
