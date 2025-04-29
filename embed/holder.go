@@ -52,7 +52,7 @@ func (r *Holder) append(mgr *manager, URL string, embedFs *embed.FS) {
 				r.append(mgr, object.URL(), embedFs)
 				continue
 			}
-			reader, err := mgr.OpenURL(context.Background(), object.URL())
+			reader, err := mgr.OpenURL(context.Background(), object.URL(), embedFs)
 			if err != nil {
 				continue
 			}
