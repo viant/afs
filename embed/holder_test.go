@@ -1,10 +1,15 @@
 package embed
 
 import (
+	"embed"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
 )
+
+//go:embed test/*
+var testEmbedFs embed.FS
 
 func TestHolder_Add(t *testing.T) {
 
@@ -27,4 +32,8 @@ func TestHolder_Add(t *testing.T) {
 		_ = fh.Close()
 	}
 
+	aHolder := NewHolder()
+	aHolder.AddFs(&testEmbedFs, "embed:///test")
+	merged := aHolder.EmbedFs()
+	fmt.Println(merged)
 }

@@ -1,9 +1,13 @@
 package embed
 
 import (
+	"context"
 	"crypto/sha256"
 	"embed"
+	"github.com/viant/afs/url"
 	"github.com/viant/xunsafe"
+	"io"
+	"path"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -28,6 +32,35 @@ type Holder struct {
 	slicePtr    interface{}
 	entries     map[string]string
 	needSorting bool
+}
+
+// AddFs adds file to embed.FS
+func (r *Holder) AddFs(fs *embed.FS, path string) {
+	mgr := newManager(fs, path)
+	r.append(mgr, path)
+}
+
+func (r *Holder) append(mgr *manager, URL string) {
+	objects, _ := mgr.List(context.Background(), URL, nil)
+	parent := strings.Trim(url.Path(URL), "/")
+	if len(objects) > 0 {
+		for _, object := range objects {
+			if object.IsDir() {
+				if url.IsSchemeEquals(URL, object.URL()) {
+					continue
+				}
+				r.append(mgr, object.URL())
+				continue
+			}
+			reader, err := mgr.OpenURL(context.Background(), object.URL())
+			if err != nil {
+				continue
+			}
+			data, err := io.ReadAll(reader)
+			r.Add(path.Join(parent, object.Name()), string(data))
+			_ = reader.Close()
+		}
+	}
 }
 
 // NewHolder create a fs holder
@@ -61,7 +94,7 @@ func (r *Holder) EmbedFs() *embed.FS {
 func (r *Holder) Add(name string, data string) {
 	r.ensureParent(name)
 	aFile := r.newFile(name, data)
-	r.Append(aFile)
+	r.Appender.Append(aFile)
 	r.syncValues()
 	r.needSorting = true
 
@@ -110,7 +143,7 @@ func (r *Holder) ensureParent(name string) {
 	}
 	r.entries[parent] = ""
 	aParent := r.newFile(parent, "")
-	r.Append(aParent)
+	r.Appender.Append(aParent)
 	if strings.Count(parent, "/") > 1 {
 		r.ensureParent(parent)
 	}
