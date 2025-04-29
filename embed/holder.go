@@ -37,11 +37,11 @@ type Holder struct {
 // AddFs adds file to embed.FS
 func (r *Holder) AddFs(fs *embed.FS, path string) {
 	mgr := newManager(fs, path)
-	r.append(mgr, path)
+	r.append(mgr, path, fs)
 }
 
-func (r *Holder) append(mgr *manager, URL string) {
-	objects, _ := mgr.List(context.Background(), URL, nil)
+func (r *Holder) append(mgr *manager, URL string, embedFs *embed.FS) {
+	objects, _ := mgr.List(context.Background(), URL, embedFs)
 	parent := strings.Trim(url.Path(URL), "/")
 	if len(objects) > 0 {
 		for _, object := range objects {
@@ -49,7 +49,7 @@ func (r *Holder) append(mgr *manager, URL string) {
 				if url.IsSchemeEquals(URL, object.URL()) {
 					continue
 				}
-				r.append(mgr, object.URL())
+				r.append(mgr, object.URL(), embedFs)
 				continue
 			}
 			reader, err := mgr.OpenURL(context.Background(), object.URL())
