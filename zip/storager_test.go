@@ -3,15 +3,17 @@ package zip
 import (
 	"bytes"
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/viant/afs/asset"
-	"github.com/viant/afs/mem"
-	"github.com/viant/afs/storage"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/viant/afs/asset"
+	"github.com/viant/afs/mem"
+	"github.com/viant/afs/storage"
 )
 
 func TestNewStorager(t *testing.T) {
@@ -74,7 +76,8 @@ func TestNewStorager(t *testing.T) {
 		assert.Nil(t, err, useCase.description)
 		objects, err = storager.List(ctx, parent)
 		assert.Nil(t, err, useCase.description)
-		assert.EqualValues(t, 2, len(objects), useCase.description)
+
+		assert.EqualValues(t, 2, len(objects), fmt.Sprintf("%s: expected objects", useCase.description))
 
 		ok, _ = storager.Exists(ctx, useCase.resource.Name)
 		assert.True(t, ok, useCase.description)
