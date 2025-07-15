@@ -19,7 +19,7 @@ func (f *Filesystem) Open(name string) (http.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewFile(object, f.fs)
+	return NewFile(object, f.fs, f.options...)
 }
 
 // New creates http filesystem

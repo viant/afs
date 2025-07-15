@@ -61,12 +61,12 @@ func (f *file) Stat() (fs.FileInfo, error) {
 }
 
 // NewFile creates a http.File
-func NewFile(object storage.Object, fs afs.Service) (http.File, error) {
+func NewFile(object storage.Object, fs afs.Service, options ...storage.Option) (http.File, error) {
 	ret := &file{object: object, fs: fs}
 	if object.IsDir() {
 		return ret, nil
 	}
-	reader, err := fs.Open(context.Background(), object)
+	reader, err := fs.Open(context.Background(), object, options...)
 	if err != nil {
 		return nil, err
 	}
