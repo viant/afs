@@ -15,9 +15,6 @@ type Filesystem struct {
 }
 
 func (f *Filesystem) Open(name string) (http.File, error) {
-	if name == "/" {
-		name = "index.html"
-	}
 	object, err := f.fs.Object(context.Background(), url.Join(f.dir, name), f.options...)
 	if err != nil {
 		return nil, err
