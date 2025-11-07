@@ -29,6 +29,23 @@ func (w *walker) open(ctx context.Context, URL string, options ...storage.Option
 	}
 	size := option.Size(0)
 	option.Assign(options, &size)
+
+	// Also support option.Stream to supply size for streaming scenarios
+	var streamOpt *option.Stream
+	option.Assign(options, &streamOpt)
+	if size == 0 && streamOpt != nil && streamOpt.Size > 0 {
+		size = option.Size(streamOpt.Size)
+	}
+
+	// Fall back to reader-provided size if available
+	if size == 0 {
+		if sizer, ok := rawReader.(storage.Sizer); ok {
+			if s := sizer.Size(); s > 0 {
+				size = option.Size(s)
+			}
+		}
+	}
+
 	if readerAt, ok := rawReader.(io.ReaderAt); ok && size > 0 {
 		return readerAt, int(size), nil
 	}
@@ -77,12 +94,12 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 	return nil
 }
 
-//NewWalker returns a walker
+// NewWalker returns a walker
 func newWalker(download storage.Opener) *walker {
 	return &walker{Opener: download}
 }
 
-//NewWalker returns a walker
+// NewWalker returns a walker
 func NewWalker(downloader storage.Opener) storage.Walker {
 	return newWalker(downloader)
 }
