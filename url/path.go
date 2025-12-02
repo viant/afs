@@ -1,11 +1,12 @@
 package url
 
 import (
+	"path/filepath"
 	"runtime"
 	"strings"
 )
 
-//Path returns path for an URL or path
+// Path returns path for an URL or path
 func Path(URL string) string {
 	location := URL
 	if location == "" {
@@ -24,4 +25,9 @@ func Path(URL string) string {
 		location = string(location[index:])
 	}
 	return location
+}
+
+func Name(URL string) string {
+	path := Path(URL)
+	return filepath.Base(path)
 }
