@@ -4,13 +4,14 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"io"
+	"io/ioutil"
+	"path"
+
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"io"
-	"io/ioutil"
-	"path"
 )
 
 type walker struct {

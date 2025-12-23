@@ -4,8 +4,7 @@ import (
 	"context"
 	stdio "io"
 	iofs "io/fs"
-	"path"
-	"runtime"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -23,14 +22,24 @@ type openCase struct {
 }
 
 func TestFS_Open(t *testing.T) {
-	// Build root as file: URI to testdata
-	_, thisFile, _, _ := runtime.Caller(0)
-	baseDir, _ := path.Split(thisFile)
-	rootPath := path.Join(baseDir, "testdata", "fs")
-	rootURI := url.ToFileURL(rootPath)
-
+	// Build in-memory filesystem rooted at mem://localhost/fs
 	ctx := context.Background()
 	svc := afs.New()
+	rootURI := "mem://localhost/fs"
+
+	// Create structure:
+	// /fs
+	//   /a
+	//     /sub
+	//       deep.txt
+	//     alpha.txt
+	//   root.txt
+	require.NoError(t, svc.Create(ctx, url.Join(rootURI, "a"), os.FileMode(0o755), true))
+	require.NoError(t, svc.Create(ctx, url.Join(rootURI, "a", "sub"), os.FileMode(0o755), true))
+	require.NoError(t, svc.Upload(ctx, url.Join(rootURI, "root.txt"), os.FileMode(0o644), strings.NewReader("root file\n")))
+	require.NoError(t, svc.Upload(ctx, url.Join(rootURI, "a", "alpha.txt"), os.FileMode(0o644), strings.NewReader("alpha")))
+	require.NoError(t, svc.Upload(ctx, url.Join(rootURI, "a", "sub", "deep.txt"), os.FileMode(0o644), strings.NewReader("deep")))
+
 	fsys := aio.NewFS(ctx, svc, strings.TrimRight(rootURI, "/"))
 
 	cases := []openCase{

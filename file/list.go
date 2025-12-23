@@ -11,7 +11,7 @@ import (
 	"path"
 )
 
-//List list directory or returns a file Info
+// List list directory or returns a file Info
 func List(ctx context.Context, URL string, options ...storage.Option) ([]storage.Object, error) {
 	baseURL, filePath := url.Base(URL, Scheme)
 	file, err := os.Open(Path(filePath))
@@ -37,6 +37,10 @@ func List(ctx context.Context, URL string, options ...storage.Option) ([]storage
 	var result = make([]storage.Object, 0)
 	result = append(result, object.New(URL, stat, nil))
 	for _, fileInfo := range files {
+		// Skip Unix domain sockets to avoid errors when tools/consumers try to open them
+		if fileInfo.Mode()&os.ModeSocket != 0 {
+			continue
+		}
 		if !match(filePath, fileInfo) {
 			continue
 		}
