@@ -1,11 +1,12 @@
 package matcher
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/viant/afs/file"
 	"path"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/viant/afs/file"
 )
 
 func TestRegExpr_Match(t *testing.T) {
@@ -47,6 +48,12 @@ func TestRegExpr_Match(t *testing.T) {
 			description: "regexpr match",
 			filter:      "asset\\d+\\.txt",
 			location:    "asset0001.txt",
+			expect:      true,
+		},
+		{
+			description: "regexp alternation matches parent path",
+			filter:      ".*(ca|0001).*/asset\\.txt",
+			location:    "boo/foo/0001/asset.txt",
 			expect:      true,
 		},
 		{

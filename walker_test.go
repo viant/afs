@@ -77,3 +77,46 @@ func TestService_Walk(t *testing.T) {
 
 	}
 }
+
+func TestService_Walk_StartsAtNestedDirectory(t *testing.T) {
+	ctx := context.Background()
+	fileManager := file.New()
+	baseLocation := t.TempDir()
+
+	assets := []*asset.Resource{
+		asset.NewFile("a/f1.txt", []byte("v1"), 0644),
+		asset.NewFile("a/b/f2.txt", []byte("v2"), 0644),
+		asset.NewFile("a/b/c/f3.txt", []byte("v3"), 0644),
+	}
+
+	if err := asset.Create(fileManager, baseLocation, assets); !assert.Nil(t, err) {
+		return
+	}
+
+	actuals := map[string]string{}
+	service := New()
+	err := service.Walk(ctx, path.Join(baseLocation, "a"), func(ctx context.Context, baseURL string, parent string, info os.FileInfo, reader io.Reader) (bool, error) {
+		location := path.Join(parent, info.Name())
+		if info.IsDir() {
+			actuals[location] = ""
+			return true, nil
+		}
+		data, err := ioutil.ReadAll(reader)
+		if err != nil {
+			return false, err
+		}
+		actuals[location] = string(data)
+		return true, nil
+	})
+
+	if !assert.Nil(t, err) {
+		return
+	}
+	assert.EqualValues(t, map[string]string{
+		"b":          "",
+		"b/c":        "",
+		"b/c/f3.txt": "v3",
+		"b/f2.txt":   "v2",
+		"f1.txt":     "v1",
+	}, actuals)
+}

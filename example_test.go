@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-//ExampleService_List reading location content
+// ExampleService_List reading location content
 func ExampleService_List() {
 	fs := afs.New()
 	ctx := context.Background()
@@ -43,7 +43,7 @@ func ExampleService_List() {
 	}
 }
 
-//ExampleService_Upload uploading content
+// ExampleService_Upload uploading content
 func ExampleService_Upload() {
 	fs := afs.New()
 	ctx := context.Background()
@@ -66,7 +66,7 @@ func ExampleService_Upload() {
 	fmt.Printf("has file: %v\n", ok)
 }
 
-//ExampleService_Copy copy content
+// ExampleService_Copy copy content
 func ExampleService_Copy() {
 	fs := afs.New()
 	ctx := context.Background()
@@ -80,7 +80,7 @@ func ExampleService_Copy() {
 	}
 }
 
-//ExampleService_Move moves content
+// ExampleService_Move moves content
 func ExampleService_Move() {
 	fs := afs.New()
 	ctx := context.Background()
@@ -125,8 +125,8 @@ func ExampleService_Uploader() {
 	}
 }
 
-//Example_DownloadError download error simulation example
-func Example_DownloadError() {
+// Example_uploadError upload error simulation example
+func Example_uploadError() {
 	fs := afs.NewFaker()
 	ctx := context.Background()
 	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewUploadError(io.EOF))
@@ -135,8 +135,8 @@ func Example_DownloadError() {
 	}
 }
 
-//Example_DownloadError download error simulation example
-func Example_UploadError() {
+// Example_downloadError download error simulation example
+func Example_downloadError() {
 	fs := afs.NewFaker()
 	ctx := context.Background()
 	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewDownloadError(io.EOF))
@@ -149,8 +149,8 @@ func Example_UploadError() {
 	}
 }
 
-//Example_DownloadError download error simulation example
-func Example_ReaderError() {
+// Example_readerError reader error simulation example
+func Example_readerError() {
 	fs := afs.NewFaker()
 	ctx := context.Background()
 	err := fs.Upload(ctx, "gs://myBucket/folder/asset.txt", 0, strings.NewReader("some data"), option.NewReaderError(fmt.Errorf("test error")))
@@ -168,7 +168,7 @@ func Example_ReaderError() {
 	}
 }
 
-func Example_IgnoreMatcher() {
+func Example_ignoreMatcher() {
 	ignoreMatcher, err := matcher.NewIgnore([]string{"*.txt", ".ignore"})
 	if err != nil {
 		log.Fatal(err)
