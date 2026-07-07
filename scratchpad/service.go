@@ -44,12 +44,13 @@ func New(opts ...Option) *Service {
 		cfg.Now = func() time.Time { return time.Now().UTC() }
 	}
 	s := &Service{
-		fs:           cfg.FS,
-		rootTemplate: strings.TrimSpace(cfg.RootURITemplate),
-		userID:       strings.TrimSpace(cfg.UserID),
-		basePath:     strings.TrimSpace(cfg.BasePath),
-		macros:       map[string]string{},
-		now:          cfg.Now,
+		fs:             cfg.FS,
+		rootTemplate:   strings.TrimSpace(cfg.RootURITemplate),
+		userID:         strings.TrimSpace(cfg.UserID),
+		userIDProvider: cfg.UserIDProvider,
+		basePath:       strings.TrimSpace(cfg.BasePath),
+		macros:         map[string]string{},
+		now:            cfg.Now,
 	}
 	for k, v := range cfg.Macros {
 		s.macros[k] = v
@@ -77,7 +78,7 @@ func (s *Service) Memorize(ctx context.Context, input *MemorizeInput) (*Memorize
 	if body == "" {
 		return output, fmt.Errorf("body is required")
 	}
-	root, userID, err := s.ResolveRootURI()
+	root, userID, err := s.ResolveRootURIContext(ctx)
 	if err != nil {
 		return output, err
 	}
@@ -111,7 +112,7 @@ func (s *Service) Append(ctx context.Context, input *AppendInput) (*AppendOutput
 	if body == "" {
 		return output, fmt.Errorf("body is required")
 	}
-	root, userID, err := s.ResolveRootURI()
+	root, userID, err := s.ResolveRootURIContext(ctx)
 	if err != nil {
 		return output, err
 	}
@@ -133,6 +134,9 @@ func (s *Service) Append(ctx context.Context, input *AppendInput) (*AppendOutput
 		}
 		if existing.Key != key {
 			return output, fmt.Errorf("scratchpad note identity mismatch for key %q", key)
+		}
+		if err := validateNoteUser(existing, userID); err != nil {
+			return output, err
 		}
 		note = *existing
 		note.Body = AppendNoteBody(note.Body, input.Body)
@@ -167,7 +171,7 @@ func (s *Service) Append(ctx context.Context, input *AppendInput) (*AppendOutput
 
 func (s *Service) List(ctx context.Context) (*ListOutput, error) {
 	output := &ListOutput{}
-	root, _, err := s.ResolveRootURI()
+	root, userID, err := s.ResolveRootURIContext(ctx)
 	if err != nil {
 		return output, err
 	}
@@ -195,6 +199,9 @@ func (s *Service) List(ctx context.Context) (*ListOutput, error) {
 		}
 		note, err := s.readNoteURL(ctx, object.URL())
 		if err != nil {
+			return output, err
+		}
+		if err := validateNoteUser(note, userID); err != nil {
 			return output, err
 		}
 		entries = append(entries, Entry{
@@ -230,11 +237,28 @@ func (s *Service) Delete(ctx context.Context, key string) error {
 	if key == "" {
 		return fmt.Errorf("key is required")
 	}
-	root, _, err := s.ResolveRootURI()
+	root, userID, err := s.ResolveRootURIContext(ctx)
 	if err != nil {
 		return err
 	}
-	return s.fs.Delete(ctx, NoteURL(root, key))
+	target := NoteURL(root, key)
+	exists, err := s.fs.Exists(ctx, target)
+	if err != nil {
+		return fmt.Errorf("read scratchpad note failed")
+	}
+	if exists {
+		note, err := s.readNoteURL(ctx, target)
+		if err != nil {
+			return err
+		}
+		if note.Key != key {
+			return fmt.Errorf("scratchpad note identity mismatch for key %q", key)
+		}
+		if err := validateNoteUser(note, userID); err != nil {
+			return err
+		}
+	}
+	return s.fs.Delete(ctx, target)
 }
 
 func (s *Service) FetchArtifact(ctx context.Context, artifactID string) (*Artifact, error) {
@@ -275,7 +299,7 @@ func (s *Service) OpenArtifact(ctx context.Context, artifactID string) (*Artifac
 }
 
 func (s *Service) fetchNote(ctx context.Context, key string) (*Note, error) {
-	root, _, err := s.ResolveRootURI()
+	root, userID, err := s.ResolveRootURIContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -296,6 +320,9 @@ func (s *Service) fetchNote(ctx context.Context, key string) (*Note, error) {
 	}
 	if note.Key != key {
 		return nil, fmt.Errorf("scratchpad note identity mismatch for key %q", key)
+	}
+	if err := validateNoteUser(note, userID); err != nil {
+		return nil, err
 	}
 	return note, nil
 }
@@ -357,6 +384,20 @@ func (s *Service) readNoteURL(ctx context.Context, uri string) (*Note, error) {
 	return &note, nil
 }
 
+func validateNoteUser(note *Note, userID string) error {
+	if note == nil {
+		return fmt.Errorf("scratchpad note is required")
+	}
+	noteUserID := strings.TrimSpace(note.UserID)
+	if noteUserID == "" {
+		return fmt.Errorf("scratchpad note %q is missing userId", note.Key)
+	}
+	if noteUserID != strings.TrimSpace(userID) {
+		return fmt.Errorf("scratchpad note %q belongs to a different user", note.Key)
+	}
+	return nil
+}
+
 func (s *Service) ensureRoot(ctx context.Context, root string) error {
 	if ok, err := s.fs.Exists(ctx, root); err != nil {
 		return err
@@ -368,6 +409,22 @@ func (s *Service) ensureRoot(ctx context.Context, root string) error {
 
 func (s *Service) ResolveRootURI() (string, string, error) {
 	return ResolveRootURI(s.rootTemplate, s.userID, s.basePath, s.macros)
+}
+
+func (s *Service) ResolveRootURIContext(ctx context.Context) (string, string, error) {
+	return ResolveRootURI(s.rootTemplate, s.effectiveUserID(ctx), s.basePath, s.macros)
+}
+
+func (s *Service) effectiveUserID(ctx context.Context) string {
+	if userID := UserIDFromContext(ctx); userID != "" {
+		return userID
+	}
+	if s.userIDProvider != nil {
+		if userID := strings.TrimSpace(s.userIDProvider(ctx)); userID != "" {
+			return userID
+		}
+	}
+	return strings.TrimSpace(s.userID)
 }
 
 func ResolveRootURI(template, userID, basePath string, macros map[string]string) (string, string, error) {

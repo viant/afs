@@ -1,11 +1,33 @@
 package scratchpad
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	"github.com/viant/afs"
 )
+
+type userIDContextKey struct{}
+
+func ContextWithUserID(ctx context.Context, userID string) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return ctx
+	}
+	return context.WithValue(ctx, userIDContextKey{}, userID)
+}
+
+func UserIDFromContext(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	userID, _ := ctx.Value(userIDContextKey{}).(string)
+	return strings.TrimSpace(userID)
+}
 
 func WithAFS(fs afs.Service) Option {
 	return func(c *Config) {
@@ -24,6 +46,12 @@ func WithRootURI(template string) Option {
 func WithUserID(userID string) Option {
 	return func(c *Config) {
 		c.UserID = strings.TrimSpace(userID)
+	}
+}
+
+func WithUserIDProvider(provider UserIDProvider) Option {
+	return func(c *Config) {
+		c.UserIDProvider = provider
 	}
 }
 
@@ -71,6 +99,9 @@ func WithConfig(config Config) Option {
 		}
 		if strings.TrimSpace(config.UserID) != "" {
 			c.UserID = strings.TrimSpace(config.UserID)
+		}
+		if config.UserIDProvider != nil {
+			c.UserIDProvider = config.UserIDProvider
 		}
 		if strings.TrimSpace(config.BasePath) != "" {
 			c.BasePath = strings.TrimSpace(config.BasePath)

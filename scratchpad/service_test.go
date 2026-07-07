@@ -2,6 +2,7 @@ package scratchpad
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
@@ -50,6 +51,82 @@ func TestService_SharedFileBackedRootAcrossClients(t *testing.T) {
 	fetched, err := reader.Fetch(ctx, "artifact/a1")
 	require.NoError(t, err)
 	require.Contains(t, fetched.Body, "file:///tmp/a1.txt")
+}
+
+func TestService_ContextUserIsolatesSharedService(t *testing.T) {
+	ctx := context.Background()
+	svc := New(WithRootURI("mem://localhost/scratchpad_context/${userID}"))
+
+	aliceCtx := ContextWithUserID(ctx, "alice@example.com")
+	bobCtx := ContextWithUserID(ctx, "bob@example.com")
+
+	_, err := svc.Memorize(aliceCtx, &MemorizeInput{Key: "notes/report", Description: "Report", Body: "alice"})
+	require.NoError(t, err)
+	_, err = svc.Memorize(bobCtx, &MemorizeInput{Key: "notes/report", Description: "Report", Body: "bob"})
+	require.NoError(t, err)
+
+	alice, err := svc.Fetch(aliceCtx, "notes/report")
+	require.NoError(t, err)
+	require.Equal(t, "alice", alice.Body)
+
+	bob, err := svc.Fetch(bobCtx, "notes/report")
+	require.NoError(t, err)
+	require.Equal(t, "bob", bob.Body)
+}
+
+func TestService_UserIDResolutionPrecedence(t *testing.T) {
+	ctx := context.Background()
+	svc := New(
+		WithRootURI("mem://localhost/scratchpad_precedence/${userID}"),
+		WithUserID("static"),
+		WithUserIDProvider(func(context.Context) string { return "provider" }),
+	)
+
+	_, userID, err := svc.ResolveRootURIContext(ContextWithUserID(ctx, "context"))
+	require.NoError(t, err)
+	require.Equal(t, "context", userID)
+
+	_, userID, err = svc.ResolveRootURIContext(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "provider", userID)
+
+	staticSvc := New(WithRootURI("mem://localhost/scratchpad_precedence_static/${userID}"), WithUserID("static"))
+	_, userID, err = staticSvc.ResolveRootURIContext(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "static", userID)
+}
+
+func TestProvider_OpenArtifactWithContextUser(t *testing.T) {
+	ctx := context.Background()
+	fs := afs.New()
+	root := "file://" + t.TempDir() + "/scratchpad/${userID}"
+	sourceURL := "mem://localhost/scratchpad_provider_context/report.txt"
+	userCtx := ContextWithUserID(ctx, "devuser")
+	require.NoError(t, fs.Upload(ctx, sourceURL, 0o644, strings.NewReader("report content")))
+
+	svc := New(
+		WithAFS(fs),
+		WithRootURI(root),
+		WithAllowedTargetSchemes("mem"),
+	)
+	_, err := svc.Memorize(userCtx, &MemorizeInput{
+		Key:         ArtifactKey("context-a1"),
+		Description: "Artifact context-a1",
+		Body:        `{"kind":"artifact","artifactId":"context-a1","name":"report.txt","contentType":"text/plain","sourceURL":"` + sourceURL + `"}`,
+	})
+	require.NoError(t, err)
+
+	Register(
+		WithAFS(fs),
+		WithRootURI(root),
+		WithAllowedTargetSchemes("mem"),
+	)
+	reader, err := fs.OpenURL(userCtx, "scratchpad://artifact/context-a1")
+	require.NoError(t, err)
+	defer reader.Close()
+	data, err := io.ReadAll(reader)
+	require.NoError(t, err)
+	require.Equal(t, "report content", string(data))
 }
 
 func TestProvider_OpenArtifact(t *testing.T) {
@@ -102,4 +179,77 @@ func TestProvider_RejectsDisallowedArtifactTargetScheme(t *testing.T) {
 	_, err = fs.OpenURL(ctx, "scratchpad://artifact/a1")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), `source scheme "mem" is not allowed`)
+}
+
+func TestService_RejectsMismatchedNoteUser(t *testing.T) {
+	ctx := context.Background()
+	fs := afs.New()
+	rootTemplate := "mem://localhost/scratchpad_owner/${userID}"
+	root, _, err := ResolveRootURI(rootTemplate, "devuser", "", nil)
+	require.NoError(t, err)
+	require.NoError(t, fs.Create(ctx, root, 0o755, true))
+
+	svc := New(WithAFS(fs), WithRootURI(rootTemplate), WithUserID("devuser"), WithAllowedTargetSchemes("mem"))
+	writeNote(t, ctx, fs, root, Note{
+		Key:         "notes/bad",
+		Description: "Bad",
+		Body:        "body",
+		UserID:      "other",
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339Nano),
+	})
+	writeNote(t, ctx, fs, root, Note{
+		Key:         ArtifactKey("bad-artifact"),
+		Description: "Bad artifact",
+		Body:        `{"artifactId":"bad-artifact","sourceURL":"mem://localhost/private"}`,
+		UserID:      "other",
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339Nano),
+	})
+
+	_, err = svc.Fetch(ctx, "notes/bad")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "different user")
+
+	_, err = svc.Append(ctx, &AppendInput{Key: "notes/bad", Body: "append"})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "different user")
+
+	_, err = svc.List(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "different user")
+
+	err = svc.Delete(ctx, "notes/bad")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "different user")
+
+	_, _, err = svc.OpenArtifact(ctx, "bad-artifact")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "different user")
+}
+
+func TestService_RejectsMissingNoteUserID(t *testing.T) {
+	ctx := context.Background()
+	fs := afs.New()
+	rootTemplate := "mem://localhost/scratchpad_missing_user/${userID}"
+	root, _, err := ResolveRootURI(rootTemplate, "devuser", "", nil)
+	require.NoError(t, err)
+	require.NoError(t, fs.Create(ctx, root, 0o755, true))
+
+	svc := New(WithAFS(fs), WithRootURI(rootTemplate), WithUserID("devuser"))
+	writeNote(t, ctx, fs, root, Note{
+		Key:         "notes/missing",
+		Description: "Missing user",
+		Body:        "body",
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339Nano),
+	})
+
+	_, err = svc.Fetch(ctx, "notes/missing")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing userId")
+}
+
+func writeNote(t *testing.T, ctx context.Context, fs afs.Service, root string, note Note) {
+	t.Helper()
+	data, err := json.Marshal(note)
+	require.NoError(t, err)
+	require.NoError(t, fs.Upload(ctx, NoteURL(root, note.Key), 0o644, strings.NewReader(string(data))))
 }

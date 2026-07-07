@@ -1,6 +1,7 @@
 package scratchpad
 
 import (
+	"context"
 	"time"
 
 	"github.com/viant/afs"
@@ -16,6 +17,7 @@ type Config struct {
 	FS                   afs.Service
 	RootURITemplate      string
 	UserID               string
+	UserIDProvider       UserIDProvider
 	BasePath             string
 	Macros               map[string]string
 	AllowedTargetSchemes []string
@@ -24,10 +26,13 @@ type Config struct {
 
 type Option func(*Config)
 
+type UserIDProvider func(context.Context) string
+
 type Service struct {
 	fs                   afs.Service
 	rootTemplate         string
 	userID               string
+	userIDProvider       UserIDProvider
 	basePath             string
 	macros               map[string]string
 	now                  func() time.Time

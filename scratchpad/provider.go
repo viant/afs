@@ -64,7 +64,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	cfg := Config{}
 	option.Assign(options, &cfg)
 	service := m.service
-	if cfg.RootURITemplate != "" || cfg.UserID != "" || cfg.FS != nil || len(cfg.AllowedTargetSchemes) > 0 {
+	if cfg.RootURITemplate != "" || cfg.UserID != "" || cfg.UserIDProvider != nil || cfg.FS != nil || len(cfg.AllowedTargetSchemes) > 0 {
 		service = New(WithConfig(cfg))
 	}
 	return &storager{service: service, baseURL: baseURL}, nil
