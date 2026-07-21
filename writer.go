@@ -2,15 +2,16 @@ package afs
 
 import (
 	"context"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
 	"io"
 	"os"
 	"sync"
 	"sync/atomic"
+
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 )
 
-//NewWriter creates an upload writer
+// NewWriter creates an upload writer
 func (s *service) NewWriter(ctx context.Context, URL string, mode os.FileMode, options ...storage.Option) (io.WriteCloser, error) {
 	empty := &option.Empty{}
 	option.Assign(options, &empty)
@@ -47,8 +48,15 @@ type writer struct {
 	allowEmpty  bool
 	writer      *io.PipeWriter
 	doneChannel chan bool
+	closeDone   sync.Once
 	err         error
 	written     int64
+}
+
+func (w *writer) markDone() {
+	w.closeDone.Do(func() {
+		close(w.doneChannel)
+	})
 }
 
 func (w *writer) open() error {
@@ -57,7 +65,7 @@ func (w *writer) open() error {
 	w.opened = true
 	go w.monitorCancel()
 	go func() {
-		defer close(w.doneChannel)
+		defer w.markDone()
 		if err := w.uploader.Upload(w.ctx, w.url, w.mode, pipeReader, w.options...); err != nil {
 			w.setError(err)
 			pipeReader.CloseWithError(err)
@@ -89,10 +97,22 @@ func (w *writer) Write(p []byte) (n int, err error) {
 }
 
 // Close completes the write operation and flushes any buffered data.
+//
+// When Write has already opened the pipe, the upload goroutine owns closing
+// doneChannel. If written is still 0 and empty uploads are disallowed, Close
+// must wait for that goroutine instead of closing doneChannel again — the old
+// path panicked with "close of closed channel".
 func (w *writer) Close() error {
-	//nothing was written quit
+	// nothing was written quit
 	if atomic.LoadInt64(&w.written) == 0 && !w.allowEmpty {
-		defer close(w.doneChannel)
+		if w.opened {
+			if w.writer != nil {
+				_ = w.writer.Close()
+			}
+			<-w.doneChannel
+			return w.error()
+		}
+		w.markDone()
 		return nil
 	}
 	if !w.opened {
