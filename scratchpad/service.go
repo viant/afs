@@ -19,7 +19,48 @@ import (
 	afsurl "github.com/viant/afs/url"
 )
 
-var errScratchpadNoteNotFound = errors.New("scratchpad note not found")
+// ErrNoteNotFound identifies a missing scratchpad note.
+var ErrNoteNotFound = errors.New("scratchpad note not found")
+
+// NoteNotFoundError describes the logical note and resolved storage location
+// that could not be found.
+type NoteNotFoundError struct {
+	Key   string
+	URI   string
+	Cause error
+}
+
+func (e *NoteNotFoundError) Error() string {
+	message := ErrNoteNotFound.Error()
+	if e == nil {
+		return message
+	}
+	details := make([]string, 0, 2)
+	if e.Key != "" {
+		details = append(details, fmt.Sprintf("key=%q", e.Key))
+	}
+	if e.URI != "" {
+		details = append(details, fmt.Sprintf("uri=%q", e.URI))
+	}
+	if len(details) > 0 {
+		message += " (" + strings.Join(details, ", ") + ")"
+	}
+	if e.Cause != nil {
+		message += ": " + e.Cause.Error()
+	}
+	return message
+}
+
+func (e *NoteNotFoundError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Cause
+}
+
+func (e *NoteNotFoundError) Is(target error) bool {
+	return target == ErrNoteNotFound
+}
 
 func New(opts ...Option) *Service {
 	cfg := Config{
@@ -83,7 +124,7 @@ func (s *Service) Memorize(ctx context.Context, input *MemorizeInput) (*Memorize
 		return output, err
 	}
 	if err = s.ensureRoot(ctx, root); err != nil {
-		return output, fmt.Errorf("scratchpad storage unavailable")
+		return output, fmt.Errorf("scratchpad storage unavailable: %w", err)
 	}
 	updatedAt := s.now().UTC().Format(time.RFC3339Nano)
 	note := Note{
@@ -117,18 +158,18 @@ func (s *Service) Append(ctx context.Context, input *AppendInput) (*AppendOutput
 		return output, err
 	}
 	if err = s.ensureRoot(ctx, root); err != nil {
-		return output, fmt.Errorf("scratchpad storage unavailable")
+		return output, fmt.Errorf("scratchpad storage unavailable: %w", err)
 	}
 	target := NoteURL(root, key)
 	exists, err := s.fs.Exists(ctx, target)
 	if err != nil {
-		return output, fmt.Errorf("read scratchpad note failed")
+		return output, fmt.Errorf("read scratchpad note failed: %w", err)
 	}
 	description := strings.TrimSpace(input.Description)
 	updatedAt := s.now().UTC().Format(time.RFC3339Nano)
 	var note Note
 	if exists {
-		existing, err := s.readNoteURL(ctx, target)
+		existing, err := s.readNoteURL(ctx, key, target)
 		if err != nil {
 			return output, err
 		}
@@ -176,18 +217,18 @@ func (s *Service) List(ctx context.Context) (*ListOutput, error) {
 		return output, err
 	}
 	if ok, err := s.fs.Exists(ctx, root); err != nil {
-		return output, fmt.Errorf("list scratchpad notes failed")
+		return output, fmt.Errorf("list scratchpad notes failed: %w", err)
 	} else if !ok {
 		output.Entries = []Entry{}
 		return output, nil
 	}
 	objects, err := s.fs.List(ctx, root)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			output.Entries = []Entry{}
 			return output, nil
 		}
-		return output, fmt.Errorf("list scratchpad notes failed")
+		return output, fmt.Errorf("list scratchpad notes failed: %w", err)
 	}
 	var entries []Entry
 	for _, object := range objects {
@@ -197,7 +238,7 @@ func (s *Service) List(ctx context.Context) (*ListOutput, error) {
 		if !strings.HasSuffix(strings.ToLower(object.Name()), ".json") {
 			continue
 		}
-		note, err := s.readNoteURL(ctx, object.URL())
+		note, err := s.readNoteURL(ctx, "", object.URL())
 		if err != nil {
 			return output, err
 		}
@@ -244,10 +285,10 @@ func (s *Service) Delete(ctx context.Context, key string) error {
 	target := NoteURL(root, key)
 	exists, err := s.fs.Exists(ctx, target)
 	if err != nil {
-		return fmt.Errorf("read scratchpad note failed")
+		return fmt.Errorf("read scratchpad note failed: %w", err)
 	}
 	if exists {
-		note, err := s.readNoteURL(ctx, target)
+		note, err := s.readNoteURL(ctx, key, target)
 		if err != nil {
 			return err
 		}
@@ -258,7 +299,10 @@ func (s *Service) Delete(ctx context.Context, key string) error {
 			return err
 		}
 	}
-	return s.fs.Delete(ctx, target)
+	if err := s.fs.Delete(ctx, target); err != nil {
+		return fmt.Errorf("delete scratchpad note failed: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) FetchArtifact(ctx context.Context, artifactID string) (*Artifact, error) {
@@ -306,16 +350,13 @@ func (s *Service) fetchNote(ctx context.Context, key string) (*Note, error) {
 	target := NoteURL(root, key)
 	exists, err := s.fs.Exists(ctx, target)
 	if err != nil {
-		return nil, fmt.Errorf("read scratchpad note failed")
+		return nil, fmt.Errorf("read scratchpad note failed: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("scratchpad note %q not found", key)
+		return nil, &NoteNotFoundError{Key: key, URI: target}
 	}
-	note, err := s.readNoteURL(ctx, target)
+	note, err := s.readNoteURL(ctx, key, target)
 	if err != nil {
-		if errors.Is(err, errScratchpadNoteNotFound) {
-			return nil, fmt.Errorf("scratchpad note %q not found", key)
-		}
 		return nil, err
 	}
 	if note.Key != key {
@@ -354,7 +395,7 @@ func (s *Service) writeNote(ctx context.Context, root, key string, note Note) er
 	}
 	target := NoteURL(root, key)
 	if err = s.fs.Upload(ctx, target, 0o644, strings.NewReader(string(data)+"\n")); err != nil {
-		return fmt.Errorf("write scratchpad note %q failed", key)
+		return fmt.Errorf("write scratchpad note %q failed: %w", key, err)
 	}
 	return nil
 }
@@ -366,13 +407,13 @@ func AppendNoteBody(existing, addition string) string {
 	return strings.TrimRight(existing, "\n") + appendSeparator + strings.TrimLeft(addition, "\n")
 }
 
-func (s *Service) readNoteURL(ctx context.Context, uri string) (*Note, error) {
+func (s *Service) readNoteURL(ctx context.Context, key, uri string) (*Note, error) {
 	data, err := s.fs.DownloadWithURL(ctx, uri)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, errScratchpadNoteNotFound
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, &NoteNotFoundError{Key: key, URI: uri, Cause: err}
 		}
-		return nil, fmt.Errorf("read scratchpad note failed")
+		return nil, fmt.Errorf("read scratchpad note failed: %w", err)
 	}
 	var note Note
 	if err = json.Unmarshal(data, &note); err != nil {
@@ -400,7 +441,9 @@ func validateNoteUser(note *Note, userID string) error {
 
 func (s *Service) ensureRoot(ctx context.Context, root string) error {
 	if ok, err := s.fs.Exists(ctx, root); err != nil {
-		return err
+		if !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
 	} else if ok {
 		return nil
 	}

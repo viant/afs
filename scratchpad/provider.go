@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	neturl "net/url"
@@ -81,7 +82,10 @@ func (s *storager) Close() error { return nil }
 func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	_, err := s.Get(ctx, location, options...)
 	if err != nil {
-		return false, nil
+		if errors.Is(err, ErrNoteNotFound) {
+			return false, nil
+		}
+		return false, err
 	}
 	return true, nil
 }

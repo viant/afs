@@ -2,6 +2,7 @@ package afs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/mem"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-//Service represents storage storage
+// Service represents storage storage
 type Service interface {
 	storage.Lister
 	storage.Opener
@@ -53,7 +54,7 @@ type Service interface {
 	ErrorCode(scheme string, err error) int
 }
 
-//Service implementation
+// Service implementation
 type service struct {
 	faker    bool
 	mutex    *sync.RWMutex
@@ -127,7 +128,10 @@ func (s *service) exists(ctx context.Context, manager storage.Manager, URL strin
 	options = append(options, option.NewPage(0, 1))
 	objects, err := s.List(ctx, URL, options...)
 	if err != nil {
-		return false, nil
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, err
 	}
 	return len(objects) > 0, nil
 }
@@ -184,14 +188,14 @@ func (s *service) newManager(ctx context.Context, scheme string, options ...stor
 	return provider(options...)
 }
 
-//Init initialises service
+// Init initialises service
 func (s *service) Init(ctx context.Context, baseURL string, options ...storage.Option) error {
 	baseURL = url.Normalize(baseURL, file.Scheme)
 	_, err := s.manager(ctx, baseURL, options)
 	return err
 }
 
-//Close closes storage manager for supplied baseURL
+// Close closes storage manager for supplied baseURL
 func (s *service) Close(baseURL string) error {
 	baseURL, _ = url.Base(baseURL, file.Scheme)
 	s.mutex.Lock()
@@ -203,7 +207,7 @@ func (s *service) Close(baseURL string) error {
 	return manager.Close()
 }
 
-//CloseAll closes all active managers
+// CloseAll closes all active managers
 func (s *service) CloseAll() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -266,7 +270,7 @@ func (s *service) manager(ctx context.Context, URL string, options []storage.Opt
 	return manager, err
 }
 
-//ErrorCode return error code
+// ErrorCode return error code
 func (s *service) ErrorCode(scheme string, err error) int {
 	if err == nil {
 		return 0
@@ -289,7 +293,7 @@ func newService(faker bool) *service {
 	}
 }
 
-//New returns a abstract storage service
+// New returns a abstract storage service
 func New() Service {
 	return newService(false)
 }

@@ -3,10 +3,13 @@ package afs
 import (
 	"bytes"
 	"context"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
+	afsurl "github.com/viant/afs/url"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,6 +17,45 @@ import (
 	"strings"
 	"testing"
 )
+
+type existsListError struct {
+	cause error
+}
+
+func (e *existsListError) Error() string {
+	return "list failed: " + e.cause.Error()
+}
+
+func (e *existsListError) Unwrap() error {
+	return e.cause
+}
+
+type existsListErrorManager struct {
+	storage.Manager
+	err error
+}
+
+func (m *existsListErrorManager) List(context.Context, string, ...storage.Option) ([]storage.Object, error) {
+	return nil, m.err
+}
+
+func TestService_ExistsPropagatesListErrorWithoutChecker(t *testing.T) {
+	cause := errors.New("list access denied")
+	listErr := &existsListError{cause: cause}
+	manager := &existsListErrorManager{err: listErr}
+	service := newService(false)
+	target := "list-error://bucket/note.json"
+	baseURL, _ := afsurl.Base(target, "list-error")
+	service.managers[baseURL] = manager
+
+	exists, err := service.Exists(context.Background(), target)
+
+	assert.False(t, exists)
+	assert.ErrorIs(t, err, cause)
+	var actual *existsListError
+	assert.ErrorAs(t, err, &actual)
+	assert.Same(t, listErr, actual)
+}
 
 func TestNewService(t *testing.T) {
 
