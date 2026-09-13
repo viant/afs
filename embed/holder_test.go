@@ -16,7 +16,7 @@ func TestHolder_Add(t *testing.T) {
 	fs := embedFs.EmbedFs()
 	entries, err := fs.ReadDir("foo")
 	assert.Nil(t, err)
-	assert.Equal(t, 5, len(entries))
+	assert.Equal(t, 3, len(entries))
 
 	{
 		fh, err := fs.Open("foo/bar.txt")

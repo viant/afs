@@ -8,7 +8,6 @@ import (
 	"github.com/viant/xunsafe"
 	"io"
 	"path"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -113,25 +112,14 @@ func (r *Holder) sortFiles() {
 		prevName := fileNameField.String(xunsafe.AsPointer(prev))
 		nextName := fileNameField.String(xunsafe.AsPointer(next))
 
-		trim := func(s string) string { return strings.TrimSuffix(s, "/") }
-
-		// depth == number of “/” after trimming a trailing “/”
-		prevDepth := strings.Count(trim(prevName), "/")
-		nextDepth := strings.Count(trim(nextName), "/")
-
-		prevIsDir := strings.HasSuffix(prevName, "/")
-		nextIsDir := strings.HasSuffix(nextName, "/")
-
-		//  shallower (root-level) path wins
-		if prevDepth != nextDepth {
-			return prevDepth < nextDepth
+		// Match embed.FS lookup: parent directory first, then base name.
+		prevName = strings.TrimSuffix(prevName, "/")
+		nextName = strings.TrimSuffix(nextName, "/")
+		prevDir, nextDir := path.Dir(prevName), path.Dir(nextName)
+		if prevDir != nextDir {
+			return prevDir < nextDir
 		}
-		//  at same depth, directory wins over file
-		if prevIsDir != nextIsDir {
-			return prevIsDir
-		}
-		//  finally, lexicographic order
-		return prevName < nextName
+		return path.Base(prevName) < path.Base(nextName)
 	})
 
 }
@@ -155,17 +143,16 @@ func (r *Holder) newFile(name string, data string) interface{} {
 }
 
 func (r *Holder) ensureParent(name string) {
-	parent, _ := filepath.Split(name)
-	if parent == "" {
+	parent := path.Dir(strings.TrimSuffix(name, "/"))
+	if parent == "." || parent == "" {
 		return
 	}
-	if _, ok := r.entries[parent]; ok {
+	directory := parent + "/"
+	if _, ok := r.entries[directory]; ok {
 		return
 	}
-	r.entries[parent] = ""
-	aParent := r.newFile(parent, "")
+	r.ensureParent(parent)
+	r.entries[directory] = ""
+	aParent := r.newFile(directory, "")
 	r.Appender.Append(aParent)
-	if strings.Count(parent, "/") > 1 {
-		r.ensureParent(parent)
-	}
 }
