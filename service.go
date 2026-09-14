@@ -56,9 +56,10 @@ type Service interface {
 
 // Service implementation
 type service struct {
-	faker    bool
-	mutex    *sync.RWMutex
-	managers map[string]storage.Manager
+	faker     bool
+	providers map[string]Provider
+	mutex     *sync.RWMutex
+	managers  map[string]storage.Manager
 }
 
 func (s *service) Upload(ctx context.Context, URL string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
@@ -181,6 +182,13 @@ func (s *service) newManager(ctx context.Context, scheme string, options ...stor
 	if s.faker {
 		scheme = mem.Scheme
 	}
+	provider, ok := s.providers[scheme]
+	if ok {
+		if provider == nil {
+			return nil, fmt.Errorf("nil storage provider for %s", scheme)
+		}
+		return provider(options...)
+	}
 	provider, err := GetRegistry().Get(scheme)
 	if err != nil {
 		return nil, err
@@ -296,4 +304,16 @@ func newService(faker bool) *service {
 // New returns a abstract storage service
 func New() Service {
 	return newService(false)
+}
+
+// NewWithProviders returns a service with private scheme factories. The map is
+// copied and never registered globally. Unspecified schemes use GetRegistry.
+// Factories own their configuration; request options must not replace it.
+func NewWithProviders(providers map[string]Provider) Service {
+	result := newService(false)
+	result.providers = make(map[string]Provider, len(providers))
+	for scheme, provider := range providers {
+		result.providers[scheme] = provider
+	}
+	return result
 }
