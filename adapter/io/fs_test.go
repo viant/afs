@@ -19,6 +19,8 @@ type openCase struct {
 	name      string
 	openPath  string
 	wantNames []string
+	wantData  *string
+	wantError bool
 }
 
 func TestFS_Open(t *testing.T) {
@@ -46,31 +48,33 @@ func TestFS_Open(t *testing.T) {
 		{
 			name:      "open root with dot",
 			openPath:  ".",
-			wantNames: []string{"fs", "a", "root.txt"},
+			wantNames: []string{"a", "root.txt"},
 		},
 		{
 			name:      "open root with slash",
 			openPath:  "/",
-			wantNames: []string{"fs", "a", "root.txt"},
+			wantError: true,
+			wantNames: []string{"a", "root.txt"},
 		},
 		{
 			name:      "open subdir",
 			openPath:  "a",
-			wantNames: []string{"a", "alpha.txt", "sub"},
+			wantNames: []string{"alpha.txt", "sub"},
 		},
 		{
-			name:      "open nested file returns single entry",
-			openPath:  "a/sub/deep.txt",
-			wantNames: []string{"deep.txt"},
+			name:     "open nested file returns single entry",
+			openPath: "a/sub/deep.txt",
+			wantData: ptr("deep"),
 		},
 		{
-			name:      "open root file returns single entry",
-			openPath:  "root.txt",
-			wantNames: []string{"root.txt"},
+			name:     "open root file returns single entry",
+			openPath: "root.txt",
+			wantData: ptr("root file\n"),
 		},
 		{
 			name:      "open with cleanup - file path",
 			openPath:  "a/../a/sub/./deep.txt",
+			wantError: true,
 			wantNames: []string{"deep.txt"},
 		},
 	}
@@ -78,7 +82,21 @@ func TestFS_Open(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			f, err := fsys.Open(tc.openPath)
+			if tc.wantError {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
+			if tc.wantData != nil {
+				defer f.Close()
+				data, err := stdio.ReadAll(f)
+				require.NoError(t, err)
+				require.Equal(t, *tc.wantData, string(data))
+				info, err := f.Stat()
+				require.NoError(t, err)
+				require.False(t, info.IsDir())
+				return
+			}
 			defer f.Close()
 
 			rdf, ok := f.(iofs.ReadDirFile)
@@ -108,3 +126,5 @@ func TestFS_Open(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func ptr(value string) *string { return &value }

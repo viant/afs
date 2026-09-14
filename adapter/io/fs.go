@@ -2,11 +2,12 @@ package io
 
 import (
 	"context"
+	"github.com/viant/afs/storage"
 	"io"
 	"io/fs"
 	"path"
+	"sort"
 	"strings"
-	"time"
 
 	"github.com/viant/afs"
 	"github.com/viant/afs/url"
@@ -27,40 +28,49 @@ func NewFS(ctx context.Context, svc afs.Service, root string) *FS {
 
 // Open implements fs.FS. It supports opening both files and directories.
 func (a *FS) Open(name string) (fs.File, error) {
-	clean := path.Clean(name)
-	if clean == "." || clean == "/" {
-		return a.openDir(a.Root, "")
+	if !fs.ValidPath(name) {
+		return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrInvalid}
 	}
-	uri := a.join(clean)
-
-	// Try directory first; if it fails, try file.
-	if d, err := a.openDir(uri, url.Name(uri)); err == nil {
-		return d, nil
+	uri := a.Root
+	if name != "." {
+		uri = a.join(name)
 	}
-	data, err := a.Svc.DownloadWithURL(a.Ctx, uri)
+	object, err := a.Svc.Object(a.Ctx, uri)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{Op: "open", Path: name, Err: err}
 	}
+	if object.IsDir() {
+		return a.openDir(object)
+	}
+	data, err := a.Svc.Download(a.Ctx, object)
+	if err != nil {
+		return nil, &fs.PathError{Op: "open", Path: name, Err: err}
+	}
+
 	return &file{
 		name: path.Base(uri),
 		data: data,
-		info: &info{name: path.Base(uri), size: int64(len(data)), mod: time.Time{}, dir: false},
+		info: object,
 	}, nil
 }
 
-func (a *FS) openDir(uri, name string) (fs.File, error) {
-	entries, err := a.Svc.List(a.Ctx, uri)
+func (a *FS) openDir(object storage.Object) (fs.File, error) {
+	entries, err := a.Svc.List(a.Ctx, object.URL())
 	if err != nil {
 		return nil, err
 	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
 	dirents := make([]fs.DirEntry, 0, len(entries))
 	for _, e := range entries {
-		dirents = append(dirents, &dirEntry{i: &info{name: e.Name(), size: e.Size(), mod: e.ModTime(), dir: e.IsDir()}})
+		if url.Equals(object.URL(), e.URL()) {
+			continue
+		}
+		dirents = append(dirents, &dirEntry{i: e})
 	}
 	return &dir{
-		name: name,
+		name: object.Name(),
 		ents: dirents,
-		info: &info{name: name, dir: true},
+		info: object,
 	}, nil
 }
 
@@ -73,7 +83,7 @@ type file struct {
 	name string
 	data []byte
 	off  int
-	info *info
+	info fs.FileInfo
 }
 
 func (f *file) Stat() (fs.FileInfo, error) { return f.info, nil }
@@ -92,7 +102,7 @@ type dir struct {
 	name string
 	ents []fs.DirEntry
 	pos  int
-	info *info
+	info fs.FileInfo
 }
 
 func (d *dir) Stat() (fs.FileInfo, error) { return d.info, nil }
@@ -100,6 +110,9 @@ func (d *dir) Read(_ []byte) (int, error) { return 0, io.EOF }
 func (d *dir) Close() error               { return nil }
 func (d *dir) ReadDir(n int) ([]fs.DirEntry, error) {
 	if d.pos >= len(d.ents) {
+		if n <= 0 {
+			return []fs.DirEntry{}, nil
+		}
 		return nil, io.EOF
 	}
 	if n <= 0 || d.pos+n > len(d.ents) {
@@ -111,34 +124,14 @@ func (d *dir) ReadDir(n int) ([]fs.DirEntry, error) {
 }
 
 // dirEntry implements fs.DirEntry using info.
-type dirEntry struct{ i *info }
+type dirEntry struct{ i fs.FileInfo }
 
-func (e *dirEntry) Name() string { return e.i.name }
-func (e *dirEntry) IsDir() bool  { return e.i.dir }
+func (e *dirEntry) Name() string { return e.i.Name() }
+func (e *dirEntry) IsDir() bool  { return e.i.IsDir() }
 func (e *dirEntry) Type() fs.FileMode {
-	if e.i.dir {
+	if e.i.IsDir() {
 		return fs.ModeDir
 	}
 	return 0
 }
 func (e *dirEntry) Info() (fs.FileInfo, error) { return e.i, nil }
-
-// info implements fs.FileInfo.
-type info struct {
-	name string
-	size int64
-	mod  time.Time
-	dir  bool
-}
-
-func (i *info) Name() string { return i.name }
-func (i *info) Size() int64  { return i.size }
-func (i *info) Mode() fs.FileMode {
-	if i.dir {
-		return fs.ModeDir | 0o755
-	}
-	return 0o644
-}
-func (i *info) ModTime() time.Time { return i.mod }
-func (i *info) IsDir() bool        { return i.dir }
-func (i *info) Sys() interface{}   { return nil }
