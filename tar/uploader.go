@@ -36,6 +36,12 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 			options = append(options, fileInfo.Link)
 		}
 		filename := path.Join(parent, info.Name())
+		// Walkers may report a virtual archive root for root-level files.
+		// It is not an entry and must not become a synthetic "./" header
+		// when an existing archive is rewritten.
+		if info.IsDir() && (filename == "" || filename == ".") {
+			return nil
+		}
 		info = file.NewInfo(filename, info.Size(), info.Mode(), info.ModTime(), info.IsDir(), options...)
 		header, err := tar.FileInfoHeader(info, link)
 		if err != nil {
@@ -55,12 +61,12 @@ func (u *uploader) Uploader(ctx context.Context, URL string, options ...storage.
 	}, writer, nil
 }
 
-//newBatchUploader returns a batch uploader
+// newBatchUploader returns a batch uploader
 func newBatchUploader(dest storage.Uploader) *uploader {
 	return &uploader{uploader: dest}
 }
 
-//NewBatchUploader returns a batch uploader
+// NewBatchUploader returns a batch uploader
 func NewBatchUploader(dest storage.Uploader) storage.BatchUploader {
 	return newBatchUploader(dest)
 }
