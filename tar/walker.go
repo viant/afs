@@ -6,16 +6,17 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/viant/afs/file"
-	"github.com/viant/afs/object"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
-	"github.com/viant/afs/url"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/object"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
+	"github.com/viant/afs/url"
 )
 
 type walker struct {
@@ -132,6 +133,9 @@ func (w *walker) Walk(ctx context.Context, URL string, handler storage.OnVisit, 
 			if ioReader, err = w.fetch(tar.NewReader(linkReader), linkPath, cache); err == nil {
 				shallContinue, err = visitSymlinkHeader(ctx, header, linkPath, ioReader, handler, URL, relative, info)
 			}
+			if err != nil {
+				return err
+			}
 			linkReader.Close()
 		default:
 			return fmt.Errorf("unknown header type: %v", header.Typeflag)
@@ -155,6 +159,9 @@ func (w *walker) uncompressIfNeeded(readerCloser io.ReadCloser) (io.ReadCloser, 
 	}
 	_ = gzReader.Close()
 	data, err = ioutil.ReadAll(gzReader)
+	if err != nil {
+		return nil, err
+	}
 	return ioutil.NopCloser(bytes.NewReader(data)), nil
 }
 
