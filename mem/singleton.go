@@ -1,19 +1,34 @@
 package mem
 
-import "github.com/viant/afs/storage"
+import (
+	"sync"
+
+	"github.com/viant/afs/storage"
+)
 
 var singleton *manager
+var singletonMu sync.RWMutex
 
-//Singleton returns singleton manager
+// Singleton returns singleton manager
 func Singleton(options ...storage.Option) storage.Manager {
-	if singleton != nil {
-		return singleton
+	singletonMu.RLock()
+	current := singleton
+	singletonMu.RUnlock()
+	if current != nil {
+		return current
 	}
-	singleton = newManager(options...)
+	singletonMu.Lock()
+	defer singletonMu.Unlock()
+	if singleton == nil {
+		singleton = newManager(options...)
+	}
 	return singleton
 }
 
-//ResetSingleton rest singleton
+// ResetSingleton rest singleton
 func ResetSingleton(options ...storage.Option) {
-	singleton = newManager(options...)
+	current := newManager(options...)
+	singletonMu.Lock()
+	singleton = current
+	singletonMu.Unlock()
 }

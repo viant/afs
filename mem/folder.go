@@ -17,7 +17,7 @@ const (
 	noSuchFileOrDirectoryErrorMessage = "no such file or directory"
 )
 
-//Folder represents memory folder
+// Folder represents memory folder
 type Folder struct {
 	storage.Object
 	mutex   *sync.RWMutex
@@ -25,7 +25,7 @@ type Folder struct {
 	folders map[string]*Folder
 }
 
-//Objects returns folder objects
+// Objects returns folder objects
 func (f *Folder) Objects() []storage.Object {
 	var result = make([]storage.Object, 0)
 	result = append(result, f.Object)
@@ -70,7 +70,7 @@ func (f *Folder) putFile(object storage.Object) error {
 	return objFile.uploadError
 }
 
-//File returns file or downloadErr
+// File returns file or downloadErr
 func (f *Folder) file(name string) (*File, error) {
 	f.mutex.RLock()
 	defer f.mutex.RUnlock()
@@ -81,7 +81,7 @@ func (f *Folder) file(name string) (*File, error) {
 	return result, nil
 }
 
-//File returns file or downloadErr
+// File returns file or downloadErr
 func (f *Folder) folder(name string) (*Folder, error) {
 	f.mutex.RLock()
 	defer f.mutex.RUnlock()
@@ -96,7 +96,7 @@ func (f *Folder) folder(name string) (*Folder, error) {
 	return result, nil
 }
 
-//File returns a file for supplied location
+// File returns a file for supplied location
 func (f *Folder) File(URL string) (*File, error) {
 	object, err := f.Lookup(URL, 0)
 	if err != nil {
@@ -109,7 +109,7 @@ func (f *Folder) File(URL string) (*File, error) {
 	return result, object.Unwrap(&result)
 }
 
-//Folder returns a folder for supplied URL, when mkdirMode is non zero it will create missing folders with supplied mode
+// Folder returns a folder for supplied URL, when mkdirMode is non zero it will create missing folders with supplied mode
 func (f *Folder) Folder(URL string, mkdirMode os.FileMode) (*Folder, error) {
 	object, err := f.Lookup(URL, mkdirMode)
 	if err != nil {
@@ -119,7 +119,7 @@ func (f *Folder) Folder(URL string, mkdirMode os.FileMode) (*Folder, error) {
 	return result, object.Unwrap(&result)
 }
 
-//Lookup lookup path, when mkdirMode is non zero it will create missing folders with supplied mode
+// Lookup lookup path, when mkdirMode is non zero it will create missing folders with supplied mode
 func (f *Folder) Lookup(URL string, mkdirMode os.FileMode) (storage.Object, error) {
 	_, URLPath := url.Base(URL, Scheme)
 
@@ -144,10 +144,19 @@ func (f *Folder) Lookup(URL string, mkdirMode os.FileMode) (storage.Object, erro
 		}
 		//Error f.URL get missing first /
 		childURL := url.Join(f.URL(), childName)
-		child = NewFolder(childURL, mkdirMode)
-		if err = f.putFolder(child); err != nil {
-			return nil, err
+		f.mutex.Lock()
+		if _, exists := f.files[childName]; exists {
+			f.mutex.Unlock()
+			return nil, fmt.Errorf("%v is file", childURL)
 		}
+		// A different creator may have installed this child after folder().
+		// Retain that canonical child and all files already attached to it.
+		child = f.folders[childName]
+		if child == nil {
+			child = NewFolder(childURL, mkdirMode)
+			f.folders[childName] = child
+		}
+		f.mutex.Unlock()
 	}
 	if isLast {
 		return child.Object, nil
@@ -156,7 +165,7 @@ func (f *Folder) Lookup(URL string, mkdirMode os.FileMode) (storage.Object, erro
 	return child.Lookup(subPath, mkdirMode)
 }
 
-//Delete deletes object or return error
+// Delete deletes object or return error
 func (f *Folder) Delete(name string) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
@@ -174,7 +183,7 @@ func (f *Folder) Delete(name string) error {
 	return fmt.Errorf("%v: no such file or directory", url.Join(f.URL(), name))
 }
 
-//Put adds object to this folder
+// Put adds object to this folder
 func (f *Folder) Put(object storage.Object) error {
 	if object.IsDir() {
 		return f.putFolder(object)
@@ -182,7 +191,7 @@ func (f *Folder) Put(object storage.Object) error {
 	return f.putFile(object)
 }
 
-//NewFolder returns a folder for supplied URL
+// NewFolder returns a folder for supplied URL
 func NewFolder(URL string, mode os.FileMode) *Folder {
 	baseURL, URLPath := Split(URL)
 	URL = url.Join(baseURL, URLPath)

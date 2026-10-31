@@ -16,20 +16,19 @@ import (
 
 var preconditionErrorMessage = fmt.Sprintf("precondition failed: %v ", http.StatusPreconditionFailed)
 
-//Upload writes fakeReader TestContent to supplied URL path.
+// Upload writes fakeReader TestContent to supplied URL path.
 func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	s.mux.Lock()
 	parent, err := s.parent(location, file.DefaultDirOsMode)
 	s.mux.Unlock()
+	if err != nil {
+		return err
+	}
 
 	generation := &option.Generation{}
 	_, ok := option.Assign(options, &generation)
 	if !ok {
 		generation = nil
-	}
-	parent, err = s.parent(location, file.DefaultDirOsMode)
-	if err != nil {
-		return err
 	}
 	var data []byte
 	if reader != nil {
@@ -41,10 +40,13 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 	option.Assign(options, &modTime)
 	memFile := NewFile(location, mode, data, modTime)
 	parent.mutex.Lock()
+	defer parent.mutex.Unlock()
+	if _, exists := parent.folders[memFile.Name()]; exists {
+		return fmt.Errorf("%v is directory", location)
+	}
 	if prev, ok := parent.files[memFile.Name()]; ok {
 		memFile.generation = prev.generation
 	}
-	parent.mutex.Unlock()
 	if generation != nil {
 		if generation.WhenMatch {
 			if generation.Generation != memFile.generation {
@@ -57,5 +59,6 @@ func (s *storager) Upload(ctx context.Context, location string, mode os.FileMode
 		}
 	}
 	memFile.generation++
-	return parent.Put(memFile.Object)
+	parent.files[memFile.Name()] = memFile
+	return memFile.uploadError
 }
